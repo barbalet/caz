@@ -17,7 +17,10 @@
 		CAZ001000000000000000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000008 /* Assets.xcassets */; };
 		CAZ001000000000000000009 /* caz_cpu.c in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000009 /* caz_cpu.c */; };
 		CAZ001000000000000000010 /* caz_droid.c in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000010 /* caz_droid.c */; };
-		CAZ001000000000000000011 /* caz_programs.c in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000011 /* caz_programs.c */; };
+		CAZ001000000000000000011 /* caz_loader.c in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000011 /* caz_loader.c */; };
+		CAZ001000000000000000012 /* curious-patrol.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000017 /* curious-patrol.caz */; };
+		CAZ001000000000000000013 /* nap-watch.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000018 /* nap-watch.caz */; };
+		CAZ001000000000000000014 /* farmyard-mouser.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000019 /* farmyard-mouser.caz */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,12 +34,15 @@
 		CAZ000000000000000000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CAZ000000000000000000009 /* caz_cpu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_cpu.c; path = ../src/caz_cpu.c; sourceTree = SOURCE_ROOT; };
 		CAZ000000000000000000010 /* caz_droid.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_droid.c; path = ../src/caz_droid.c; sourceTree = SOURCE_ROOT; };
-		CAZ000000000000000000011 /* caz_programs.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_programs.c; path = ../src/caz_programs.c; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000011 /* caz_loader.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_loader.c; path = ../src/caz_loader.c; sourceTree = SOURCE_ROOT; };
 		CAZ000000000000000000012 /* caz_cpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_cpu.h; path = ../src/caz_cpu.h; sourceTree = SOURCE_ROOT; };
 		CAZ000000000000000000013 /* caz_droid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_droid.h; path = ../src/caz_droid.h; sourceTree = SOURCE_ROOT; };
-		CAZ000000000000000000014 /* caz_programs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_programs.h; path = ../src/caz_programs.h; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000014 /* caz_loader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_loader.h; path = ../src/caz_loader.h; sourceTree = SOURCE_ROOT; };
 		CAZ000000000000000000015 /* cazmac-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "cazmac-Bridging-Header.h"; sourceTree = "<group>"; };
 		CAZ000000000000000000016 /* cazmac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = cazmac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CAZ000000000000000000017 /* curious-patrol.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "curious-patrol.caz"; path = "../programs/curious-patrol.caz"; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000018 /* nap-watch.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "nap-watch.caz"; path = "../programs/nap-watch.caz"; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000019 /* farmyard-mouser.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "farmyard-mouser.caz"; path = "../programs/farmyard-mouser.caz"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +61,7 @@
 			children = (
 				CAZ003000000000000000002 /* cazmac */,
 				CAZ003000000000000000003 /* Caz C Runtime */,
+				CAZ003000000000000000005 /* Caz Programs */,
 				CAZ003000000000000000004 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -82,10 +89,20 @@
 				CAZ000000000000000000012 /* caz_cpu.h */,
 				CAZ000000000000000000010 /* caz_droid.c */,
 				CAZ000000000000000000013 /* caz_droid.h */,
-				CAZ000000000000000000011 /* caz_programs.c */,
-				CAZ000000000000000000014 /* caz_programs.h */,
+				CAZ000000000000000000011 /* caz_loader.c */,
+				CAZ000000000000000000014 /* caz_loader.h */,
 			);
 			name = "Caz C Runtime";
+			sourceTree = "<group>";
+		};
+		CAZ003000000000000000005 /* Caz Programs */ = {
+			isa = PBXGroup;
+			children = (
+				CAZ000000000000000000017 /* curious-patrol.caz */,
+				CAZ000000000000000000018 /* nap-watch.caz */,
+				CAZ000000000000000000019 /* farmyard-mouser.caz */,
+			);
+			name = "Caz Programs";
 			sourceTree = "<group>";
 		};
 		CAZ003000000000000000004 /* Products */ = {
@@ -155,6 +172,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				CAZ001000000000000000008 /* Assets.xcassets in Resources */,
+				CAZ001000000000000000012 /* curious-patrol.caz in Resources */,
+				CAZ001000000000000000013 /* nap-watch.caz in Resources */,
+				CAZ001000000000000000014 /* farmyard-mouser.caz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -174,7 +194,7 @@
 				CAZ001000000000000000007 /* Shaders.metal in Sources */,
 				CAZ001000000000000000009 /* caz_cpu.c in Sources */,
 				CAZ001000000000000000010 /* caz_droid.c in Sources */,
-				CAZ001000000000000000011 /* caz_programs.c in Sources */,
+				CAZ001000000000000000011 /* caz_loader.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

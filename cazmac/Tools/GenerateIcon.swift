@@ -16,8 +16,21 @@ let sizes = [16, 32, 64, 128, 256, 512, 1024]
 let sourceSize = reference.size
 
 for size in sizes {
-    let image = NSImage(size: NSSize(width: size, height: size))
-    image.lockFocus()
+    guard let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil,
+                                        pixelsWide: size,
+                                        pixelsHigh: size,
+                                        bitsPerSample: 8,
+                                        samplesPerPixel: 4,
+                                        hasAlpha: true,
+                                        isPlanar: false,
+                                        colorSpaceName: .deviceRGB,
+                                        bytesPerRow: 0,
+                                        bitsPerPixel: 0) else {
+        fatalError("Could not create bitmap for icon size \(size)")
+    }
+    bitmap.size = NSSize(width: size, height: size)
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
     NSGraphicsContext.current?.shouldAntialias = true
     NSGraphicsContext.current?.imageInterpolation = size <= 64 ? .high : .default
 
@@ -72,11 +85,9 @@ for size in sizes {
     NSColor(calibratedRed: 0.68, green: 0.72, blue: 0.73, alpha: 0.16).setStroke()
     innerBorder.stroke()
 
-    image.unlockFocus()
+    NSGraphicsContext.restoreGraphicsState()
 
     guard
-        let tiff = image.tiffRepresentation,
-        let bitmap = NSBitmapImageRep(data: tiff),
         let png = bitmap.representation(using: .png, properties: [:])
     else {
         fatalError("Could not render icon size \(size)")

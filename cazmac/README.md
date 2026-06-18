@@ -25,7 +25,8 @@ xcodebuild -project cazmac/cazmac.xcodeproj -target cazmac -configuration Debug 
 - SwiftUI owns the development surface and controls.
 - Metal renders the droid, sensor rays, body pose, tail, ears, eyes, and farmyard floor.
 - The Caz C runtime remains the behavioural source of truth.
-- The bridge header imports `caz_cpu.h`, `caz_droid.h`, and `caz_programs.h`.
+- The bridge header imports `caz_cpu.h`, `caz_droid.h`, and `caz_loader.h`.
+- The `.caz` files from `../programs` are included as app resources and loaded by the C loader.
 
 ## App Icon
 

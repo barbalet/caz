@@ -115,7 +115,7 @@ All sensor values are unsigned bytes. Low-level firmware would normally smooth a
 
 ## Caz Assembly Style
 
-The current programs are built in C as bytecode, but the intended assembly style is:
+The current programs live in `programs/*.caz` and are assembled by `src/caz_loader.c` at runtime. The assembly style is:
 
 ```asm
 ; Farmyard mouser sketch
@@ -197,8 +197,9 @@ Add opcodes in `src/caz_cpu.c` where the dispatch table decodes the instruction 
 
 ## Adding A Program
 
-1. Add a value to `CazProgramKind` in `src/caz_programs.h`.
-2. Add a builder function in `src/caz_programs.c`.
-3. Use `emit_in_a`, `emit_cp`, `emit_set_port`, and `emit_pose` where possible.
-4. Add the name and description to `caz_program_name`, `caz_program_description`, `caz_program_parse`, and `caz_program_print_all`.
-5. Run the program with at least two scenarios so thresholds are not tuned to a single world.
+1. Create a `.caz` file in `programs/`.
+2. Add `; name:` and `; description:` metadata comments at the top.
+3. Use labels, sensor ports, symbolic actuator values, and ordinary Caz instructions.
+4. Run it directly with `./build/caz --program programs/your-program.caz`.
+5. If it should be a named built-in option, add it to `CazProgramKind` and the small name table in `src/caz_loader.c`.
+6. Run the program with at least two scenarios so thresholds are not tuned to a single world.

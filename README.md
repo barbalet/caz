@@ -19,6 +19,7 @@ Try the other modes:
 ./build/caz --program curious-patrol --scenario kitchen --steps 40
 ./build/caz --program nap-watch --scenario night-parlour --steps 40
 ./build/caz --program farmyard-mouser --scenario hedgerow --steps 60 --sample-every 2
+./build/caz --program programs/farmyard-mouser.caz --scenario farmyard --steps 40
 ./build/caz --list
 ```
 
@@ -33,8 +34,9 @@ For instruction-level tracing:
 The binary creates three things:
 
 1. A Caz CPU, which is a Z80-shaped VM with 64 KiB of memory, registers `A F B C D E H L`, `PC`, `SP`, flags, `IN`, `OUT`, jumps, comparisons, arithmetic, and `HALT`.
-2. A cat droid body, which exposes eyes and ears as input ports and accepts actuator commands through output ports.
-3. A world model, which produces household and rural events such as kitchen movement, night parlour rustles, farm machinery, weather, glare, human voices, and prey-like motion.
+2. A Caz loader, which reads `.caz` assembly files from `programs/`, assembles them to Z80-style bytecode, and loads them at `0x0100`.
+3. A cat droid body, which exposes eyes and ears as input ports and accepts actuator commands through output ports.
+4. A world model, which produces household and rural events such as kitchen movement, night parlour rustles, farm machinery, weather, glare, human voices, and prey-like motion.
 
 Each body tick updates the environment, then lets the Caz CPU execute a fixed number of bytecode instructions. The Caz program reads sensor ports and writes actuator ports. The runner prints a line describing what the cat perceived and what posture it chose.
 
@@ -89,11 +91,13 @@ Important output ports:
 
 ## Included Caz Programs
 
-`curious-patrol` is a general indoor cat loop. It retreats from very loud noises, tracks motion, crouches for prey-like rustles, listens in low light, and otherwise walks with a level tail.
+The canonical Caz programs live in `programs/` as editable `.caz` source files.
 
-`nap-watch` is a low-energy parlour mode. It keeps the eyelids low, purrs quietly, opens one eye for movement, greets human voices, and startles away from abrupt sound.
+`curious-patrol.caz` is a general indoor cat loop. It retreats from very loud noises, tracks motion, crouches for prey-like rustles, listens in low light, and otherwise walks with a level tail.
 
-`farmyard-mouser` is tuned for rural use. It gives machinery room, treats prey-pattern sounds as a hunting cue, greets human speech, shelters during weather, and narrows its eyes in glare.
+`nap-watch.caz` is a low-energy parlour mode. It keeps the eyelids low, purrs quietly, opens one eye for movement, greets human voices, and startles away from abrupt sound.
+
+`farmyard-mouser.caz` is tuned for rural use. It gives machinery room, treats prey-pattern sounds as a hunting cue, greets human speech, shelters during weather, and narrows its eyes in glare.
 
 ## How Caz Feels
 
@@ -134,13 +138,17 @@ The docs are written to be useful to two kinds of participant: a programmer exte
 |   |-- caz-language.md
 |   |-- field-histories.md
 |   `-- maker-diagrams.md
+|-- programs/
+|   |-- curious-patrol.caz
+|   |-- farmyard-mouser.caz
+|   `-- nap-watch.caz
 `-- src/
+    |-- caz_loader.c
+    |-- caz_loader.h
     |-- caz_cpu.c
     |-- caz_cpu.h
     |-- caz_droid.c
     |-- caz_droid.h
-    |-- caz_programs.c
-    |-- caz_programs.h
     `-- main.c
 ```
 
@@ -150,7 +158,8 @@ The simulator is meant to be extended in layers:
 
 - Add more Z80 instructions when a Caz program actually needs them.
 - Add richer sensor channels without changing the CPU core.
-- Add new embedded programs in `src/caz_programs.c`.
+- Add new Caz programs as `.caz` files in `programs/`.
+- Extend `src/caz_loader.c` when the language needs another instruction or directive.
 - Add scenario generators in `src/caz_droid.c`.
 - Replace the simple body model with real kinematics later, while preserving the port contract.
 

@@ -81,11 +81,11 @@ final class CatDroidRenderer: NSObject, MTKViewDelegate {
         }
 
         let gait = snapshot.gait % 6
-        let crouch = gait == 2 ? -0.10 : (gait == 3 ? 0.08 : 0.0)
-        let bob = (gait == 1 || gait == 3) ? sin(time * 8) * 0.018 : 0
-        let bodyCenter = SIMD2<Float>(0.28, -0.10 + crouch + bob)
+        let crouch: Float = gait == 2 ? -0.10 : (gait == 3 ? 0.08 : 0.0)
+        let bob: Float = (gait == 1 || gait == 3) ? sin(time * 8) * 0.018 : 0
+        let bodyCenter = SIMD2<Float>(0.28, Float(-0.10) + crouch + bob)
         let headYaw = (Float(snapshot.headYaw) - 128) / 128
-        let headCenter = SIMD2<Float>(-0.22 + headYaw * 0.08, 0.02 + crouch + bob * 0.6)
+        let headCenter = SIMD2<Float>(Float(-0.22) + headYaw * Float(0.08), Float(0.02) + crouch + bob * Float(0.6))
         let graphite = SIMD4<Float>(0.36, 0.39, 0.41, 1.0)
         let graphiteDark = SIMD4<Float>(0.18, 0.20, 0.22, 1.0)
         let seam = SIMD4<Float>(0.06, 0.09, 0.10, 0.9)

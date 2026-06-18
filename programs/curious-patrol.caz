@@ -1,0 +1,113 @@
+; name: curious-patrol
+; description: general house-cat patrol loop that tracks motion, listens at night, and retreats from loud shocks
+
+loop:
+    IN   A,(EAR_VOLUME)
+    CP   190
+    JP   NC,alarm
+
+    IN   A,(EYE_MOTION)
+    CP   150
+    JP   NC,track_motion
+
+    IN   A,(EAR_PATTERN)
+    CP   PREY
+    JP   Z,mouse
+
+    IN   A,(EYE_LUMA)
+    CP   32
+    JP   C,night_listen
+
+    IN   A,(EYE_EDGE)
+    CP   210
+    JP   NC,close_object
+
+patrol:
+    LD   A,GAIT_WALK
+    OUT  (GAIT),A
+    LD   A,128
+    OUT  (HEAD_YAW),A
+    LD   A,EAR_SCAN
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_LEVEL
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,150
+    OUT  (EYELID),A
+    JP   loop
+
+track_motion:
+    LD   A,GAIT_WALK
+    OUT  (GAIT),A
+    LD   A,196
+    OUT  (HEAD_YAW),A
+    LD   A,EAR_FORWARD
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_TWITCH
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_CHIRRUP
+    OUT  (VOCAL),A
+    LD   A,210
+    OUT  (EYELID),A
+    JP   loop
+
+mouse:
+    LD   A,GAIT_CROUCH
+    OUT  (GAIT),A
+    LD   A,96
+    OUT  (HEAD_YAW),A
+    LD   A,EAR_FORWARD
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_STILL
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,224
+    OUT  (EYELID),A
+    JP   loop
+
+alarm:
+    LD   A,GAIT_RETREAT
+    OUT  (GAIT),A
+    LD   A,64
+    OUT  (HEAD_YAW),A
+    LD   A,EAR_FLAT
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_BOTTLE
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_HISS
+    OUT  (VOCAL),A
+    LD   A,240
+    OUT  (EYELID),A
+    JP   loop
+
+night_listen:
+    LD   A,GAIT_LOAF
+    OUT  (GAIT),A
+    LD   A,128
+    OUT  (HEAD_YAW),A
+    LD   A,EAR_SWIVEL
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_WRAP
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_PURR
+    OUT  (VOCAL),A
+    LD   A,255
+    OUT  (EYELID),A
+    JP   loop
+
+close_object:
+    LD   A,GAIT_PAW_TEST
+    OUT  (GAIT),A
+    LD   A,144
+    OUT  (HEAD_YAW),A
+    LD   A,EAR_FORWARD
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_QUESTION
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_MRRP
+    OUT  (VOCAL),A
+    LD   A,200
+    OUT  (EYELID),A
+    JP   loop

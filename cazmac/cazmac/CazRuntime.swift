@@ -22,6 +22,14 @@ enum CazProgramChoice: String, CaseIterable, Identifiable {
         case .farmyardMouser: return CAZ_PROGRAM_FARMYARD_MOUSER
         }
     }
+
+    var fileBaseName: String {
+        switch self {
+        case .curiousPatrol: return "curious-patrol"
+        case .napWatch: return "nap-watch"
+        case .farmyardMouser: return "farmyard-mouser"
+        }
+    }
 }
 
 enum CazScenarioChoice: String, CaseIterable, Identifiable {
@@ -156,8 +164,18 @@ final class CazRuntime: ObservableObject {
         recentInstructions.removeAll()
         caz_droid_init(&droid, scenarioChoice.cScenario, 0)
         caz_cpu_init(&cpu, caz_droid_read_port, caz_droid_write_port, &droid)
-        _ = caz_program_load(&cpu, programChoice.cKind, &image)
+        loadSelectedProgram()
         snapshot = makeSnapshot()
+    }
+
+    private func loadSelectedProgram() {
+        guard let url = Bundle.main.url(forResource: programChoice.fileBaseName, withExtension: "caz") else {
+            return
+        }
+        _ = url.withUnsafeFileSystemRepresentation { path in
+            guard let path else { return false }
+            return caz_loader_load_file(&cpu, path, &image)
+        }
     }
 
     func stepFrame() {
@@ -227,8 +245,9 @@ final class CazRuntime: ObservableObject {
 
     private func disassemble(address: UInt16) -> String {
         var buffer = [CChar](repeating: 0, count: 96)
+        let bufferCount = buffer.count
         buffer.withUnsafeMutableBufferPointer { pointer in
-            _ = caz_cpu_disassemble_at(&cpu, address, pointer.baseAddress, buffer.count)
+            _ = caz_cpu_disassemble_at(&cpu, address, pointer.baseAddress, bufferCount)
         }
         return String(cString: buffer)
     }

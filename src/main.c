@@ -1,6 +1,6 @@
 #include "caz_cpu.h"
 #include "caz_droid.h"
-#include "caz_programs.h"
+#include "caz_loader.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -9,6 +9,9 @@
 
 typedef struct Options {
     CazProgramKind program;
+    char program_path[CAZ_PROGRAM_PATH_MAX];
+    char program_dir[CAZ_PROGRAM_PATH_MAX];
+    bool custom_program_path;
     CazScenario scenario;
     uint32_t seed;
     uint64_t steps;
@@ -24,7 +27,8 @@ static void print_usage(FILE *out, const char *argv0)
             "Usage: %s [options]\n"
             "\n"
             "Options:\n"
-            "  --program NAME              curious-patrol, nap-watch, farmyard-mouser\n"
+            "  --program NAME|PATH         curious-patrol, nap-watch, farmyard-mouser, or a .caz file\n"
+            "  --program-dir PATH          directory for named .caz programs (default: programs)\n"
             "  --scenario NAME             kitchen, farmyard, night-parlour, hedgerow\n"
             "  --steps N                   body ticks to simulate (default: 64)\n"
             "  --instructions-per-tick N   Caz CPU instructions per body tick (default: 48)\n"
@@ -62,6 +66,9 @@ static bool parse_args(int argc, char **argv, Options *options)
 {
     int i;
     options->program = CAZ_PROGRAM_FARMYARD_MOUSER;
+    options->program_path[0] = '\0';
+    snprintf(options->program_dir, sizeof(options->program_dir), "%s", "programs");
+    options->custom_program_path = false;
     options->scenario = CAZ_SCENARIO_FARMYARD;
     options->seed = 0u;
     options->steps = 64u;
@@ -76,7 +83,7 @@ static bool parse_args(int argc, char **argv, Options *options)
             exit(0);
         } else if (strcmp(argv[i], "--list") == 0) {
             printf("Programs:\n");
-            caz_program_print_all(stdout);
+            caz_loader_print_programs(stdout);
             printf("\nScenarios:\n");
             caz_scenario_print_all(stdout);
             exit(0);
@@ -86,10 +93,20 @@ static bool parse_args(int argc, char **argv, Options *options)
             options->quiet = true;
         } else if (strcmp(argv[i], "--program") == 0 && i + 1 < argc) {
             i++;
-            if (!caz_program_parse(argv[i], &options->program)) {
-                fprintf(stderr, "Unknown program: %s\n", argv[i]);
+            if (caz_loader_parse_program_name(argv[i], &options->program)) {
+                options->custom_program_path = false;
+                options->program_path[0] = '\0';
+            } else {
+                snprintf(options->program_path, sizeof(options->program_path), "%s", argv[i]);
+                options->custom_program_path = true;
+            }
+        } else if (strcmp(argv[i], "--program-dir") == 0 && i + 1 < argc) {
+            i++;
+            if (strlen(argv[i]) >= sizeof(options->program_dir)) {
+                fprintf(stderr, "Program directory path is too long: %s\n", argv[i]);
                 return false;
             }
+            snprintf(options->program_dir, sizeof(options->program_dir), "%s", argv[i]);
         } else if (strcmp(argv[i], "--scenario") == 0 && i + 1 < argc) {
             i++;
             if (!caz_scenario_parse(argv[i], &options->scenario)) {
@@ -147,14 +164,23 @@ int main(int argc, char **argv)
     caz_cpu_init(&cpu, caz_droid_read_port, caz_droid_write_port, &droid);
     cpu.trace = options.trace;
 
-    if (!caz_program_load(&cpu, options.program, &image)) {
-        fprintf(stderr, "Failed to build/load Caz program: %s\n", caz_program_name(options.program));
+    if (options.custom_program_path) {
+        if (!caz_loader_load_file(&cpu, options.program_path, &image)) {
+            fprintf(stderr, "Failed to load Caz program: %s\n%s\n", options.program_path, image.error);
+            return 1;
+        }
+    } else if (!caz_loader_load_named(&cpu, options.program, options.program_dir, &image)) {
+        fprintf(stderr,
+                "Failed to load Caz program: %s\n%s\n",
+                caz_loader_program_name(options.program),
+                image.error);
         return 1;
     }
 
     if (!options.quiet) {
         printf("Caz Cat Operating System simulation\n");
         printf("program=%s (%s)\n", image.name, image.description);
+        printf("source=%s\n", image.path);
         printf("scenario=%s steps=%llu instructions_per_tick=%llu program_bytes=%zu\n\n",
                caz_scenario_name(options.scenario),
                (unsigned long long)options.steps,

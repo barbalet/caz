@@ -3,6 +3,6 @@
 
 #include "../../src/caz_cpu.h"
 #include "../../src/caz_droid.h"
-#include "../../src/caz_programs.h"
+#include "../../src/caz_loader.h"
 
 #endif
