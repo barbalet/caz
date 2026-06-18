@@ -33,6 +33,8 @@ The middle layer should become the single place where high-level cat intent is t
 - Treat balance, fall recovery, and low-voltage protection as body-level reflexes that override normal behaviour.
 - Keep hardware-specific assumptions out of the CPU and loader.
 - Let the simulator and CazMac renderer consume the same middle-layer state.
+- Use the OpenCat simple URDF as the rigging source for body proportions, joint hierarchy, and joint axes.
+- Use Nybble STL parts as visual reference or optional mesh pieces, not as the source of truth for animation.
 
 ## Proposed Port Map
 
@@ -176,6 +178,29 @@ Pose frame example:
     OUT  (POSE_FRAME_COMMIT),A
 ```
 
+## 3D Form And Asset Strategy
+
+CazMac should use a two-source body model:
+
+- Rigging source: OpenCat's simple URDF simulation model. This provides clean proportions, link names, joint hierarchy, origins, axes, and primitive body geometry suitable for a stable renderer and later physics work.
+- Visual source: Nybble STL parts. These provide recognizable cat-droid form language, especially head, ears, eyes, nose, mouth, spine, body plates, thighs, shanks, and base pieces.
+
+The URDF should drive animation. The STLs should be treated as surface detail, reference material, or optional per-link meshes after licensing and provenance are checked.
+
+Asset pipeline:
+
+1. Reference or import the OpenCat simple URDF into a CazMac asset source folder.
+2. Parse the URDF link and joint tree into an intermediate `CazRig` description.
+3. Map URDF joints onto the Caz 16-DOF joint indices.
+4. Normalize units, axes, and origins into the CazMac Metal coordinate convention.
+5. Generate a procedural fallback mesh from URDF boxes and capsules.
+6. Select Nybble STL parts only where they improve the cat silhouette or recognizable hardware form.
+7. Convert chosen STL parts into app-friendly assets such as OBJ, USDZ, or baked Metal vertex buffers.
+8. Attach converted mesh pieces to the matching rig links.
+9. Store source provenance, conversion settings, scale, orientation, and license notes beside generated assets.
+
+Do not animate a whole imported STL as one rigid object. Every visible mesh should either be generated from the rig or attached to a moving link controlled by `JOINT` and `POSE_FRAME`.
+
 ## Reflex Priority
 
 Reflexes should live below Caz behaviour and above the backend. They are not optional program logic; they are body survival rules.
@@ -285,7 +310,7 @@ The work should proceed in vertical cycles. Each cycle must leave the command-li
 | `P4` | `JOINT` and `POSE_FRAME` control. | Direct body control is powerful but should sit behind safety and skill support. |
 | `P5` | Cat behaviour breadth in `.caz`. | New behaviours should be written once the body can express them. |
 | `P6` | File-backed skill library. | Tunable `.cazskill` files are valuable after built-ins prove the format. |
-| `P7` | CazMac rendering integration. | Visual fidelity should follow the shared body state rather than inventing its own model. |
+| `P7` | CazMac asset pipeline and rendering integration. | Visual fidelity should follow the shared body state rather than inventing its own model. |
 | `P8` | OpenCat hardware bridge. | Physical output should wait until commands, limits, and reflexes are stable. |
 
 ## Development Cycles
@@ -427,13 +452,37 @@ Exit criteria:
 - Editing a `.cazskill` file changes the simulator behaviour without changing `.caz` source.
 - Invalid skill files report useful loader errors.
 
-### Cycle 8: CazMac Body Rendering
+### Cycle 8: URDF And STL Asset Pipeline
+
+Priority: `P7`
+
+Deliverables:
+
+- Add a CazMac asset source folder for third-party references and generated local assets.
+- Import or reference the OpenCat simple URDF as the rigging source.
+- Write a small conversion tool or documented conversion step that extracts link names, joint origins, joint axes, primitive boxes, and capsules.
+- Map the imported rig onto the Caz 16-DOF joint map.
+- Generate a procedural fallback body from URDF primitives.
+- Select Nybble STL parts for recognizable form only where they can attach cleanly to rig links.
+- Convert chosen STL pieces into app-friendly assets such as OBJ, USDZ, or baked Metal vertex buffers.
+- Record provenance and license notes for every third-party source asset before bundling.
+
+Exit criteria:
+
+- The rig can be loaded or compiled into CazMac without hand-entering every joint.
+- The generated fallback body renders without any STL dependency.
+- Optional Nybble-derived mesh pieces can be disabled without breaking animation.
+- Each imported asset has documented source, scale, orientation, and license status.
+
+### Cycle 9: CazMac Body Rendering
 
 Priority: `P7`
 
 Deliverables:
 
 - Feed active skill, reflex state, and 16-DOF joint values into the Swift/SwiftUI/Metal runtime.
+- Animate the URDF-derived rig with the `JOINT` and `POSE_FRAME` layer.
+- Attach generated or converted mesh pieces to the appropriate rig links.
 - Make rest, sit, walk, crawl, pounce, sniff, and scratch visually distinct.
 - Show active skill and reflex state in the left code overlay without hiding source code.
 - Keep the droid readable at desktop and smaller window sizes.
@@ -441,10 +490,12 @@ Deliverables:
 Exit criteria:
 
 - CazMac builds.
+- The rendered body uses the URDF-derived joint hierarchy rather than a separate renderer-only skeleton.
 - The rendered cat droid visibly responds to skill changes.
+- Optional Nybble-derived meshes improve the cat silhouette without being required for the rig.
 - Reflex states are visible enough for prototyping without turning the app into a debug dashboard.
 
-### Cycle 9: OpenCat Bridge Dry Run
+### Cycle 10: OpenCat Bridge Dry Run
 
 Priority: `P8`
 
@@ -461,7 +512,7 @@ Exit criteria:
 - No live hardware output is possible without an explicit command-line option and calibration data.
 - Reflexes still override hardware-bound commands.
 
-### Cycle 10: Live Hardware Gate
+### Cycle 11: Live Hardware Gate
 
 Priority: `P8`
 
@@ -484,6 +535,8 @@ The existing `GAIT`, `HEAD_YAW`, `EAR_POSE`, `TAIL_POSE`, `VOCAL`, and `EYELID` 
 
 The new middle layer should avoid adding new Z80 opcodes at first. The language can gain symbols and optional assembler sugar while preserving the bytecode model.
 
+Third-party body assets should remain optional until their license and redistribution status are documented. The CazMac renderer should always have a procedural URDF-derived fallback so the repo can build and run without bundled STL meshes.
+
 ## Acceptance Criteria
 
 - Existing programs in `programs/` still assemble and run.
@@ -493,4 +546,6 @@ The new middle layer should avoid adding new Z80 opcodes at first. The language 
 - The simulator exposes `IMU_ROLL`, `IMU_PITCH`, `LIFTED`, `DROPPED`, and `BATTERY`.
 - Balance, lifted, dropped, and low-battery reflexes override normal behaviour.
 - Documentation explains skill calls, pose frames, reflex priority, and the cat behaviour expansion.
+- The CazMac body rig is derived from the OpenCat simple URDF or an equivalent checked-in intermediate generated from it.
+- Nybble STL parts are used only as documented visual references or optional converted mesh attachments.
 - CazMac renders visible body differences for at least rest, sit, walk, crawl, pounce, sniff, and scratch.
