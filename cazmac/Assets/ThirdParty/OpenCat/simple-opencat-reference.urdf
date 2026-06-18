@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<!--
+  Local OpenCat-style reference rig for CazMac pipeline development.
+  This file is not an upstream OpenCat asset. It records the simple link
+  hierarchy, joint axes, and Caz joint-index mapping used by the generated
+  fallback renderer until a vetted upstream URDF is imported with license notes.
+-->
+<robot name="caz_opencat_simple_reference" xmlns:caz="https://caz.local/rig">
+  <link name="torso">
+    <visual>
+      <origin xyz="0 0 0"/>
+      <geometry><box size="0.68 0.24 0.18"/></geometry>
+      <caz:render shape="ellipse" color="body"/>
+    </visual>
+  </link>
+  <link name="chest">
+    <visual>
+      <origin xyz="-0.23 0.04 0"/>
+      <geometry><box size="0.24 0.16 0.16"/></geometry>
+      <caz:render shape="ellipse" color="shell"/>
+    </visual>
+  </link>
+  <link name="neck">
+    <visual>
+      <origin xyz="-0.36 0.08 0"/>
+      <geometry><box size="0.18 0.08 0.08"/></geometry>
+      <caz:render shape="capsule" color="dark"/>
+    </visual>
+  </link>
+  <link name="head">
+    <visual>
+      <origin xyz="-0.50 0.11 0"/>
+      <geometry><box size="0.28 0.22 0.18"/></geometry>
+      <caz:render shape="ellipse" color="shell"/>
+    </visual>
+  </link>
+  <link name="left-ear">
+    <visual>
+      <origin xyz="-0.59 0.26 0"/>
+      <geometry><box size="0.12 0.18 0.04"/></geometry>
+      <caz:render shape="triangle" color="dark"/>
+    </visual>
+  </link>
+  <link name="right-ear">
+    <visual>
+      <origin xyz="-0.43 0.26 0"/>
+      <geometry><box size="0.12 0.18 0.04"/></geometry>
+      <caz:render shape="triangle" color="dark"/>
+    </visual>
+  </link>
+  <link name="left-front-upper-leg">
+    <visual>
+      <origin xyz="-0.23 -0.19 0"/>
+      <geometry><box size="0.06 0.24 0.06"/></geometry>
+      <caz:render shape="capsule" color="dark"/>
+    </visual>
+  </link>
+  <link name="left-front-lower-leg">
+    <visual>
+      <origin xyz="-0.25 -0.42 0"/>
+      <geometry><box size="0.05 0.24 0.05"/></geometry>
+      <caz:render shape="capsule" color="dark"/>
+    </visual>
+  </link>
+  <link name="right-front-upper-leg">
+    <visual>
+      <origin xyz="-0.10 -0.19 0"/>
+      <geometry><box size="0.06 0.24 0.06"/></geometry>
+      <caz:render shape="capsule" color="dark"/>
+    </visual>
+  </link>
+  <link name="right-front-lower-leg">
+    <visual>
+      <origin xyz="-0.08 -0.42 0"/>
+      <geometry><box size="0.05 0.24 0.05"/></geometry>
+      <caz:render shape="capsule" color="dark"/>
+    </visual>
+  </link>
+  <link name="left-rear-upper-leg">
+    <visual>
+      <origin xyz="0.14 -0.19 0"/>
+      <geometry><box size="0.07 0.25 0.07"/></geometry>
+      <caz:render shape="capsule" color="dark"/>
+    </visual>
+  </link>
+  <link name="left-rear-lower-leg">
+    <visual>
+      <origin xyz="0.12 -0.43 0"/>
+      <geometry><box size="0.055 0.25 0.055"/></geometry>
+      <caz:render shape="capsule" color="dark"/>
+    </visual>
+  </link>
+  <link name="right-rear-upper-leg">
+    <visual>
+      <origin xyz="0.29 -0.19 0"/>
+      <geometry><box size="0.07 0.25 0.07"/></geometry>
+      <caz:render shape="capsule" color="dark"/>
+    </visual>
+  </link>
+  <link name="right-rear-lower-leg">
+    <visual>
+      <origin xyz="0.31 -0.43 0"/>
+      <geometry><box size="0.055 0.25 0.055"/></geometry>
+      <caz:render shape="capsule" color="dark"/>
+    </visual>
+  </link>
+  <link name="tail-base">
+    <visual>
+      <origin xyz="0.43 0.06 0"/>
+      <geometry><box size="0.24 0.06 0.05"/></geometry>
+      <caz:render shape="capsule" color="dark"/>
+    </visual>
+  </link>
+  <link name="tail-tip">
+    <visual>
+      <origin xyz="0.64 0.08 0"/>
+      <geometry><box size="0.24 0.045 0.04"/></geometry>
+      <caz:render shape="capsule" color="dark"/>
+    </visual>
+  </link>
+
+  <joint name="head-yaw" type="revolute"><parent link="neck"/><child link="head"/><origin xyz="-0.38 0.09 0"/><axis xyz="0 1 0"/><limit lower="-0.75" upper="0.75"/><caz:map index="0"/></joint>
+  <joint name="head-pitch" type="revolute"><parent link="neck"/><child link="head"/><origin xyz="-0.40 0.10 0"/><axis xyz="1 0 0"/><limit lower="-0.50" upper="0.50"/><caz:map index="1"/></joint>
+  <joint name="left-front-shoulder" type="revolute"><parent link="torso"/><child link="left-front-upper-leg"/><origin xyz="-0.23 -0.04 0"/><axis xyz="1 0 0"/><limit lower="-0.90" upper="0.90"/><caz:map index="2"/></joint>
+  <joint name="right-front-shoulder" type="revolute"><parent link="torso"/><child link="right-front-upper-leg"/><origin xyz="-0.10 -0.04 0"/><axis xyz="1 0 0"/><limit lower="-0.90" upper="0.90"/><caz:map index="3"/></joint>
+  <joint name="left-rear-hip" type="revolute"><parent link="torso"/><child link="left-rear-upper-leg"/><origin xyz="0.14 -0.04 0"/><axis xyz="1 0 0"/><limit lower="-0.90" upper="0.90"/><caz:map index="4"/></joint>
+  <joint name="right-rear-hip" type="revolute"><parent link="torso"/><child link="right-rear-upper-leg"/><origin xyz="0.29 -0.04 0"/><axis xyz="1 0 0"/><limit lower="-0.90" upper="0.90"/><caz:map index="5"/></joint>
+  <joint name="tail-base" type="revolute"><parent link="torso"/><child link="tail-base"/><origin xyz="0.38 0.06 0"/><axis xyz="0 1 0"/><limit lower="-1.10" upper="1.10"/><caz:map index="6"/></joint>
+  <joint name="tail-tip" type="revolute"><parent link="tail-base"/><child link="tail-tip"/><origin xyz="0.58 0.07 0"/><axis xyz="0 1 0"/><limit lower="-1.10" upper="1.10"/><caz:map index="7"/></joint>
+  <joint name="spine-height" type="prismatic"><parent link="world"/><child link="torso"/><origin xyz="0 0 0"/><axis xyz="0 1 0"/><limit lower="-0.09" upper="0.09"/><caz:map index="8"/></joint>
+  <joint name="spine-curve" type="revolute"><parent link="torso"/><child link="chest"/><origin xyz="-0.14 0.03 0"/><axis xyz="1 0 0"/><limit lower="-0.55" upper="0.55"/><caz:map index="9"/></joint>
+  <joint name="left-knee" type="revolute"><parent link="left-rear-upper-leg"/><child link="left-rear-lower-leg"/><origin xyz="0.14 -0.30 0"/><axis xyz="1 0 0"/><limit lower="-1.10" upper="1.10"/><caz:map index="10"/></joint>
+  <joint name="right-knee" type="revolute"><parent link="right-rear-upper-leg"/><child link="right-rear-lower-leg"/><origin xyz="0.29 -0.30 0"/><axis xyz="1 0 0"/><limit lower="-1.10" upper="1.10"/><caz:map index="11"/></joint>
+  <joint name="left-elbow" type="revolute"><parent link="left-front-upper-leg"/><child link="left-front-lower-leg"/><origin xyz="-0.23 -0.29 0"/><axis xyz="1 0 0"/><limit lower="-1.10" upper="1.10"/><caz:map index="12"/></joint>
+  <joint name="right-elbow" type="revolute"><parent link="right-front-upper-leg"/><child link="right-front-lower-leg"/><origin xyz="-0.10 -0.29 0"/><axis xyz="1 0 0"/><limit lower="-1.10" upper="1.10"/><caz:map index="13"/></joint>
+  <joint name="paw-spread" type="prismatic"><parent link="torso"/><child link="torso"/><origin xyz="0 -0.53 0"/><axis xyz="1 0 0"/><limit lower="-0.05" upper="0.05"/><caz:map index="14"/></joint>
+  <joint name="body-roll" type="revolute"><parent link="world"/><child link="torso"/><origin xyz="0 0 0"/><axis xyz="0 0 1"/><limit lower="-0.40" upper="0.40"/><caz:map index="15"/></joint>
+</robot>

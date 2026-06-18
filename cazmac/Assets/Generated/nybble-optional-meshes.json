@@ -1,0 +1,15 @@
+{
+  "enabled": false,
+  "reason": "No Nybble STL files are bundled until source, scale, orientation, and license notes are recorded.",
+  "candidateAttachments": [
+    { "link": "head", "sourcePiece": "head shell", "convertedAsset": null, "licenseStatus": "pending" },
+    { "link": "left-ear", "sourcePiece": "ear shell", "convertedAsset": null, "licenseStatus": "pending" },
+    { "link": "right-ear", "sourcePiece": "ear shell", "convertedAsset": null, "licenseStatus": "pending" },
+    { "link": "torso", "sourcePiece": "body plate", "convertedAsset": null, "licenseStatus": "pending" },
+    { "link": "chest", "sourcePiece": "body plate", "convertedAsset": null, "licenseStatus": "pending" },
+    { "link": "left-front-upper-leg", "sourcePiece": "front thigh", "convertedAsset": null, "licenseStatus": "pending" },
+    { "link": "right-front-upper-leg", "sourcePiece": "front thigh", "convertedAsset": null, "licenseStatus": "pending" },
+    { "link": "left-rear-upper-leg", "sourcePiece": "rear thigh", "convertedAsset": null, "licenseStatus": "pending" },
+    { "link": "right-rear-upper-leg", "sourcePiece": "rear thigh", "convertedAsset": null, "licenseStatus": "pending" }
+  ]
+}

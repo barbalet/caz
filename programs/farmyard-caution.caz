@@ -1,0 +1,177 @@
+; name: farmyard-caution
+; description: rural safety routine for machine avoidance, terrain caution, fatigue, and recovery
+
+loop:
+    IN   A,(DROPPED)
+    CP   1
+    JP   NC,recover
+
+    IN   A,(LIFTED)
+    CP   1
+    JP   NC,recover
+
+    IN   A,(BATTERY)
+    CP   58
+    JP   C,fatigue
+
+    IN   A,(TERRAIN)
+    CP   4
+    JP   NC,terrain
+
+    IN   A,(EAR_PATTERN)
+    CP   MACHINE
+    JP   Z,avoid
+
+    IN   A,(EAR_VOLUME)
+    CP   198
+    JP   NC,startle
+
+    IN   A,(EAR_PATTERN)
+    CP   WEATHER
+    JP   Z,shelter
+
+    IN   A,(EAR_PATTERN)
+    CP   HUMAN
+    JP   Z,greet
+
+    IN   A,(EYE_EDGE)
+    CP   178
+    JP   NC,inspect
+
+patrol:
+    LD   A,SKILL_SNIFF
+    OUT  (SKILL),A
+    LD   A,GAIT_WALK
+    OUT  (GAIT),A
+    LD   A,EAR_SCAN
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_LEVEL
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,172
+    OUT  (EYELID),A
+    JP   loop
+
+avoid:
+    LD   A,SKILL_STARTLE
+    OUT  (SKILL),A
+    LD   A,GAIT_RETREAT
+    OUT  (GAIT),A
+    LD   A,84
+    OUT  (HEAD_YAW),A
+    LD   A,EAR_FLAT
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_BOTTLE
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_HISS
+    OUT  (VOCAL),A
+    LD   A,242
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+terrain:
+    LD   A,GAIT_PAW_TEST
+    OUT  (GAIT),A
+    LD   A,SKILL_CRAWL
+    OUT  (SKILL),A
+    LD   A,EAR_FORWARD
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_LOW
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,206
+    OUT  (EYELID),A
+    JP   loop
+
+startle:
+    LD   A,SKILL_STARTLE
+    OUT  (SKILL),A
+    LD   A,EAR_FLAT
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_BOTTLE
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_HISS
+    OUT  (VOCAL),A
+    LD   A,250
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+recover:
+    LD   A,SKILL_RECOVER
+    OUT  (SKILL),A
+    LD   A,EAR_FLAT
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_WRAP
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_MRRP
+    OUT  (VOCAL),A
+    LD   A,226
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+shelter:
+    LD   A,SKILL_REST
+    OUT  (SKILL),A
+    LD   A,EAR_SWIVEL
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_CURL
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,112
+    OUT  (EYELID),A
+    JP   loop
+
+greet:
+    LD   A,SKILL_SNIFF
+    OUT  (SKILL),A
+    LD   A,EAR_SCAN
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_FLAG
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_PURR
+    OUT  (VOCAL),A
+    LD   A,164
+    OUT  (EYELID),A
+    JP   loop
+
+inspect:
+    LD   A,SKILL_SNIFF
+    OUT  (SKILL),A
+    LD   A,GAIT_PAW_TEST
+    OUT  (GAIT),A
+    LD   A,EAR_FORWARD
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_QUESTION
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_MRRP
+    OUT  (VOCAL),A
+    LD   A,208
+    OUT  (EYELID),A
+    JP   loop
+
+fatigue:
+    LD   A,SKILL_REST
+    OUT  (SKILL),A
+    LD   A,EAR_NEUTRAL
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_LOW
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,58
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+pause:
+    LD   B,32
+wait:
+    DEC  B
+    JP   NZ,wait
+    RET

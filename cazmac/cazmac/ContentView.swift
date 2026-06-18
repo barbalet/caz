@@ -129,6 +129,8 @@ private struct CazOverlay: View {
             Text("EARS  VOL  \(runtime.snapshot.earVolume.hex2)  PITCH \(runtime.snapshot.earPitch.hex2)  BRG \(runtime.snapshot.earBearing.hex2)")
             Text("POSE  \(runtime.snapshot.gaitName.uppercased())  HEAD \(runtime.snapshot.headYaw.hex2)  EARS \(runtime.snapshot.earPoseName.uppercased())")
             Text("TAIL  \(runtime.snapshot.tailPoseName.uppercased())  VOCAL \(runtime.snapshot.vocalName.uppercased())  LID \(runtime.snapshot.eyelid.hex2)")
+            Text("BODY  \(runtime.snapshot.activeSkillName.uppercased())  \(runtime.snapshot.skillStatusName.uppercased())  REF \(runtime.snapshot.reflexStateName.uppercased())")
+            Text("IMU   R \(runtime.snapshot.imuRoll.hex2)  P \(runtime.snapshot.imuPitch.hex2)  BAT \(runtime.snapshot.battery.hex2)  TERR \(runtime.snapshot.terrain.hex2)")
             Text("AF \(runtime.snapshot.af)  PC \(runtime.snapshot.pc)  CYC \(runtime.snapshot.cycles)")
         }
         .font(.system(size: 12, weight: .medium, design: .monospaced))

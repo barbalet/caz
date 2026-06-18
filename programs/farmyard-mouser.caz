@@ -23,6 +23,8 @@ loop:
     JP   NC,glare
 
 patrol:
+    LD   A,SKILL_SNIFF
+    OUT  (SKILL),A
     LD   A,GAIT_WALK
     OUT  (GAIT),A
     LD   A,132
@@ -58,6 +60,8 @@ prey:
     JP   NC,pounce
 
 crouch:
+    LD   A,SKILL_CRAWL
+    OUT  (SKILL),A
     LD   A,GAIT_CROUCH
     OUT  (GAIT),A
     LD   A,108
@@ -73,6 +77,8 @@ crouch:
     JP   loop
 
 pounce:
+    LD   A,SKILL_POUNCE
+    OUT  (SKILL),A
     LD   A,GAIT_POUNCE
     OUT  (GAIT),A
     LD   A,168
@@ -103,6 +109,8 @@ human:
     JP   loop
 
 weather:
+    LD   A,SKILL_REST
+    OUT  (SKILL),A
     LD   A,GAIT_LOAF
     OUT  (GAIT),A
     LD   A,128

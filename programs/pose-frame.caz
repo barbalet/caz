@@ -1,0 +1,104 @@
+; name: pose-frame
+; description: buffers and commits a full 16-slot normalized body pose frame
+
+setup:
+    ; Direct joint write first: head yaw clamps from 255 down to its body limit.
+    LD   A,JOINT_HEAD_YAW
+    OUT  (JOINT_INDEX),A
+    LD   A,255
+    OUT  (JOINT_ANGLE),A
+    LD   A,1
+    OUT  (JOINT_COMMIT),A
+
+    LD   A,JOINT_HEAD_YAW
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,208
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_HEAD_PITCH
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,148
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_LEFT_SHOULDER
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,196
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_RIGHT_SHOULDER
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,76
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_LEFT_HIP
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,84
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_RIGHT_HIP
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,188
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_TAIL_BASE
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,212
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_TAIL_TIP
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,232
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_SPINE_HEIGHT
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,40
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_SPINE_CURVE
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,176
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_LEFT_KNEE
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,180
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_RIGHT_KNEE
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,88
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_LEFT_ELBOW
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,188
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_RIGHT_ELBOW
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,92
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_PAW_SPREAD
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,220
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,JOINT_BODY_ROLL
+    OUT  (POSE_FRAME_INDEX),A
+    LD   A,88
+    OUT  (POSE_FRAME_VALUE),A
+
+    LD   A,1
+    OUT  (POSE_FRAME_FLAGS),A
+    LD   A,8
+    OUT  (POSE_FRAME_TIME),A
+    LD   A,1
+    OUT  (POSE_FRAME_COMMIT),A
+
+    LD   A,JOINT_HEAD_YAW
+    OUT  (JOINT_INDEX),A
+
+loop:
+    JP   loop

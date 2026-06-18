@@ -90,6 +90,12 @@ All sensor values are unsigned bytes. Low-level firmware would normally smooth a
 | `0x21` | `EAR_PITCH` | 0..255 | Dominant pitch bucket. |
 | `0x22` | `EAR_BEARING` | 0..255 | Approximate source bearing. |
 | `0x23` | `EAR_PATTERN` | 0..255 | Recognised sound class. |
+| `0x30` | `IMU_ROLL` | 0..255 | Normalized body roll, centred on 128. |
+| `0x31` | `IMU_PITCH` | 0..255 | Normalized body pitch, centred on 128. |
+| `0x32` | `LIFTED` | 0 or 255 | Body has been picked up. |
+| `0x33` | `DROPPED` | 0 or 255 | Body is in a dropped or impact reflex event. |
+| `0x34` | `BATTERY` | 0..255 | Normalized energy reserve. |
+| `0x35` | `TERRAIN` | 0..255 | Coarse terrain class from the simulator scenario. |
 
 `EAR_PATTERN` values used by the simulator:
 
@@ -112,6 +118,95 @@ All sensor values are unsigned bytes. Low-level firmware would normally smooth a
 | `0x43` | `TAIL_POSE` | `0` low, `1` curl, `2` wrap, `3` still, `4` question, `5` level, `6` flag, `7` twitch, `8` bottle. |
 | `0x44` | `VOCAL` | `0` silent, `1` mrrp, `2` chirrup, `3` purr, `4` hiss, `5` meow. |
 | `0x45` | `EYELID` | Low is sleepy, high is alert. |
+| `0x50` | `SKILL` | Built-in skill request: `SKILL_BALANCE`, `SKILL_REST`, `SKILL_SIT`, `SKILL_WALK`, `SKILL_CRAWL`, `SKILL_POUNCE`, `SKILL_SNIFF`, `SKILL_SCRATCH`, `SKILL_GROOM`, `SKILL_STRETCH`, `SKILL_STARTLE`, or `SKILL_RECOVER`. |
+| `0x51` | `SKILL_ARG` | Optional byte argument for future skill commands. |
+| `0x52` | `SKILL_STATUS` | Current skill status: `SKILL_STATUS_IDLE`, `SKILL_STATUS_READY`, `SKILL_STATUS_RUNNING`, `SKILL_STATUS_BLOCKED`, or `SKILL_STATUS_REFLEX`. |
+| `0x53` | `REFLEX_STATE` | Current reflex state: `REFLEX_CLEAR`, `REFLEX_LOW_BATTERY`, `REFLEX_DROPPED`, `REFLEX_LIFTED`, `REFLEX_BALANCE`, or `REFLEX_TERRAIN_CAUTION`. |
+| `0x60` | `JOINT_INDEX` | Select one of 16 normalized joint targets. |
+| `0x61` | `JOINT_ANGLE` | Stage a normalized joint target value. |
+| `0x62` | `JOINT_COMMIT` | Commit the staged joint value to the selected joint. |
+| `0x70` | `POSE_FRAME_INDEX` | Select one of 16 pose-frame values. |
+| `0x71` | `POSE_FRAME_VALUE` | Stage a pose-frame value. |
+| `0x72` | `POSE_FRAME_FLAGS` | Stage pose-frame flags. |
+| `0x73` | `POSE_FRAME_TIME` | Stage pose-frame timing. |
+| `0x74` | `POSE_FRAME_COMMIT` | Commit the staged pose-frame value. |
+
+The body layer treats coarse actuator writes as requested commands. Reflexes then compute the effective pose reported by the simulator. Priority is low battery, dropped, lifted, balance, terrain caution, then normal behaviour.
+
+Joint index symbols:
+
+| Value | Symbol |
+| --- | --- |
+| `0` | `JOINT_HEAD_YAW` |
+| `1` | `JOINT_HEAD_PITCH` |
+| `2` | `JOINT_LEFT_SHOULDER` |
+| `3` | `JOINT_RIGHT_SHOULDER` |
+| `4` | `JOINT_LEFT_HIP` |
+| `5` | `JOINT_RIGHT_HIP` |
+| `6` | `JOINT_TAIL_BASE` |
+| `7` | `JOINT_TAIL_TIP` |
+| `8` | `JOINT_SPINE_HEIGHT` |
+| `9` | `JOINT_SPINE_CURVE` |
+| `10` | `JOINT_LEFT_KNEE` |
+| `11` | `JOINT_RIGHT_KNEE` |
+| `12` | `JOINT_LEFT_ELBOW` |
+| `13` | `JOINT_RIGHT_ELBOW` |
+| `14` | `JOINT_PAW_SPREAD` |
+| `15` | `JOINT_BODY_ROLL` |
+
+`JOINT_ANGLE` and `POSE_FRAME_VALUE` are clamped by the body layer before they become effective joint targets. A pose frame is staged in a 16-slot buffer and copied to the effective target set when `POSE_FRAME_COMMIT` is written.
+
+## Caz Skill Files
+
+The body layer has C-defined skill defaults for `SKILL_BALANCE`, `SKILL_REST`, `SKILL_SIT`, `SKILL_WALK`, `SKILL_CRAWL`, `SKILL_POUNCE`, `SKILL_SNIFF`, `SKILL_SCRATCH`, `SKILL_GROOM`, `SKILL_STRETCH`, `SKILL_STARTLE`, and `SKILL_RECOVER`. At startup the simulator resets to those built-ins, then loads `.cazskill` files from `skills/` or from the path passed with `--skills-dir`.
+
+If the skill directory is missing, startup continues with the built-in skills. If a file is malformed, startup stops and reports the file path, line number, and reason.
+
+Skill files are simple key/value documents. The skill can be inferred from the filename, or written explicitly:
+
+```ini
+skill=walk
+name=Walk
+gait=1
+head_yaw=128
+ear_pose=1
+tail_pose=5
+vocal=0
+eyelid=172
+
+[frame]
+head-yaw=128
+head-pitch=128
+left-shoulder=102
+right-shoulder=154
+left-hip=154
+right-hip=102
+tail-base=146
+tail-tip=162
+spine-height=136
+spine-curve=132
+left-knee=116
+right-knee=150
+left-elbow=150
+right-elbow=116
+paw-spread=136
+body-roll=128
+```
+
+The frame section also accepts the compact list form. Values are normalized bytes and are clamped by the body layer's joint limits:
+
+```ini
+name=walk
+id=4
+duration=32
+interruptible=true
+
+[frame 0]
+time=0
+joints=128,128,102,154,154,102,146,162,136,132,116,150,150,116,136,128
+```
+
+Metadata keys can use hyphens or underscores. `duration`, `interruptible`, and frame `time` are accepted for forward-compatible tuning files, but the first loader-backed implementation applies a single target frame per skill.
 
 ## Caz Assembly Style
 

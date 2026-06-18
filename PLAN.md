@@ -319,6 +319,8 @@ The work should proceed in vertical cycles. Each cycle must leave the command-li
 
 Priority: `P0`
 
+Status: Done
+
 Deliverables:
 
 - Record known-good CLI commands for `farmyard-mouser`, `curious-patrol`, and `nap-watch`.
@@ -336,6 +338,8 @@ Exit criteria:
 
 Priority: `P1`
 
+Status: Done
+
 Deliverables:
 
 - Add `src/caz_body.[ch]` with normalized body sensors, 16 joint targets, pose-frame buffer, active skill, skill status, and reflex state.
@@ -351,6 +355,8 @@ Exit criteria:
 ### Cycle 2: New Ports And Loader Symbols
 
 Priority: `P1`
+
+Status: Done
 
 Deliverables:
 
@@ -369,6 +375,8 @@ Exit criteria:
 
 Priority: `P2`
 
+Status: Done
+
 Deliverables:
 
 - Compute normalized `IMU_ROLL`, `IMU_PITCH`, `LIFTED`, `DROPPED`, `BATTERY`, and `TERRAIN` values in the simulator.
@@ -385,6 +393,8 @@ Exit criteria:
 ### Cycle 4: Built-In Skill MVP
 
 Priority: `P3`
+
+Status: Done
 
 Deliverables:
 
@@ -404,6 +414,8 @@ Exit criteria:
 
 Priority: `P4`
 
+Status: Done
+
 Deliverables:
 
 - Implement `JOINT_INDEX`, `JOINT_ANGLE`, and `JOINT_COMMIT`.
@@ -420,6 +432,8 @@ Exit criteria:
 ### Cycle 6: Cat Behaviour Program Expansion
 
 Priority: `P5`
+
+Status: Done
 
 Deliverables:
 
@@ -439,6 +453,8 @@ Exit criteria:
 
 Priority: `P6`
 
+Status: Done
+
 Deliverables:
 
 - Add `skills/` with `.cazskill` files for balance, rest, sit, walk, crawl, pounce, sniff, and scratch.
@@ -455,6 +471,8 @@ Exit criteria:
 ### Cycle 8: URDF And STL Asset Pipeline
 
 Priority: `P7`
+
+Status: Done
 
 Deliverables:
 
@@ -477,6 +495,8 @@ Exit criteria:
 ### Cycle 9: CazMac Body Rendering
 
 Priority: `P7`
+
+Status: Done
 
 Deliverables:
 

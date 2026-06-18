@@ -35,6 +35,56 @@ static uint8_t clamp_u8(int value)
     return (uint8_t)value;
 }
 
+static uint8_t centered_sensor(int offset)
+{
+    return clamp_u8(128 + offset);
+}
+
+static uint8_t terrain_for_scenario(CazScenario scenario)
+{
+    switch (scenario) {
+    case CAZ_SCENARIO_KITCHEN: return 1u;
+    case CAZ_SCENARIO_FARMYARD: return 2u;
+    case CAZ_SCENARIO_NIGHT_PARLOUR: return 3u;
+    case CAZ_SCENARIO_HEDGEROW: return 4u;
+    default: return 0u;
+    }
+}
+
+static int gait_pitch_offset(uint8_t gait)
+{
+    switch (gait % 6u) {
+    case 1: return 4;
+    case 2: return -10;
+    case 3: return 18;
+    case 4: return -6;
+    case 5: return 8;
+    default: return 0;
+    }
+}
+
+static uint8_t lifted_sensor(const CazDroid *droid)
+{
+    if (droid->scenario == CAZ_SCENARIO_KITCHEN &&
+        droid->body_ticks != 0u &&
+        (droid->body_ticks % 41u) == 0u &&
+        droid->ear_pattern == 2u) {
+        return 255u;
+    }
+    return 0u;
+}
+
+static uint8_t dropped_sensor(const CazDroid *droid)
+{
+    if (droid->scenario == CAZ_SCENARIO_HEDGEROW &&
+        droid->body_ticks != 0u &&
+        (droid->body_ticks % 7u) == 0u &&
+        droid->body.requested_gait == 3u) {
+        return 255u;
+    }
+    return 0u;
+}
+
 static int triangular_phase(uint64_t tick, int period, int peak)
 {
     int phase = (int)(tick % (uint64_t)period);
@@ -65,10 +115,38 @@ static void set_world(CazDroid *droid,
     droid->ear_pattern = clamp_u8(pattern);
 }
 
+static void sync_legacy_pose_fields(CazDroid *droid)
+{
+    droid->gait = droid->body.gait;
+    droid->head_yaw = droid->body.head_yaw;
+    droid->ear_pose = droid->body.ear_pose;
+    droid->tail_pose = droid->body.tail_pose;
+    droid->vocal = droid->body.vocal;
+    droid->eyelid = droid->body.eyelid;
+}
+
+static void update_body_sensors(CazDroid *droid)
+{
+    int yaw_offset = ((int)droid->body.requested_head_yaw - 128) / 8;
+    int gait_pitch = gait_pitch_offset(droid->body.requested_gait);
+    if (droid->body.requested_gait == 3u &&
+        (droid->body.requested_head_yaw < 40u || droid->body.requested_head_yaw > 216u)) {
+        gait_pitch += 48;
+    }
+    caz_body_set_normalized_sensors(&droid->body,
+                                    centered_sensor(yaw_offset),
+                                    centered_sensor(gait_pitch),
+                                    lifted_sensor(droid),
+                                    dropped_sensor(droid),
+                                    clamp_u8(droid->energy),
+                                    terrain_for_scenario(droid->scenario));
+    caz_body_apply_reflexes(&droid->body);
+}
+
 static void update_pose(CazDroid *droid)
 {
-    int gait = droid->gait % 6u;
-    int yaw = (int)droid->head_yaw - 128;
+    int gait = droid->body.gait % 6u;
+    int yaw = (int)droid->body.head_yaw - 128;
 
     if (gait == 1 || gait == 3 || gait == 5) {
         droid->heading += yaw / 32;
@@ -91,11 +169,11 @@ static void update_pose(CazDroid *droid)
         droid->energy -= 1;
         droid->comfort += 1;
     } else if (gait == 3) {
-        droid->x += (int16_t)((droid->head_yaw > 128u) ? 2 : -2);
+        droid->x += (int16_t)((droid->body.head_yaw > 128u) ? 2 : -2);
         droid->energy -= 4;
         droid->curiosity += 3;
     } else if (gait == 4) {
-        droid->x -= (int16_t)((droid->head_yaw > 128u) ? 1 : -1);
+        droid->x -= (int16_t)((droid->body.head_yaw > 128u) ? 1 : -1);
         droid->energy -= 2;
         droid->comfort -= 2;
     } else if (gait == 5) {
@@ -106,9 +184,9 @@ static void update_pose(CazDroid *droid)
         droid->comfort += 1;
     }
 
-    if (droid->vocal == 3u) {
+    if (droid->body.vocal == 3u) {
         droid->comfort += 2;
-    } else if (droid->vocal == 4u) {
+    } else if (droid->body.vocal == 4u) {
         droid->comfort -= 2;
     }
 
@@ -138,18 +216,16 @@ static void update_pose(CazDroid *droid)
 void caz_droid_init(CazDroid *droid, CazScenario scenario, uint32_t seed)
 {
     memset(droid, 0, sizeof(*droid));
+    caz_body_init(&droid->body);
     droid->scenario = scenario;
     droid->rng = seed == 0u ? 0xc0ffee11u : seed;
-    droid->gait = 0u;
-    droid->head_yaw = 128u;
-    droid->ear_pose = 1u;
-    droid->tail_pose = 2u;
-    droid->vocal = 0u;
-    droid->eyelid = 180u;
+    sync_legacy_pose_fields(droid);
     droid->energy = 210;
     droid->curiosity = 96;
     droid->comfort = 144;
     droid->heading = 0;
+    update_body_sensors(droid);
+    sync_legacy_pose_fields(droid);
 }
 
 void caz_droid_tick(CazDroid *droid)
@@ -245,11 +321,15 @@ void caz_droid_tick(CazDroid *droid)
 
     set_world(droid, light, motion, edge, colour, volume, pitch, bearing, pattern);
     update_pose(droid);
+    update_body_sensors(droid);
+    caz_body_tick(&droid->body);
+    sync_legacy_pose_fields(droid);
 }
 
 uint8_t caz_droid_read_port(void *user, uint8_t port)
 {
     CazDroid *droid = (CazDroid *)user;
+    uint8_t body_value;
     switch (port) {
     case CAZ_PORT_EYE_LUMA: return droid->eye_luma;
     case CAZ_PORT_EYE_MOTION: return droid->eye_motion;
@@ -259,34 +339,17 @@ uint8_t caz_droid_read_port(void *user, uint8_t port)
     case CAZ_PORT_EAR_PITCH: return droid->ear_pitch;
     case CAZ_PORT_EAR_BEARING: return droid->ear_bearing;
     case CAZ_PORT_EAR_PATTERN: return droid->ear_pattern;
-    default: return 0xffu;
+    default:
+        return caz_body_read_port(&droid->body, port, &body_value) ? body_value : 0xffu;
     }
 }
 
 void caz_droid_write_port(void *user, uint8_t port, uint8_t value)
 {
     CazDroid *droid = (CazDroid *)user;
-    switch (port) {
-    case CAZ_PORT_GAIT:
-        droid->gait = (uint8_t)(value % 6u);
-        break;
-    case CAZ_PORT_HEAD_YAW:
-        droid->head_yaw = value;
-        break;
-    case CAZ_PORT_EAR_POSE:
-        droid->ear_pose = (uint8_t)(value % 5u);
-        break;
-    case CAZ_PORT_TAIL_POSE:
-        droid->tail_pose = (uint8_t)(value % 9u);
-        break;
-    case CAZ_PORT_VOCAL:
-        droid->vocal = (uint8_t)(value % 6u);
-        break;
-    case CAZ_PORT_EYELID:
-        droid->eyelid = value;
-        break;
-    default:
-        break;
+    if (caz_body_write_port(&droid->body, port, value)) {
+        update_body_sensors(droid);
+        sync_legacy_pose_fields(droid);
     }
 }
 
@@ -296,6 +359,7 @@ void caz_droid_print_report(const CazDroid *droid, FILE *out)
             "tick=%04llu %-14s eyes{luma=%3u motion=%3u edge=%3u temp=%3u} "
             "ears{vol=%3u pitch=%3u bearing=%3u pattern=%-9s} "
             "pose{gait=%-8s head=%3u ears=%-8s tail=%-9s vocal=%-7s eyelid=%3u} "
+            "body{imu=(%3u,%3u) lifted=%3u dropped=%3u battery=%3u terrain=%u skill=%-8s status=%-7s reflex=%-11s joint[%02u:%-14s]=%3u->%3u pose[%02u]=%3u} "
             "state{energy=%3d curiosity=%3d comfort=%3d xy=(%d,%d)}\n",
             (unsigned long long)droid->body_ticks,
             caz_scenario_name(droid->scenario),
@@ -313,6 +377,21 @@ void caz_droid_print_report(const CazDroid *droid, FILE *out)
             caz_tail_pose_name(droid->tail_pose),
             caz_vocal_name(droid->vocal),
             droid->eyelid,
+            droid->body.imu_roll,
+            droid->body.imu_pitch,
+            droid->body.lifted,
+            droid->body.dropped,
+            droid->body.battery,
+            droid->body.terrain,
+            caz_body_skill_name(droid->body.active_skill),
+            caz_body_skill_status_name(droid->body.skill_status),
+            caz_body_reflex_state_name(droid->body.reflex_state),
+            droid->body.selected_joint,
+            caz_body_joint_name(droid->body.selected_joint),
+            droid->body.joint_values[droid->body.selected_joint],
+            droid->body.joint_targets[droid->body.selected_joint],
+            droid->body.pose_frame_index,
+            droid->body.pose_frame[droid->body.pose_frame_index],
             droid->energy,
             droid->curiosity,
             droid->comfort,
@@ -363,12 +442,30 @@ const char *caz_port_name(uint8_t port)
     case CAZ_PORT_EAR_PITCH: return "EAR_PITCH";
     case CAZ_PORT_EAR_BEARING: return "EAR_BEARING";
     case CAZ_PORT_EAR_PATTERN: return "EAR_PATTERN";
+    case CAZ_PORT_IMU_ROLL: return "IMU_ROLL";
+    case CAZ_PORT_IMU_PITCH: return "IMU_PITCH";
+    case CAZ_PORT_LIFTED: return "LIFTED";
+    case CAZ_PORT_DROPPED: return "DROPPED";
+    case CAZ_PORT_BATTERY: return "BATTERY";
+    case CAZ_PORT_TERRAIN: return "TERRAIN";
     case CAZ_PORT_GAIT: return "GAIT";
     case CAZ_PORT_HEAD_YAW: return "HEAD_YAW";
     case CAZ_PORT_EAR_POSE: return "EAR_POSE";
     case CAZ_PORT_TAIL_POSE: return "TAIL_POSE";
     case CAZ_PORT_VOCAL: return "VOCAL";
     case CAZ_PORT_EYELID: return "EYELID";
+    case CAZ_PORT_SKILL: return "SKILL";
+    case CAZ_PORT_SKILL_ARG: return "SKILL_ARG";
+    case CAZ_PORT_SKILL_STATUS: return "SKILL_STATUS";
+    case CAZ_PORT_REFLEX_STATE: return "REFLEX_STATE";
+    case CAZ_PORT_JOINT_INDEX: return "JOINT_INDEX";
+    case CAZ_PORT_JOINT_ANGLE: return "JOINT_ANGLE";
+    case CAZ_PORT_JOINT_COMMIT: return "JOINT_COMMIT";
+    case CAZ_PORT_POSE_FRAME_INDEX: return "POSE_FRAME_INDEX";
+    case CAZ_PORT_POSE_FRAME_VALUE: return "POSE_FRAME_VALUE";
+    case CAZ_PORT_POSE_FRAME_FLAGS: return "POSE_FRAME_FLAGS";
+    case CAZ_PORT_POSE_FRAME_TIME: return "POSE_FRAME_TIME";
+    case CAZ_PORT_POSE_FRAME_COMMIT: return "POSE_FRAME_COMMIT";
     default: return "UNKNOWN";
     }
 }

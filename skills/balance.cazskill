@@ -1,0 +1,26 @@
+skill=balance
+name=Balance Reflex
+gait=2
+head_yaw=128
+ear_pose=2
+tail_pose=5
+vocal=0
+eyelid=224
+
+[frame]
+head-yaw=128
+head-pitch=128
+left-shoulder=116
+right-shoulder=140
+left-hip=116
+right-hip=140
+tail-base=128
+tail-tip=128
+spine-height=118
+spine-curve=128
+left-knee=116
+right-knee=140
+left-elbow=116
+right-elbow=140
+paw-spread=136
+body-roll=128

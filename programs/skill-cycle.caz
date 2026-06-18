@@ -1,0 +1,47 @@
+; name: skill-cycle
+; description: cycles rest, sit, walk, crawl, pounce, sniff, and scratch built-in skills by symbol
+
+loop:
+rest:
+    LD   A,SKILL_REST
+    OUT  (SKILL),A
+    CALL pause
+
+sit:
+    LD   A,SKILL_SIT
+    OUT  (SKILL),A
+    CALL pause
+
+walk:
+    LD   A,SKILL_WALK
+    OUT  (SKILL),A
+    CALL pause
+
+crawl:
+    LD   A,SKILL_CRAWL
+    OUT  (SKILL),A
+    CALL pause
+
+pounce:
+    LD   A,SKILL_POUNCE
+    OUT  (SKILL),A
+    CALL pause
+
+sniff:
+    LD   A,SKILL_SNIFF
+    OUT  (SKILL),A
+    CALL pause
+
+scratch:
+    LD   A,SKILL_SCRATCH
+    OUT  (SKILL),A
+    CALL pause
+
+    JP   loop
+
+pause:
+    LD   B,64
+wait:
+    DEC  B
+    JP   NZ,wait
+    RET

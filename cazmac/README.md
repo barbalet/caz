@@ -24,9 +24,26 @@ xcodebuild -project cazmac/cazmac.xcodeproj -target cazmac -configuration Debug 
 
 - SwiftUI owns the development surface and controls.
 - Metal renders the droid, sensor rays, body pose, tail, ears, eyes, and farmyard floor.
+- The renderer uses `CazRig.generated.swift`, produced from `Assets/ThirdParty/OpenCat/simple-opencat-reference.urdf`, for link sizes, joint origins, axes, and the Caz 16-DOF joint map.
 - The Caz C runtime remains the behavioural source of truth.
+- CazMac snapshots include active skill, reflex state, normalized body sensors, and all 16 body joint values.
 - The bridge header imports `caz_cpu.h`, `caz_droid.h`, and `caz_loader.h`.
 - The `.caz` files from `../programs` are included as app resources and loaded by the C loader.
+
+## Rig And Asset Pipeline
+
+The asset pipeline lives under `Assets/`:
+
+- `ThirdParty/OpenCat/simple-opencat-reference.urdf` is the local OpenCat-style reference rig used for pipeline development.
+- `Tools/GenerateRig.swift` converts the URDF into `cazmac/CazRig.generated.swift`.
+- `Assets/Generated/nybble-optional-meshes.json` records optional Nybble attachment candidates, disabled until source and license notes are pinned down.
+- The procedural rig renderer is the fallback body and does not depend on STL files.
+
+Regenerate the rig with:
+
+```sh
+swift Tools/GenerateRig.swift Assets/ThirdParty/OpenCat/simple-opencat-reference.urdf cazmac/CazRig.generated.swift
+```
 
 ## App Icon
 

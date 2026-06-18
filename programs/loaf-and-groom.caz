@@ -1,0 +1,138 @@
+; name: loaf-and-groom
+; description: quiet indoor routine that rests, stretches after motion, and grooms when the room feels safe
+
+loop:
+    IN   A,(BATTERY)
+    CP   56
+    JP   C,fatigue
+
+    IN   A,(DROPPED)
+    CP   1
+    JP   NC,recover
+
+    IN   A,(LIFTED)
+    CP   1
+    JP   NC,recover
+
+    IN   A,(EAR_VOLUME)
+    CP   188
+    JP   NC,startle
+
+    IN   A,(EYE_MOTION)
+    CP   150
+    JP   NC,stretch
+
+    IN   A,(EAR_PATTERN)
+    CP   HUMAN
+    JP   Z,greet
+
+    IN   A,(EYE_LUMA)
+    CP   48
+    JP   C,loaf
+
+groom:
+    LD   A,SKILL_GROOM
+    OUT  (SKILL),A
+    LD   A,EAR_NEUTRAL
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_CURL
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_PURR
+    OUT  (VOCAL),A
+    LD   A,132
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+loaf:
+    LD   A,SKILL_REST
+    OUT  (SKILL),A
+    LD   A,EAR_SWIVEL
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_WRAP
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_PURR
+    OUT  (VOCAL),A
+    LD   A,72
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+stretch:
+    LD   A,SKILL_STRETCH
+    OUT  (SKILL),A
+    LD   A,EAR_FORWARD
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_FLAG
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_MRRP
+    OUT  (VOCAL),A
+    LD   A,188
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+greet:
+    LD   A,SKILL_SNIFF
+    OUT  (SKILL),A
+    LD   A,128
+    OUT  (HEAD_YAW),A
+    LD   A,EAR_SCAN
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_FLAG
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_MEOW
+    OUT  (VOCAL),A
+    LD   A,166
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+startle:
+    LD   A,SKILL_STARTLE
+    OUT  (SKILL),A
+    LD   A,EAR_FLAT
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_BOTTLE
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_HISS
+    OUT  (VOCAL),A
+    LD   A,246
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+recover:
+    LD   A,SKILL_RECOVER
+    OUT  (SKILL),A
+    LD   A,EAR_FLAT
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_WRAP
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_MRRP
+    OUT  (VOCAL),A
+    LD   A,224
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+fatigue:
+    LD   A,SKILL_REST
+    OUT  (SKILL),A
+    LD   A,EAR_NEUTRAL
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_LOW
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,54
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+pause:
+    LD   B,36
+wait:
+    DEC  B
+    JP   NZ,wait
+    RET

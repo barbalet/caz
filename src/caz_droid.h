@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "caz_body.h"
+
 enum {
     CAZ_PORT_EYE_LUMA = 0x10,
     CAZ_PORT_EYE_MOTION = 0x11,
@@ -21,7 +23,29 @@ enum {
     CAZ_PORT_EAR_POSE = 0x42,
     CAZ_PORT_TAIL_POSE = 0x43,
     CAZ_PORT_VOCAL = 0x44,
-    CAZ_PORT_EYELID = 0x45
+    CAZ_PORT_EYELID = 0x45,
+
+    CAZ_PORT_IMU_ROLL = 0x30,
+    CAZ_PORT_IMU_PITCH = 0x31,
+    CAZ_PORT_LIFTED = 0x32,
+    CAZ_PORT_DROPPED = 0x33,
+    CAZ_PORT_BATTERY = 0x34,
+    CAZ_PORT_TERRAIN = 0x35,
+
+    CAZ_PORT_SKILL = 0x50,
+    CAZ_PORT_SKILL_ARG = 0x51,
+    CAZ_PORT_SKILL_STATUS = 0x52,
+    CAZ_PORT_REFLEX_STATE = 0x53,
+
+    CAZ_PORT_JOINT_INDEX = 0x60,
+    CAZ_PORT_JOINT_ANGLE = 0x61,
+    CAZ_PORT_JOINT_COMMIT = 0x62,
+
+    CAZ_PORT_POSE_FRAME_INDEX = 0x70,
+    CAZ_PORT_POSE_FRAME_VALUE = 0x71,
+    CAZ_PORT_POSE_FRAME_FLAGS = 0x72,
+    CAZ_PORT_POSE_FRAME_TIME = 0x73,
+    CAZ_PORT_POSE_FRAME_COMMIT = 0x74
 };
 
 typedef enum CazScenario {
@@ -33,6 +57,7 @@ typedef enum CazScenario {
 
 typedef struct CazDroid {
     CazScenario scenario;
+    CazBody body;
     uint32_t rng;
     uint64_t body_ticks;
 

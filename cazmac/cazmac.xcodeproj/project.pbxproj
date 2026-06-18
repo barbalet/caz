@@ -13,14 +13,17 @@
 		CAZ001000000000000000004 /* CazProgramSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000004 /* CazProgramSource.swift */; };
 		CAZ001000000000000000005 /* MetalCatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000005 /* MetalCatView.swift */; };
 		CAZ001000000000000000006 /* CatDroidRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000006 /* CatDroidRenderer.swift */; };
+		CAZ001000000000000000016 /* CazRig.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000022 /* CazRig.generated.swift */; };
 		CAZ001000000000000000007 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000007 /* Shaders.metal */; };
 		CAZ001000000000000000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000008 /* Assets.xcassets */; };
 		CAZ001000000000000000009 /* caz_cpu.c in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000009 /* caz_cpu.c */; };
 		CAZ001000000000000000010 /* caz_droid.c in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000010 /* caz_droid.c */; };
 		CAZ001000000000000000011 /* caz_loader.c in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000011 /* caz_loader.c */; };
+		CAZ001000000000000000015 /* caz_body.c in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000020 /* caz_body.c */; };
 		CAZ001000000000000000012 /* curious-patrol.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000017 /* curious-patrol.caz */; };
 		CAZ001000000000000000013 /* nap-watch.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000018 /* nap-watch.caz */; };
 		CAZ001000000000000000014 /* farmyard-mouser.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000019 /* farmyard-mouser.caz */; };
+		CAZ001000000000000000017 /* skill-cycle.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000023 /* skill-cycle.caz */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +33,7 @@
 		CAZ000000000000000000004 /* CazProgramSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CazProgramSource.swift; sourceTree = "<group>"; };
 		CAZ000000000000000000005 /* MetalCatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalCatView.swift; sourceTree = "<group>"; };
 		CAZ000000000000000000006 /* CatDroidRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatDroidRenderer.swift; sourceTree = "<group>"; };
+		CAZ000000000000000000022 /* CazRig.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CazRig.generated.swift; sourceTree = "<group>"; };
 		CAZ000000000000000000007 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		CAZ000000000000000000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CAZ000000000000000000009 /* caz_cpu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_cpu.c; path = ../src/caz_cpu.c; sourceTree = SOURCE_ROOT; };
@@ -38,11 +42,14 @@
 		CAZ000000000000000000012 /* caz_cpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_cpu.h; path = ../src/caz_cpu.h; sourceTree = SOURCE_ROOT; };
 		CAZ000000000000000000013 /* caz_droid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_droid.h; path = ../src/caz_droid.h; sourceTree = SOURCE_ROOT; };
 		CAZ000000000000000000014 /* caz_loader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_loader.h; path = ../src/caz_loader.h; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000020 /* caz_body.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_body.c; path = ../src/caz_body.c; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000021 /* caz_body.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_body.h; path = ../src/caz_body.h; sourceTree = SOURCE_ROOT; };
 		CAZ000000000000000000015 /* cazmac-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "cazmac-Bridging-Header.h"; sourceTree = "<group>"; };
 		CAZ000000000000000000016 /* cazmac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = cazmac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CAZ000000000000000000017 /* curious-patrol.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "curious-patrol.caz"; path = "../programs/curious-patrol.caz"; sourceTree = SOURCE_ROOT; };
 		CAZ000000000000000000018 /* nap-watch.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "nap-watch.caz"; path = "../programs/nap-watch.caz"; sourceTree = SOURCE_ROOT; };
 		CAZ000000000000000000019 /* farmyard-mouser.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "farmyard-mouser.caz"; path = "../programs/farmyard-mouser.caz"; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000023 /* skill-cycle.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "skill-cycle.caz"; path = "../programs/skill-cycle.caz"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +82,7 @@
 				CAZ000000000000000000004 /* CazProgramSource.swift */,
 				CAZ000000000000000000005 /* MetalCatView.swift */,
 				CAZ000000000000000000006 /* CatDroidRenderer.swift */,
+				CAZ000000000000000000022 /* CazRig.generated.swift */,
 				CAZ000000000000000000007 /* Shaders.metal */,
 				CAZ000000000000000000008 /* Assets.xcassets */,
 				CAZ000000000000000000015 /* cazmac-Bridging-Header.h */,
@@ -87,6 +95,8 @@
 			children = (
 				CAZ000000000000000000009 /* caz_cpu.c */,
 				CAZ000000000000000000012 /* caz_cpu.h */,
+				CAZ000000000000000000020 /* caz_body.c */,
+				CAZ000000000000000000021 /* caz_body.h */,
 				CAZ000000000000000000010 /* caz_droid.c */,
 				CAZ000000000000000000013 /* caz_droid.h */,
 				CAZ000000000000000000011 /* caz_loader.c */,
@@ -101,6 +111,7 @@
 				CAZ000000000000000000017 /* curious-patrol.caz */,
 				CAZ000000000000000000018 /* nap-watch.caz */,
 				CAZ000000000000000000019 /* farmyard-mouser.caz */,
+				CAZ000000000000000000023 /* skill-cycle.caz */,
 			);
 			name = "Caz Programs";
 			sourceTree = "<group>";
@@ -175,6 +186,7 @@
 				CAZ001000000000000000012 /* curious-patrol.caz in Resources */,
 				CAZ001000000000000000013 /* nap-watch.caz in Resources */,
 				CAZ001000000000000000014 /* farmyard-mouser.caz in Resources */,
+				CAZ001000000000000000017 /* skill-cycle.caz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -191,8 +203,10 @@
 				CAZ001000000000000000004 /* CazProgramSource.swift in Sources */,
 				CAZ001000000000000000005 /* MetalCatView.swift in Sources */,
 				CAZ001000000000000000006 /* CatDroidRenderer.swift in Sources */,
+				CAZ001000000000000000016 /* CazRig.generated.swift in Sources */,
 				CAZ001000000000000000007 /* Shaders.metal in Sources */,
 				CAZ001000000000000000009 /* caz_cpu.c in Sources */,
+				CAZ001000000000000000015 /* caz_body.c in Sources */,
 				CAZ001000000000000000010 /* caz_droid.c in Sources */,
 				CAZ001000000000000000011 /* caz_loader.c in Sources */,
 			);

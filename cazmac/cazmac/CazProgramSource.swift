@@ -9,7 +9,7 @@ extension CazProgramChoice {
         return ["; missing bundled source: \(fileBaseName).caz"]
     }
 
-    func highlightLine(for gait: UInt8, pattern: UInt8) -> Int? {
+    func highlightLine(for gait: UInt8, pattern: UInt8, skill: UInt8) -> Int? {
         let label: String?
         switch self {
         case .curiousPatrol:
@@ -32,6 +32,17 @@ extension CazProgramChoice {
             else if pattern == 3 { label = "weather" }
             else if gait == 1 { label = "patrol" }
             else { label = nil }
+        case .skillCycle:
+            switch skill {
+            case 2: label = "rest"
+            case 3: label = "sit"
+            case 4: label = "walk"
+            case 5: label = "crawl"
+            case 6: label = "pounce"
+            case 7: label = "sniff"
+            case 8: label = "scratch"
+            default: label = "walk"
+            }
         }
 
         guard let label else {

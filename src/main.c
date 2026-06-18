@@ -11,6 +11,7 @@ typedef struct Options {
     CazProgramKind program;
     char program_path[CAZ_PROGRAM_PATH_MAX];
     char program_dir[CAZ_PROGRAM_PATH_MAX];
+    char skills_dir[CAZ_PROGRAM_PATH_MAX];
     bool custom_program_path;
     CazScenario scenario;
     uint32_t seed;
@@ -29,6 +30,7 @@ static void print_usage(FILE *out, const char *argv0)
             "Options:\n"
             "  --program NAME|PATH         curious-patrol, nap-watch, farmyard-mouser, or a .caz file\n"
             "  --program-dir PATH          directory for named .caz programs (default: programs)\n"
+            "  --skills-dir PATH           directory for .cazskill skill overrides (default: skills)\n"
             "  --scenario NAME             kitchen, farmyard, night-parlour, hedgerow\n"
             "  --steps N                   body ticks to simulate (default: 64)\n"
             "  --instructions-per-tick N   Caz CPU instructions per body tick (default: 48)\n"
@@ -68,6 +70,7 @@ static bool parse_args(int argc, char **argv, Options *options)
     options->program = CAZ_PROGRAM_FARMYARD_MOUSER;
     options->program_path[0] = '\0';
     snprintf(options->program_dir, sizeof(options->program_dir), "%s", "programs");
+    snprintf(options->skills_dir, sizeof(options->skills_dir), "%s", "skills");
     options->custom_program_path = false;
     options->scenario = CAZ_SCENARIO_FARMYARD;
     options->seed = 0u;
@@ -107,6 +110,13 @@ static bool parse_args(int argc, char **argv, Options *options)
                 return false;
             }
             snprintf(options->program_dir, sizeof(options->program_dir), "%s", argv[i]);
+        } else if (strcmp(argv[i], "--skills-dir") == 0 && i + 1 < argc) {
+            i++;
+            if (strlen(argv[i]) >= sizeof(options->skills_dir)) {
+                fprintf(stderr, "Skills directory path is too long: %s\n", argv[i]);
+                return false;
+            }
+            snprintf(options->skills_dir, sizeof(options->skills_dir), "%s", argv[i]);
         } else if (strcmp(argv[i], "--scenario") == 0 && i + 1 < argc) {
             i++;
             if (!caz_scenario_parse(argv[i], &options->scenario)) {
@@ -152,12 +162,18 @@ int main(int argc, char **argv)
     CazDroid droid;
     CazCpu cpu;
     CazProgramImage image;
+    char skill_error[CAZ_LOADER_ERROR_MAX];
     uint64_t step;
     int status = 0;
 
     if (!parse_args(argc, argv, &options)) {
         print_usage(stderr, argv[0]);
         return 2;
+    }
+
+    if (!caz_body_load_skill_dir(options.skills_dir, skill_error, sizeof(skill_error))) {
+        fprintf(stderr, "Failed to load Caz skills from %s\n%s\n", options.skills_dir, skill_error);
+        return 1;
     }
 
     caz_droid_init(&droid, options.scenario, options.seed);
