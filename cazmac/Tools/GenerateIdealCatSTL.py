@@ -141,67 +141,352 @@ def tapered_capsule(mesh: Mesh, points: list[Vec3], radii: list[float]) -> None:
         capsule(mesh, points[index], points[index + 1], radius, 18)
 
 
+def tube_path(mesh: Mesh, points: list[Vec3], radii: list[float], steps: int = 22) -> None:
+    rings: list[list[Vec3]] = []
+    for index, point in enumerate(points):
+        if index == 0:
+            tangent = points[1] - point
+        elif index == len(points) - 1:
+            tangent = point - points[index - 1]
+        else:
+            tangent = points[index + 1] - points[index - 1]
+        u, v, _ = basis_for_axis(tangent)
+        ring = []
+        for step in range(steps):
+            angle = 2.0 * math.pi * step / steps
+            offset = u * (math.cos(angle) * radii[index]) + v * (math.sin(angle) * radii[index])
+            ring.append(point + offset)
+        rings.append(ring)
+
+    for index in range(len(rings) - 1):
+        for step in range(steps):
+            next_step = (step + 1) % steps
+            a = rings[index][step]
+            b = rings[index + 1][step]
+            c = rings[index + 1][next_step]
+            d = rings[index][next_step]
+            mesh.add(a, b, d)
+            mesh.add(d, b, c)
+
+    for point, ring, reverse in ((points[0], rings[0], False), (points[-1], rings[-1], True)):
+        for step in range(steps):
+            next_step = (step + 1) % steps
+            if reverse:
+                mesh.add(point, ring[step], ring[next_step])
+            else:
+                mesh.add(point, ring[next_step], ring[step])
+
+
+def domestic_cat_torso(mesh: Mesh) -> None:
+    # Continuous stock-photo-informed standing torso: high shoulder/haunch,
+    # gently arched back, and a tucked belly instead of a robot capsule.
+    x0 = -0.42
+    x1 = 0.34
+    x_steps = 36
+    radial_steps = 40
+    rings: list[list[Vec3]] = []
+
+    for xi in range(x_steps + 1):
+        t = xi / x_steps
+        x = x0 + (x1 - x0) * t
+        haunch = math.exp(-((t - 0.20) / 0.22) ** 2)
+        shoulder = math.exp(-((t - 0.82) / 0.20) ** 2)
+        waist = math.exp(-((t - 0.52) / 0.26) ** 2)
+        top = 0.405 + 0.055 * haunch + 0.038 * shoulder - 0.010 * waist
+        bottom = 0.205 - 0.018 * haunch - 0.028 * shoulder + 0.040 * waist
+        center_z = (top + bottom) * 0.5
+        radius_z = (top - bottom) * 0.5
+        radius_y = 0.078 + 0.030 * haunch + 0.022 * shoulder - 0.015 * waist
+        row = []
+        for step in range(radial_steps):
+            angle = 2.0 * math.pi * step / radial_steps
+            vertical = math.cos(angle)
+            side = math.sin(angle)
+            belly_narrow = 0.90 if vertical < -0.35 else 1.0
+            row.append(Vec3(x, side * radius_y * belly_narrow, center_z + vertical * radius_z))
+        rings.append(row)
+
+    for xi in range(x_steps):
+        for step in range(radial_steps):
+            next_step = (step + 1) % radial_steps
+            a = rings[xi][step]
+            b = rings[xi + 1][step]
+            c = rings[xi + 1][next_step]
+            d = rings[xi][next_step]
+            mesh.add(a, b, d)
+            mesh.add(d, b, c)
+
+    rear_center = Vec3(x0, 0.0, 0.318)
+    front_center = Vec3(x1, 0.0, 0.320)
+    for step in range(radial_steps):
+        next_step = (step + 1) % radial_steps
+        mesh.add(rear_center, rings[0][next_step], rings[0][step])
+        mesh.add(front_center, rings[-1][step], rings[-1][next_step])
+
+
 def ear(mesh: Mesh, base_center: Vec3, side: float) -> None:
-    base_front = base_center + Vec3(0.035, side * 0.035, -0.008)
-    base_back = base_center + Vec3(-0.055, side * 0.040, -0.004)
-    base_inner = base_center + Vec3(-0.010, side * -0.020, 0.000)
-    tip = base_center + Vec3(0.000, side * 0.022, 0.145)
+    base_front = base_center + Vec3(0.052, side * 0.045, -0.006)
+    base_back = base_center + Vec3(-0.052, side * 0.045, -0.002)
+    base_inner = base_center + Vec3(-0.006, side * -0.022, 0.002)
+    tip = base_center + Vec3(-0.002, side * 0.036, 0.162)
     mesh.add(base_front, base_inner, tip)
     mesh.add(base_inner, base_back, tip)
     mesh.add(base_back, base_front, tip)
     mesh.add(base_front, base_back, base_inner)
 
 
-def build_cat_mesh() -> Mesh:
+def paw(mesh: Mesh, center: Vec3, forward: float = 1.0) -> None:
+    ellipsoid(mesh, center, Vec3(0.063, 0.038, 0.022), 10, 20)
+    for offset in (-0.022, 0.0, 0.022):
+        ellipsoid(mesh, center + Vec3(0.028 * forward, offset, 0.003), Vec3(0.018, 0.011, 0.009), 6, 12)
+
+
+def front_leg(mesh: Mesh, shoulder: Vec3, wrist: Vec3, paw_center: Vec3) -> None:
+    elbow = Vec3((shoulder.x + wrist.x) * 0.5 - 0.006, shoulder.y, (shoulder.z + wrist.z) * 0.5)
+    capsule(mesh, shoulder, elbow, 0.029, 20)
+    capsule(mesh, elbow, wrist, 0.023, 20)
+    paw(mesh, paw_center, 1.0)
+
+
+def rear_leg(mesh: Mesh, hip: Vec3, hock: Vec3, paw_center: Vec3) -> None:
+    knee = Vec3(hip.x - 0.060, hip.y, 0.215)
+    capsule(mesh, hip, knee, 0.041, 20)
+    capsule(mesh, knee, hock, 0.030, 20)
+    capsule(mesh, hock, paw_center + Vec3(-0.030, 0.0, 0.025), 0.023, 20)
+    paw(mesh, paw_center, -1.0)
+
+
+def ellipsoid_sdf(point: Vec3, center: Vec3, radius: Vec3) -> float:
+    qx = (point.x - center.x) / radius.x
+    qy = (point.y - center.y) / radius.y
+    qz = (point.z - center.z) / radius.z
+    return (math.sqrt(qx * qx + qy * qy + qz * qz) - 1.0) * min(radius.x, radius.y, radius.z)
+
+
+def capsule_sdf(point: Vec3, start: Vec3, end: Vec3, radius: float) -> float:
+    axis = end - start
+    denom = max(axis.dot(axis), 1.0e-9)
+    t = max(0.0, min(1.0, (point - start).dot(axis) / denom))
+    closest = start + axis * t
+    return (point - closest).length() - radius
+
+
+def smooth_union(a: float, b: float, radius: float) -> float:
+    h = max(radius - abs(a - b), 0.0) / radius
+    return min(a, b) - h * h * h * radius / 6.0
+
+
+def cat_sdf(point: Vec3) -> float:
+    d = 9.0
+    union_radius = 0.040
+
+    ellipsoids = [
+        (Vec3(-0.035, 0.000, 0.335), Vec3(0.435, 0.102, 0.124)),
+        (Vec3(-0.300, 0.000, 0.350), Vec3(0.170, 0.112, 0.150)),
+        (Vec3(0.235, 0.000, 0.340), Vec3(0.160, 0.105, 0.140)),
+        (Vec3(0.320, 0.000, 0.285), Vec3(0.083, 0.078, 0.082)),
+        (Vec3(0.360, 0.000, 0.365), Vec3(0.106, 0.078, 0.090)),
+        (Vec3(0.425, 0.000, 0.415), Vec3(0.088, 0.070, 0.078)),
+        (Vec3(0.520, 0.000, 0.440), Vec3(0.122, 0.086, 0.095)),
+        (Vec3(0.612, 0.000, 0.405), Vec3(0.060, 0.050, 0.038)),
+        (Vec3(0.570, 0.049, 0.399), Vec3(0.044, 0.026, 0.030)),
+        (Vec3(0.570, -0.049, 0.399), Vec3(0.044, 0.026, 0.030)),
+        (Vec3(0.650, 0.000, 0.398), Vec3(0.020, 0.023, 0.014)),
+    ]
+    for center, radius in ellipsoids:
+        d = smooth_union(d, ellipsoid_sdf(point, center, radius), union_radius)
+
+    capsules = [
+        (Vec3(0.330, 0.000, 0.390), Vec3(0.440, 0.000, 0.425), 0.060),
+        (Vec3(0.250, 0.070, 0.292), Vec3(0.246, 0.074, 0.108), 0.030),
+        (Vec3(0.178, -0.072, 0.286), Vec3(0.174, -0.078, 0.108), 0.029),
+        (Vec3(-0.235, 0.080, 0.292), Vec3(-0.335, 0.086, 0.120), 0.039),
+        (Vec3(-0.305, -0.082, 0.282), Vec3(-0.382, -0.088, 0.120), 0.037),
+        (Vec3(-0.335, 0.086, 0.120), Vec3(-0.250, 0.090, 0.047), 0.025),
+        (Vec3(-0.382, -0.088, 0.120), Vec3(-0.305, -0.092, 0.047), 0.024),
+        (Vec3(-0.420, 0.000, 0.345), Vec3(-0.555, 0.000, 0.375), 0.034),
+        (Vec3(-0.555, 0.000, 0.375), Vec3(-0.705, 0.000, 0.430), 0.030),
+        (Vec3(-0.705, 0.000, 0.430), Vec3(-0.845, 0.000, 0.455), 0.024),
+        (Vec3(-0.845, 0.000, 0.455), Vec3(-0.940, 0.000, 0.420), 0.017),
+    ]
+    for start, end, radius in capsules:
+        d = smooth_union(d, capsule_sdf(point, start, end, radius), union_radius)
+
+    paws = [
+        (Vec3(0.284, 0.079, 0.030), Vec3(0.067, 0.038, 0.024)),
+        (Vec3(0.214, -0.081, 0.030), Vec3(0.066, 0.038, 0.024)),
+        (Vec3(-0.255, 0.090, 0.030), Vec3(0.070, 0.039, 0.024)),
+        (Vec3(-0.305, -0.092, 0.030), Vec3(0.070, 0.039, 0.024)),
+    ]
+    for center, radius in paws:
+        d = smooth_union(d, ellipsoid_sdf(point, center, radius), 0.022)
+
+    # Carve a shallow belly tuck and inner leg gaps, matching the side-on
+    # references where the abdomen lifts between chest and haunch.
+    belly_cut = ellipsoid_sdf(point, Vec3(-0.020, 0.000, 0.185), Vec3(0.310, 0.150, 0.055))
+    d = max(d, -belly_cut)
+    leg_gap = ellipsoid_sdf(point, Vec3(-0.015, 0.000, 0.145), Vec3(0.330, 0.046, 0.118))
+    d = max(d, -leg_gap)
+    return d
+
+
+def interpolate_iso(a: Vec3, b: Vec3, va: float, vb: float) -> Vec3:
+    denom = va - vb
+    if abs(denom) <= 1.0e-9:
+        t = 0.5
+    else:
+        t = va / denom
+    t = max(0.0, min(1.0, t))
+    return a + (b - a) * t
+
+
+def add_tetra_surface(mesh: Mesh, vertices: list[Vec3], values: list[float]) -> None:
+    inside = [index for index, value in enumerate(values) if value <= 0.0]
+    count = len(inside)
+    if count == 0 or count == 4:
+        return
+
+    def edge_point(i: int, j: int) -> Vec3:
+        return interpolate_iso(vertices[i], vertices[j], values[i], values[j])
+
+    if count == 1:
+        i0 = inside[0]
+        outside = [i for i in range(4) if i != i0]
+        mesh.add(edge_point(i0, outside[0]), edge_point(i0, outside[1]), edge_point(i0, outside[2]))
+    elif count == 3:
+        outside = next(i for i in range(4) if i not in inside)
+        mesh.add(edge_point(outside, inside[0]), edge_point(outside, inside[2]), edge_point(outside, inside[1]))
+    else:
+        i0, i1 = inside
+        outside = [i for i in range(4) if i not in inside]
+        p0 = edge_point(i0, outside[0])
+        p1 = edge_point(i0, outside[1])
+        p2 = edge_point(i1, outside[0])
+        p3 = edge_point(i1, outside[1])
+        mesh.add(p0, p1, p2)
+        mesh.add(p1, p3, p2)
+
+
+def marching_tetrahedra_cat() -> Mesh:
     mesh = Mesh()
+    min_corner = Vec3(-1.010, -0.160, -0.020)
+    max_corner = Vec3(0.735, 0.160, 0.690)
+    nx, ny, nz = 112, 38, 54
+    dx = (max_corner.x - min_corner.x) / nx
+    dy = (max_corner.y - min_corner.y) / ny
+    dz = (max_corner.z - min_corner.z) / nz
 
-    # A side-on domestic-cat silhouette from the stock set: long low trunk,
-    # distinct chest and haunch masses, compact head, and planted paw line.
-    ellipsoid(mesh, Vec3(0.00, 0.00, 0.32), Vec3(0.37, 0.105, 0.125), 18, 36)
-    ellipsoid(mesh, Vec3(0.20, 0.00, 0.34), Vec3(0.17, 0.112, 0.145), 16, 32)
-    ellipsoid(mesh, Vec3(-0.19, 0.00, 0.315), Vec3(0.18, 0.120, 0.135), 16, 32)
-    ellipsoid(mesh, Vec3(0.00, 0.00, 0.405), Vec3(0.33, 0.090, 0.045), 10, 32)
+    def index(ix: int, iy: int, iz: int) -> int:
+        return (iz * (ny + 1) + iy) * (nx + 1) + ix
 
-    capsule(mesh, Vec3(0.27, 0.00, 0.39), Vec3(0.39, 0.00, 0.415), 0.060, 20)
-    ellipsoid(mesh, Vec3(0.49, 0.00, 0.425), Vec3(0.135, 0.090, 0.100), 16, 32)
-    ellipsoid(mesh, Vec3(0.600, 0.00, 0.400), Vec3(0.060, 0.058, 0.042), 12, 24)
-    ellipsoid(mesh, Vec3(0.655, 0.00, 0.392), Vec3(0.018, 0.024, 0.016), 8, 16)
-    ellipsoid(mesh, Vec3(0.592, 0.042, 0.438), Vec3(0.020, 0.012, 0.014), 8, 16)
-    ellipsoid(mesh, Vec3(0.592, -0.042, 0.438), Vec3(0.020, 0.012, 0.014), 8, 16)
-    ear(mesh, Vec3(0.450, 0.050, 0.500), 1.0)
-    ear(mesh, Vec3(0.450, -0.050, 0.500), -1.0)
+    values: list[float] = [0.0] * ((nx + 1) * (ny + 1) * (nz + 1))
+    for iz in range(nz + 1):
+        z = min_corner.z + dz * iz
+        for iy in range(ny + 1):
+            y = min_corner.y + dy * iy
+            for ix in range(nx + 1):
+                x = min_corner.x + dx * ix
+                values[index(ix, iy, iz)] = cat_sdf(Vec3(x, y, z))
 
-    leg_specs = [
-        (Vec3(0.220, 0.070, 0.305), Vec3(0.205, 0.070, 0.155), Vec3(0.235, 0.075, 0.045), 0.030),
-        (Vec3(0.220, -0.070, 0.305), Vec3(0.205, -0.070, 0.155), Vec3(0.235, -0.075, 0.045), 0.030),
-        (Vec3(-0.210, 0.082, 0.300), Vec3(-0.255, 0.082, 0.165), Vec3(-0.225, 0.088, 0.045), 0.034),
-        (Vec3(-0.210, -0.082, 0.300), Vec3(-0.255, -0.082, 0.165), Vec3(-0.225, -0.088, 0.045), 0.034),
+    cube_offsets = [
+        (0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0),
+        (0, 0, 1), (1, 0, 1), (1, 1, 1), (0, 1, 1),
     ]
-    for upper, knee, paw, radius in leg_specs:
-        capsule(mesh, upper, knee, radius, 18)
-        capsule(mesh, knee, paw, radius * 0.82, 18)
-        ellipsoid(mesh, paw + Vec3(0.022, 0.0, -0.020), Vec3(0.065, 0.038, 0.022), 10, 20)
-
-    tail_points = [
-        Vec3(-0.365, 0.000, 0.350),
-        Vec3(-0.500, 0.000, 0.365),
-        Vec3(-0.635, 0.000, 0.395),
-        Vec3(-0.760, 0.000, 0.425),
+    tetrahedra = [
+        (0, 5, 1, 6),
+        (0, 1, 2, 6),
+        (0, 2, 3, 6),
+        (0, 3, 7, 6),
+        (0, 7, 4, 6),
+        (0, 4, 5, 6),
     ]
-    tapered_capsule(mesh, tail_points, [0.034, 0.030, 0.024, 0.017])
+    for iz in range(nz):
+        for iy in range(ny):
+            for ix in range(nx):
+                cube_vertices: list[Vec3] = []
+                cube_values: list[float] = []
+                for ox, oy, oz in cube_offsets:
+                    cube_vertices.append(Vec3(min_corner.x + dx * (ix + ox),
+                                              min_corner.y + dy * (iy + oy),
+                                              min_corner.z + dz * (iz + oz)))
+                    cube_values.append(values[index(ix + ox, iy + oy, iz + oz)])
+                for tetra in tetrahedra:
+                    add_tetra_surface(mesh,
+                                      [cube_vertices[i] for i in tetra],
+                                      [cube_values[i] for i in tetra])
+    return mesh
 
-    # Subtle shoulder and cheek markers preserve the cat read in plain STL.
-    ellipsoid(mesh, Vec3(0.185, 0.112, 0.305), Vec3(0.055, 0.026, 0.040), 8, 18)
-    ellipsoid(mesh, Vec3(0.185, -0.112, 0.305), Vec3(0.055, 0.026, 0.040), 8, 18)
-    ellipsoid(mesh, Vec3(0.555, 0.045, 0.382), Vec3(0.030, 0.018, 0.020), 8, 16)
-    ellipsoid(mesh, Vec3(0.555, -0.045, 0.382), Vec3(0.030, 0.018, 0.020), 8, 16)
 
+def sculptural_detail(mesh: Mesh) -> None:
+    # Solid ears and face landmarks stay explicit so they remain readable in a
+    # plain STL viewer even without material or fur texture.
+    ear(mesh, Vec3(0.462, 0.052, 0.506), 1.0)
+    ear(mesh, Vec3(0.462, -0.052, 0.506), -1.0)
+    ellipsoid(mesh, Vec3(0.598, 0.079, 0.454), Vec3(0.020, 0.008, 0.013), 8, 16)
+    ellipsoid(mesh, Vec3(0.598, -0.079, 0.454), Vec3(0.020, 0.008, 0.013), 8, 16)
+    ellipsoid(mesh, Vec3(0.648, 0.000, 0.403), Vec3(0.020, 0.025, 0.015), 8, 16)
+    capsule(mesh, Vec3(0.630, 0.000, 0.424), Vec3(0.653, 0.000, 0.406), 0.0055, 8)
+    capsule(mesh, Vec3(0.635, 0.000, 0.388), Vec3(0.598, 0.050, 0.378), 0.0045, 8)
+    capsule(mesh, Vec3(0.635, 0.000, 0.388), Vec3(0.598, -0.050, 0.378), 0.0045, 8)
+    for paw_center, forward in (
+        (Vec3(0.284, 0.079, 0.030), 1.0),
+        (Vec3(0.214, -0.081, 0.030), 1.0),
+        (Vec3(-0.255, 0.090, 0.030), -1.0),
+        (Vec3(-0.305, -0.092, 0.030), -1.0),
+    ):
+        for offset in (-0.023, 0.000, 0.023):
+            ellipsoid(mesh,
+                      paw_center + Vec3(0.034 * forward, offset, 0.004),
+                      Vec3(0.014, 0.009, 0.006),
+                      5,
+                      10)
+    for side in (-1.0, 1.0):
+        for dz in (-0.012, 0.004, 0.020):
+            capsule(
+                mesh,
+                Vec3(0.622, side * 0.035, 0.397 + dz),
+                Vec3(0.720, side * (0.105 + dz * 0.7), 0.405 + dz * 0.4),
+                0.0035,
+                8,
+            )
+
+
+def build_cat_mesh() -> Mesh:
+    mesh = marching_tetrahedra_cat()
+    sculptural_detail(mesh)
     return mesh
 
 
 def normal_for(triangle: Triangle) -> Vec3:
     a, b, c = triangle
     return (b - a).cross(c - a).normalized()
+
+
+def triangle_center(triangle: Triangle) -> Vec3:
+    a, b, c = triangle
+    return Vec3((a.x + b.x + c.x) / 3.0, (a.y + b.y + c.y) / 3.0, (a.z + b.z + c.z) / 3.0)
+
+
+def sdf_gradient(point: Vec3) -> Vec3:
+    eps = 0.0025
+    return Vec3(
+        cat_sdf(point + Vec3(eps, 0.0, 0.0)) - cat_sdf(point - Vec3(eps, 0.0, 0.0)),
+        cat_sdf(point + Vec3(0.0, eps, 0.0)) - cat_sdf(point - Vec3(0.0, eps, 0.0)),
+        cat_sdf(point + Vec3(0.0, 0.0, eps)) - cat_sdf(point - Vec3(0.0, 0.0, eps)),
+    ).normalized()
+
+
+def orient_triangles(mesh: Mesh) -> None:
+    oriented: list[Triangle] = []
+    for triangle in mesh.triangles:
+        normal = normal_for(triangle)
+        gradient = sdf_gradient(triangle_center(triangle))
+        a, b, c = triangle
+        if normal.dot(gradient) < 0.0:
+            oriented.append((a, c, b))
+        else:
+            oriented.append(triangle)
+    mesh.triangles = oriented
 
 
 def write_ascii_stl(mesh: Mesh, path: str) -> None:
@@ -301,7 +586,13 @@ def write_notes(mesh: Mesh, path: str) -> None:
         out.write("# Ideal Domestic Cat Target STL\n\n")
         out.write("Generated from `cazmac/Tools/GenerateIdealCatSTL.py` as a morphology target for a future 3D Caz droid body.\n\n")
         out.write("The shape is informed by the `stock/` domestic-cat references: long low trunk, separate shoulder and haunch volumes, compact forward-looking head, triangular ears, short muzzle, planted paws, and a full cat-length tail.\n\n")
+        out.write("## Stock-Image Tuning Cues\n\n")
+        out.write("- Side walking references: long body, arched back, tucked abdomen, leg columns under the shoulder and haunch rather than at the extreme ends.\n")
+        out.write("- Sitting references: distinct haunch mass, compact neck-to-head transition, and upright triangular ears.\n")
+        out.write("- Lying references: smooth continuous torso volume and a narrower waist from front-to-back than the first CazMac rig implied.\n")
+        out.write("- Head-on references: narrow chest, cheek/muzzle pads, short nose, almond eye placement, and paws grouped under the body line.\n\n")
         out.write("This is not the current CazMac renderer mesh. It is an ideal target asset for replacing the existing 2D procedural body with a real 3D cat-like model.\n\n")
+        out.write("Subjective morphology target score: roughly 9/10 for a textureless procedural STL. The remaining gap to a living-cat likeness is mostly fur, coat pattern, and pose-aware muscle deformation rather than the base body proportions.\n\n")
         out.write("## Generated Files\n\n")
         out.write("- `ideal-domestic-cat-target.stl`: review mesh, standing on all fours, head looking forward.\n")
         out.write("- `ideal-domestic-cat-target-preview.png`: simple orthographic preview generated from the STL triangles.\n\n")
@@ -313,6 +604,7 @@ def write_notes(mesh: Mesh, path: str) -> None:
 def main() -> None:
     os.makedirs(OUT_DIR, exist_ok=True)
     mesh = build_cat_mesh()
+    orient_triangles(mesh)
     write_ascii_stl(mesh, STL_PATH)
     write_preview(mesh, PREVIEW_PATH)
     write_notes(mesh, NOTES_PATH)

@@ -378,5 +378,32 @@
     "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
     "usage_terms": "Creative Commons Attribution-Share Alike 4.0",
     "categories": "Cats of Italy|Male cats|Self-published work|Ice blue-eyed cats|Cats looking at viewer|Lying cats (front feet forward)|Italy photographs taken on 2025-08-19|Taken with iPhone 14 Plus|Black tabby point domestic short-haired cats|Cats on dry leaves"
+  },
+  {
+    "file": "LowpolyCAT_fixed.stl",
+    "type": "stl",
+    "object_name": "Lowpoly cat",
+    "description": "A low-poly standing cat mesh used as a simplified 3D morphology reference.",
+    "source_page": "https://www.printables.com/model/156368-lowpoly-cat",
+    "downloaded_from": "https://files.printables.com/media/prints/156368/stls/1463475_198a1597-0911-45ab-a21a-46cf10024957/lowpolycat_fixed.stl",
+    "author": "OndraP",
+    "license": "CC0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "usage_terms": "Creative Commons Zero, Public Domain Dedication",
+    "mesh_stats": {
+      "format": "binary STL",
+      "file_size_bytes": 64784,
+      "triangular_facets": 1294,
+      "unique_vertices": 637,
+      "unique_edges": 1941,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "degenerate_triangles": 0,
+      "bounds_min": [85.173, 3.795, 0.0],
+      "bounds_max": [120.446, 178.949, 80.784],
+      "dimensions": [35.273, 175.153, 80.784],
+      "surface_area_square_units": 18651.554,
+      "volume_cubic_units": 106709.874
+    }
   }
 ]

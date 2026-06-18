@@ -1,0 +1,49 @@
+LowpolyCAT_fixed.stl source information
+
+Local file
+- Path: stock/LowpolyCAT_fixed.stl
+- Format: binary STL
+- File size: 64,784 bytes
+
+Source model
+- Title: Lowpoly cat
+- Author / uploader: OndraP
+- Source page: https://www.printables.com/model/156368-lowpoly-cat
+- Printables model ID: 156368
+- Printables slug: lowpoly-cat
+- Source description: A cat made with just a few polygons.
+- Model origin note from source page: The author marked this model as their own original creation.
+- First published: 2022-03-29T21:24:40.433505+00:00
+- Updated / published version: 2022-11-30T08:19:51.591335+00:00
+
+Source file
+- Source file name: LowpolyCAT_fixed.stl
+- Printables STL file ID: 641721
+- Source file created: 2022-03-29T21:23:16.643090+00:00
+- Source file size: 64,784 bytes
+- Resolved download URL: https://files.printables.com/media/prints/156368/stls/1463475_198a1597-0911-45ab-a21a-46cf10024957/lowpolycat_fixed.stl
+- Preview image path: https://media.printables.com/media/prints/156368/stls/1463475_198a1597-0911-45ab-a21a-46cf10024957/lowpolycat_fixed_preview.png
+
+License
+- License: Creative Commons Zero / Public Domain Dedication
+- License abbreviation: CC0
+- Printables license ID: 7
+- License URL: https://creativecommons.org/publicdomain/zero/1.0/
+- License terms: The work is dedicated to the public domain under CC0. Attribution is not required, remixing is allowed, and commercial use is allowed.
+
+Local mesh inspection
+- Triangular surfaces / facets: 1,294
+- Unique vertices: 637
+- Unique edges: 1,941
+- Boundary edges: 0
+- Non-manifold edges: 0
+- Degenerate triangles: 0
+- Bounds minimum: [85.173, 3.795, 0.0]
+- Bounds maximum: [120.446, 178.949, 80.784]
+- Dimensions: [35.273, 175.153, 80.784] STL units
+- Surface area: 18,651.554 square STL units
+- Volume: 106,709.874 cubic STL units
+
+Retrieval
+- Retrieved for Caz stock references on 2026-06-18.
+- Purpose: Simplified 3D domestic-cat morphology reference for Caz droid shape work.

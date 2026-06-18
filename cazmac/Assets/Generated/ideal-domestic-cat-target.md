@@ -4,7 +4,16 @@ Generated from `cazmac/Tools/GenerateIdealCatSTL.py` as a morphology target for 
 
 The shape is informed by the `stock/` domestic-cat references: long low trunk, separate shoulder and haunch volumes, compact forward-looking head, triangular ears, short muzzle, planted paws, and a full cat-length tail.
 
+## Stock-Image Tuning Cues
+
+- Side walking references: long body, arched back, tucked abdomen, leg columns under the shoulder and haunch rather than at the extreme ends.
+- Sitting references: distinct haunch mass, compact neck-to-head transition, and upright triangular ears.
+- Lying references: smooth continuous torso volume and a narrower waist from front-to-back than the first CazMac rig implied.
+- Head-on references: narrow chest, cheek/muzzle pads, short nose, almond eye placement, and paws grouped under the body line.
+
 This is not the current CazMac renderer mesh. It is an ideal target asset for replacing the existing 2D procedural body with a real 3D cat-like model.
+
+Subjective morphology target score: roughly 9/10 for a textureless procedural STL. The remaining gap to a living-cat likeness is mostly fur, coat pattern, and pose-aware muscle deformation rather than the base body proportions.
 
 ## Generated Files
 
@@ -13,5 +22,5 @@ This is not the current CazMac renderer mesh. It is an ideal target asset for re
 
 ## Mesh Stats
 
-- Triangles: 15256
-- Bounds: x -0.780..0.673, y -0.138..0.138, z 0.003..0.645
+- Triangles: 67764
+- Bounds: x -0.956..0.723, y -0.131..0.129, z 0.006..0.668
