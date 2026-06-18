@@ -490,3 +490,186 @@ void caz_cpu_dump(const CazCpu *cpu, FILE *out)
             (unsigned long long)cpu->instructions,
             cpu->halted ? "yes" : "no");
 }
+
+static const char *reg_name(uint8_t code)
+{
+    switch (code & 7u) {
+    case 0: return "B";
+    case 1: return "C";
+    case 2: return "D";
+    case 3: return "E";
+    case 4: return "H";
+    case 5: return "L";
+    case 6: return "(HL)";
+    default: return "A";
+    }
+}
+
+static const char *jp_condition(uint8_t opcode)
+{
+    switch (opcode) {
+    case 0xc2: return "NZ";
+    case 0xca: return "Z";
+    case 0xd2: return "NC";
+    case 0xda: return "C";
+    case 0xe2: return "PO";
+    case 0xea: return "PE";
+    case 0xf2: return "P";
+    case 0xfa: return "M";
+    default: return "";
+    }
+}
+
+const char *caz_cpu_disassemble_at(const CazCpu *cpu,
+                                   uint16_t address,
+                                   char *buffer,
+                                   size_t buffer_length)
+{
+    uint8_t opcode;
+    uint8_t next;
+    uint16_t word;
+
+    if (buffer_length == 0u) {
+        return buffer;
+    }
+
+    opcode = cpu->memory[address];
+    next = cpu->memory[(uint16_t)(address + 1u)];
+    word = (uint16_t)(next | ((uint16_t)cpu->memory[(uint16_t)(address + 2u)] << 8));
+
+    if (opcode == 0x76u) {
+        snprintf(buffer, buffer_length, "%04X  HALT", address);
+    } else if ((opcode & 0xc7u) == 0x06u) {
+        snprintf(buffer,
+                 buffer_length,
+                 "%04X  LD %-4s,#%02X",
+                 address,
+                 reg_name((uint8_t)((opcode >> 3) & 7u)),
+                 next);
+    } else if ((opcode & 0xc7u) == 0x04u) {
+        snprintf(buffer,
+                 buffer_length,
+                 "%04X  INC %s",
+                 address,
+                 reg_name((uint8_t)((opcode >> 3) & 7u)));
+    } else if ((opcode & 0xc7u) == 0x05u) {
+        snprintf(buffer,
+                 buffer_length,
+                 "%04X  DEC %s",
+                 address,
+                 reg_name((uint8_t)((opcode >> 3) & 7u)));
+    } else if (opcode >= 0x40u && opcode <= 0x7fu) {
+        snprintf(buffer,
+                 buffer_length,
+                 "%04X  LD %-4s,%s",
+                 address,
+                 reg_name((uint8_t)((opcode >> 3) & 7u)),
+                 reg_name((uint8_t)(opcode & 7u)));
+    } else if (opcode >= 0x80u && opcode <= 0x87u) {
+        snprintf(buffer, buffer_length, "%04X  ADD A,%s", address, reg_name((uint8_t)(opcode & 7u)));
+    } else if (opcode >= 0x90u && opcode <= 0x97u) {
+        snprintf(buffer, buffer_length, "%04X  SUB %s", address, reg_name((uint8_t)(opcode & 7u)));
+    } else if (opcode >= 0xa0u && opcode <= 0xa7u) {
+        snprintf(buffer, buffer_length, "%04X  AND %s", address, reg_name((uint8_t)(opcode & 7u)));
+    } else if (opcode >= 0xa8u && opcode <= 0xafu) {
+        snprintf(buffer, buffer_length, "%04X  XOR %s", address, reg_name((uint8_t)(opcode & 7u)));
+    } else if (opcode >= 0xb0u && opcode <= 0xb7u) {
+        snprintf(buffer, buffer_length, "%04X  OR %s", address, reg_name((uint8_t)(opcode & 7u)));
+    } else if (opcode >= 0xb8u && opcode <= 0xbfu) {
+        snprintf(buffer, buffer_length, "%04X  CP %s", address, reg_name((uint8_t)(opcode & 7u)));
+    } else {
+        switch (opcode) {
+        case 0x00:
+            snprintf(buffer, buffer_length, "%04X  NOP", address);
+            break;
+        case 0x01:
+            snprintf(buffer, buffer_length, "%04X  LD BC,#%04X", address, word);
+            break;
+        case 0x11:
+            snprintf(buffer, buffer_length, "%04X  LD DE,#%04X", address, word);
+            break;
+        case 0x21:
+            snprintf(buffer, buffer_length, "%04X  LD HL,#%04X", address, word);
+            break;
+        case 0x31:
+            snprintf(buffer, buffer_length, "%04X  LD SP,#%04X", address, word);
+            break;
+        case 0x3a:
+            snprintf(buffer, buffer_length, "%04X  LD A,(#%04X)", address, word);
+            break;
+        case 0x32:
+            snprintf(buffer, buffer_length, "%04X  LD (#%04X),A", address, word);
+            break;
+        case 0xc3:
+            snprintf(buffer, buffer_length, "%04X  JP #%04X", address, word);
+            break;
+        case 0xc2:
+        case 0xca:
+        case 0xd2:
+        case 0xda:
+        case 0xe2:
+        case 0xea:
+        case 0xf2:
+        case 0xfa:
+            snprintf(buffer, buffer_length, "%04X  JP %s,#%04X", address, jp_condition(opcode), word);
+            break;
+        case 0x18:
+            snprintf(buffer, buffer_length, "%04X  JR %+d", address, (int)(int8_t)next);
+            break;
+        case 0x20:
+            snprintf(buffer, buffer_length, "%04X  JR NZ,%+d", address, (int)(int8_t)next);
+            break;
+        case 0x28:
+            snprintf(buffer, buffer_length, "%04X  JR Z,%+d", address, (int)(int8_t)next);
+            break;
+        case 0x30:
+            snprintf(buffer, buffer_length, "%04X  JR NC,%+d", address, (int)(int8_t)next);
+            break;
+        case 0x38:
+            snprintf(buffer, buffer_length, "%04X  JR C,%+d", address, (int)(int8_t)next);
+            break;
+        case 0xcd:
+            snprintf(buffer, buffer_length, "%04X  CALL #%04X", address, word);
+            break;
+        case 0xc9:
+            snprintf(buffer, buffer_length, "%04X  RET", address);
+            break;
+        case 0xc6:
+            snprintf(buffer, buffer_length, "%04X  ADD A,#%02X", address, next);
+            break;
+        case 0xd6:
+            snprintf(buffer, buffer_length, "%04X  SUB #%02X", address, next);
+            break;
+        case 0xe6:
+            snprintf(buffer, buffer_length, "%04X  AND #%02X", address, next);
+            break;
+        case 0xee:
+            snprintf(buffer, buffer_length, "%04X  XOR #%02X", address, next);
+            break;
+        case 0xf6:
+            snprintf(buffer, buffer_length, "%04X  OR #%02X", address, next);
+            break;
+        case 0xfe:
+            snprintf(buffer, buffer_length, "%04X  CP #%02X", address, next);
+            break;
+        case 0xdb:
+            snprintf(buffer, buffer_length, "%04X  IN A,(#%02X)", address, next);
+            break;
+        case 0xd3:
+            snprintf(buffer, buffer_length, "%04X  OUT (#%02X),A", address, next);
+            break;
+        case 0xf3:
+            snprintf(buffer, buffer_length, "%04X  DI", address);
+            break;
+        case 0xfb:
+            snprintf(buffer, buffer_length, "%04X  EI", address);
+            break;
+        default:
+            snprintf(buffer, buffer_length, "%04X  DB #%02X", address, opcode);
+            break;
+        }
+    }
+
+    buffer[buffer_length - 1u] = '\0';
+    return buffer;
+}

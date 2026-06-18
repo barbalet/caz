@@ -47,6 +47,10 @@ bool caz_cpu_load(CazCpu *cpu, uint16_t address, const uint8_t *program, size_t 
 int caz_cpu_step(CazCpu *cpu);
 uint64_t caz_cpu_run(CazCpu *cpu, uint64_t max_instructions);
 void caz_cpu_dump(const CazCpu *cpu, FILE *out);
+const char *caz_cpu_disassemble_at(const CazCpu *cpu,
+                                   uint16_t address,
+                                   char *buffer,
+                                   size_t buffer_length);
 
 uint16_t caz_cpu_hl(const CazCpu *cpu);
 void caz_cpu_set_hl(CazCpu *cpu, uint16_t value);

@@ -1,0 +1,374 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		CAZ001000000000000000001 /* CazMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000001 /* CazMacApp.swift */; };
+		CAZ001000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000002 /* ContentView.swift */; };
+		CAZ001000000000000000003 /* CazRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000003 /* CazRuntime.swift */; };
+		CAZ001000000000000000004 /* CazProgramSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000004 /* CazProgramSource.swift */; };
+		CAZ001000000000000000005 /* MetalCatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000005 /* MetalCatView.swift */; };
+		CAZ001000000000000000006 /* CatDroidRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000006 /* CatDroidRenderer.swift */; };
+		CAZ001000000000000000007 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000007 /* Shaders.metal */; };
+		CAZ001000000000000000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000008 /* Assets.xcassets */; };
+		CAZ001000000000000000009 /* caz_cpu.c in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000009 /* caz_cpu.c */; };
+		CAZ001000000000000000010 /* caz_droid.c in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000010 /* caz_droid.c */; };
+		CAZ001000000000000000011 /* caz_programs.c in Sources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000011 /* caz_programs.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		CAZ000000000000000000001 /* CazMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CazMacApp.swift; sourceTree = "<group>"; };
+		CAZ000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		CAZ000000000000000000003 /* CazRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CazRuntime.swift; sourceTree = "<group>"; };
+		CAZ000000000000000000004 /* CazProgramSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CazProgramSource.swift; sourceTree = "<group>"; };
+		CAZ000000000000000000005 /* MetalCatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalCatView.swift; sourceTree = "<group>"; };
+		CAZ000000000000000000006 /* CatDroidRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatDroidRenderer.swift; sourceTree = "<group>"; };
+		CAZ000000000000000000007 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+		CAZ000000000000000000008 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CAZ000000000000000000009 /* caz_cpu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_cpu.c; path = ../src/caz_cpu.c; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000010 /* caz_droid.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_droid.c; path = ../src/caz_droid.c; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000011 /* caz_programs.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_programs.c; path = ../src/caz_programs.c; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000012 /* caz_cpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_cpu.h; path = ../src/caz_cpu.h; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000013 /* caz_droid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_droid.h; path = ../src/caz_droid.h; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000014 /* caz_programs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_programs.h; path = ../src/caz_programs.h; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000015 /* cazmac-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "cazmac-Bridging-Header.h"; sourceTree = "<group>"; };
+		CAZ000000000000000000016 /* cazmac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = cazmac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CAZ002000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CAZ003000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				CAZ003000000000000000002 /* cazmac */,
+				CAZ003000000000000000003 /* Caz C Runtime */,
+				CAZ003000000000000000004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CAZ003000000000000000002 /* cazmac */ = {
+			isa = PBXGroup;
+			children = (
+				CAZ000000000000000000001 /* CazMacApp.swift */,
+				CAZ000000000000000000002 /* ContentView.swift */,
+				CAZ000000000000000000003 /* CazRuntime.swift */,
+				CAZ000000000000000000004 /* CazProgramSource.swift */,
+				CAZ000000000000000000005 /* MetalCatView.swift */,
+				CAZ000000000000000000006 /* CatDroidRenderer.swift */,
+				CAZ000000000000000000007 /* Shaders.metal */,
+				CAZ000000000000000000008 /* Assets.xcassets */,
+				CAZ000000000000000000015 /* cazmac-Bridging-Header.h */,
+			);
+			path = cazmac;
+			sourceTree = "<group>";
+		};
+		CAZ003000000000000000003 /* Caz C Runtime */ = {
+			isa = PBXGroup;
+			children = (
+				CAZ000000000000000000009 /* caz_cpu.c */,
+				CAZ000000000000000000012 /* caz_cpu.h */,
+				CAZ000000000000000000010 /* caz_droid.c */,
+				CAZ000000000000000000013 /* caz_droid.h */,
+				CAZ000000000000000000011 /* caz_programs.c */,
+				CAZ000000000000000000014 /* caz_programs.h */,
+			);
+			name = "Caz C Runtime";
+			sourceTree = "<group>";
+		};
+		CAZ003000000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CAZ000000000000000000016 /* cazmac.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CAZ004000000000000000001 /* cazmac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CAZ008000000000000000002 /* Build configuration list for PBXNativeTarget "cazmac" */;
+			buildPhases = (
+				CAZ005000000000000000001 /* Sources */,
+				CAZ002000000000000000001 /* Frameworks */,
+				CAZ006000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = cazmac;
+			productName = cazmac;
+			productReference = CAZ000000000000000000016 /* cazmac.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CAZ007000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1520;
+				LastUpgradeCheck = 1520;
+				TargetAttributes = {
+					CAZ004000000000000000001 = {
+						CreatedOnToolsVersion = 15.2;
+					};
+				};
+			};
+			buildConfigurationList = CAZ008000000000000000001 /* Build configuration list for PBXProject "cazmac" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = CAZ003000000000000000001;
+			productRefGroup = CAZ003000000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CAZ004000000000000000001 /* cazmac */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CAZ006000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CAZ001000000000000000008 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CAZ005000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CAZ001000000000000000001 /* CazMacApp.swift in Sources */,
+				CAZ001000000000000000002 /* ContentView.swift in Sources */,
+				CAZ001000000000000000003 /* CazRuntime.swift in Sources */,
+				CAZ001000000000000000004 /* CazProgramSource.swift in Sources */,
+				CAZ001000000000000000005 /* MetalCatView.swift in Sources */,
+				CAZ001000000000000000006 /* CatDroidRenderer.swift in Sources */,
+				CAZ001000000000000000007 /* Shaders.metal in Sources */,
+				CAZ001000000000000000009 /* caz_cpu.c in Sources */,
+				CAZ001000000000000000010 /* caz_droid.c in Sources */,
+				CAZ001000000000000000011 /* caz_programs.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		CAZ009000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CAZ009000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		CAZ009000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../src",
+				);
+				INFOPLIST_KEY_CFBundleDisplayName = CazMac;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright 2026 Tom Barbalet";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.caz.cazmac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "cazmac/cazmac-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		CAZ009000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../src",
+				);
+				INFOPLIST_KEY_CFBundleDisplayName = CazMac;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright 2026 Tom Barbalet";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.caz.cazmac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "cazmac/cazmac-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CAZ008000000000000000001 /* Build configuration list for PBXProject "cazmac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CAZ009000000000000000001 /* Debug */,
+				CAZ009000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CAZ008000000000000000002 /* Build configuration list for PBXNativeTarget "cazmac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CAZ009000000000000000003 /* Debug */,
+				CAZ009000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = CAZ007000000000000000001 /* Project object */;
+}
