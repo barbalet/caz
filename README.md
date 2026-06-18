@@ -49,6 +49,7 @@ make
 ./build/caz --program programs/farmyard-caution.caz --scenario hedgerow --steps 24 --seed 1 --sample-every 6
 ./build/caz --program programs/greeting-play.caz --scenario kitchen --steps 20 --seed 1 --sample-every 5
 ./build/caz --skills-dir /private/tmp/caz-missing-skills --program programs/skill-pounce.caz --scenario farmyard --steps 4 --seed 1 --sample-every 2
+./build/caz --program programs/skill-cycle.caz --scenario farmyard --steps 8 --seed 1 --sample-every 4 --opencat-dry-run
 xcodebuild -project cazmac/cazmac.xcodeproj -scheme cazmac -configuration Debug -derivedDataPath /private/tmp/cazmac-derived-data CODE_SIGNING_ALLOWED=NO build
 ```
 
@@ -186,6 +187,7 @@ The language is spare on purpose. A cat droid should not require a cloud service
 
 - [Caz language reference](docs/caz-language.md)
 - [Maker diagrams](docs/maker-diagrams.md)
+- [OpenCat hardware bridge](docs/hardware-bridge.md)
 - [Field histories](docs/field-histories.md)
 
 The docs are written to be useful to two kinds of participant: a programmer extending the VM and a maker imagining the droid as a physical machine.
@@ -201,7 +203,10 @@ CazMac's rig source, generated fallback body, and optional mesh provenance notes
 |-- docs/
 |   |-- caz-language.md
 |   |-- field-histories.md
+|   |-- hardware-bridge.md
 |   `-- maker-diagrams.md
+|-- hardware/
+|   `-- opencat-calibration.example
 |-- cazmac/
 |   |-- Assets/
 |   |-- Tools/
@@ -239,6 +244,8 @@ CazMac's rig source, generated fallback body, and optional mesh provenance notes
     |-- caz_cpu.h
     |-- caz_droid.c
     |-- caz_droid.h
+    |-- caz_opencat.c
+    |-- caz_opencat.h
     `-- main.c
 ```
 
@@ -250,6 +257,7 @@ The simulator is meant to be extended in layers:
 - Add richer sensor channels without changing the CPU core.
 - Add new Caz programs as `.caz` files in `programs/`.
 - Tune body skills as `.cazskill` files in `skills/`.
+- Dry-run OpenCat-style hardware output with `--opencat-dry-run`; live serial output requires explicit calibration.
 - Extend `src/caz_loader.c` when the language needs another instruction or directive.
 - Add scenario generators in `src/caz_droid.c`.
 - Replace the simple body model with real kinematics later, while preserving the port contract.

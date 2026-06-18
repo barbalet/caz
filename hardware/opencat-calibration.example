@@ -1,0 +1,24 @@
+# Example Caz-to-OpenCat calibration file.
+#
+# Live output refuses to start without a calibration file. Values are normalized
+# Caz joint bytes, not physical degrees. Use narrow ranges until real hardware
+# has been measured with power-limited servos and the legs unloaded.
+#
+# Format:
+#   model=nybble|bittle|caz-droid
+#   rate_limit_ticks=N
+#   joint.<caz_joint_index>=<servo_index>,<minimum>,<maximum>
+
+model=nybble
+rate_limit_ticks=6
+
+joint.0=0,80,176
+joint.1=1,88,168
+joint.2=8,64,192
+joint.3=9,64,192
+joint.4=12,64,192
+joint.5=13,64,192
+joint.10=14,64,192
+joint.11=15,64,192
+joint.12=10,64,192
+joint.13=11,64,192

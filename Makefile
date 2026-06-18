@@ -9,6 +9,7 @@ SOURCES := \
 	src/caz_cpu.c \
 	src/caz_body.c \
 	src/caz_droid.c \
+	src/caz_opencat.c \
 	src/caz_loader.c
 OBJECTS := $(SOURCES:src/%.c=$(BUILD_DIR)/%.o)
 
@@ -19,7 +20,7 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $@
 
-$(BUILD_DIR)/%.o: src/%.c src/caz_cpu.h src/caz_body.h src/caz_droid.h src/caz_loader.h
+$(BUILD_DIR)/%.o: src/%.c src/caz_cpu.h src/caz_body.h src/caz_droid.h src/caz_opencat.h src/caz_loader.h
 	mkdir -p $(BUILD_DIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 

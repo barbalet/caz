@@ -1,6 +1,7 @@
 #include "caz_cpu.h"
 #include "caz_droid.h"
 #include "caz_loader.h"
+#include "caz_opencat.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -12,7 +13,12 @@ typedef struct Options {
     char program_path[CAZ_PROGRAM_PATH_MAX];
     char program_dir[CAZ_PROGRAM_PATH_MAX];
     char skills_dir[CAZ_PROGRAM_PATH_MAX];
+    char opencat_serial_path[CAZ_OPENCAT_PATH_MAX];
+    char opencat_calibration_path[CAZ_OPENCAT_PATH_MAX];
     bool custom_program_path;
+    CazOpenCatMode opencat_mode;
+    CazOpenCatModel opencat_model;
+    uint64_t opencat_rate_limit_ticks;
     CazScenario scenario;
     uint32_t seed;
     uint64_t steps;
@@ -31,6 +37,12 @@ static void print_usage(FILE *out, const char *argv0)
             "  --program NAME|PATH         curious-patrol, nap-watch, farmyard-mouser, or a .caz file\n"
             "  --program-dir PATH          directory for named .caz programs (default: programs)\n"
             "  --skills-dir PATH           directory for .cazskill skill overrides (default: skills)\n"
+            "  --opencat-dry-run           print OpenCat-style serial commands without writing hardware\n"
+            "  --opencat-live              enable live OpenCat serial output; requires serial and calibration\n"
+            "  --opencat-model NAME        nybble, bittle, or caz-droid (default: nybble)\n"
+            "  --opencat-serial PATH       serial device/path for live OpenCat output\n"
+            "  --opencat-calibration PATH  calibration limits required for live OpenCat output\n"
+            "  --opencat-rate N            bridge command rate limit in body ticks\n"
             "  --scenario NAME             kitchen, farmyard, night-parlour, hedgerow\n"
             "  --steps N                   body ticks to simulate (default: 64)\n"
             "  --instructions-per-tick N   Caz CPU instructions per body tick (default: 48)\n"
@@ -71,7 +83,12 @@ static bool parse_args(int argc, char **argv, Options *options)
     options->program_path[0] = '\0';
     snprintf(options->program_dir, sizeof(options->program_dir), "%s", "programs");
     snprintf(options->skills_dir, sizeof(options->skills_dir), "%s", "skills");
+    options->opencat_serial_path[0] = '\0';
+    options->opencat_calibration_path[0] = '\0';
     options->custom_program_path = false;
+    options->opencat_mode = CAZ_OPENCAT_DISABLED;
+    options->opencat_model = CAZ_OPENCAT_NYBBLE;
+    options->opencat_rate_limit_ticks = 0u;
     options->scenario = CAZ_SCENARIO_FARMYARD;
     options->seed = 0u;
     options->steps = 64u;
@@ -117,6 +134,45 @@ static bool parse_args(int argc, char **argv, Options *options)
                 return false;
             }
             snprintf(options->skills_dir, sizeof(options->skills_dir), "%s", argv[i]);
+        } else if (strcmp(argv[i], "--opencat-dry-run") == 0) {
+            if (options->opencat_mode == CAZ_OPENCAT_LIVE) {
+                fprintf(stderr, "--opencat-dry-run and --opencat-live are mutually exclusive\n");
+                return false;
+            }
+            options->opencat_mode = CAZ_OPENCAT_DRY_RUN;
+        } else if (strcmp(argv[i], "--opencat-live") == 0) {
+            if (options->opencat_mode == CAZ_OPENCAT_DRY_RUN) {
+                fprintf(stderr, "--opencat-dry-run and --opencat-live are mutually exclusive\n");
+                return false;
+            }
+            options->opencat_mode = CAZ_OPENCAT_LIVE;
+        } else if (strcmp(argv[i], "--opencat-model") == 0 && i + 1 < argc) {
+            i++;
+            if (!caz_opencat_model_parse(argv[i], &options->opencat_model)) {
+                fprintf(stderr, "Unknown OpenCat model: %s\n", argv[i]);
+                return false;
+            }
+        } else if (strcmp(argv[i], "--opencat-serial") == 0 && i + 1 < argc) {
+            i++;
+            if (strlen(argv[i]) >= sizeof(options->opencat_serial_path)) {
+                fprintf(stderr, "OpenCat serial path is too long: %s\n", argv[i]);
+                return false;
+            }
+            snprintf(options->opencat_serial_path, sizeof(options->opencat_serial_path), "%s", argv[i]);
+        } else if (strcmp(argv[i], "--opencat-calibration") == 0 && i + 1 < argc) {
+            i++;
+            if (strlen(argv[i]) >= sizeof(options->opencat_calibration_path)) {
+                fprintf(stderr, "OpenCat calibration path is too long: %s\n", argv[i]);
+                return false;
+            }
+            snprintf(options->opencat_calibration_path, sizeof(options->opencat_calibration_path), "%s", argv[i]);
+        } else if (strcmp(argv[i], "--opencat-rate") == 0 && i + 1 < argc) {
+            i++;
+            if (!parse_u64(argv[i], &options->opencat_rate_limit_ticks) ||
+                options->opencat_rate_limit_ticks == 0u) {
+                fprintf(stderr, "Invalid --opencat-rate value: %s\n", argv[i]);
+                return false;
+            }
         } else if (strcmp(argv[i], "--scenario") == 0 && i + 1 < argc) {
             i++;
             if (!caz_scenario_parse(argv[i], &options->scenario)) {
@@ -153,6 +209,12 @@ static bool parse_args(int argc, char **argv, Options *options)
         }
     }
 
+    if (options->opencat_serial_path[0] != '\0' &&
+        options->opencat_mode != CAZ_OPENCAT_LIVE) {
+        fprintf(stderr, "--opencat-serial is only accepted with --opencat-live\n");
+        return false;
+    }
+
     return true;
 }
 
@@ -162,7 +224,9 @@ int main(int argc, char **argv)
     CazDroid droid;
     CazCpu cpu;
     CazProgramImage image;
+    CazOpenCatBridge opencat_bridge;
     char skill_error[CAZ_LOADER_ERROR_MAX];
+    char opencat_error[CAZ_OPENCAT_ERROR_MAX];
     uint64_t step;
     int status = 0;
 
@@ -193,6 +257,18 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    if (!caz_opencat_bridge_open(&opencat_bridge,
+                                 options.opencat_mode,
+                                 options.opencat_model,
+                                 options.opencat_serial_path,
+                                 options.opencat_calibration_path,
+                                 options.opencat_rate_limit_ticks,
+                                 opencat_error,
+                                 sizeof(opencat_error))) {
+        fprintf(stderr, "Failed to configure OpenCat bridge\n%s\n", opencat_error);
+        return 1;
+    }
+
     if (!options.quiet) {
         printf("Caz Cat Operating System simulation\n");
         printf("program=%s (%s)\n", image.name, image.description);
@@ -219,7 +295,10 @@ int main(int argc, char **argv)
         if (!options.quiet && (step % options.sample_every) == 0u) {
             caz_droid_print_report(&droid, stdout);
         }
+        caz_opencat_bridge_emit(&opencat_bridge, &droid, stdout);
     }
+
+    caz_opencat_bridge_close(&opencat_bridge);
 
     if (!options.quiet) {
         printf("\nCPU: ");

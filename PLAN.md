@@ -519,6 +519,8 @@ Exit criteria:
 
 Priority: `P8`
 
+Status: Done
+
 Deliverables:
 
 - Add an optional bridge module that translates body-layer skills and safe joint targets to OpenCat-style serial command strings.
@@ -535,6 +537,8 @@ Exit criteria:
 ### Cycle 11: Live Hardware Gate
 
 Priority: `P8`
+
+Status: Done
 
 Deliverables:
 
