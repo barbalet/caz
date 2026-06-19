@@ -24,6 +24,7 @@
 		CAZ001000000000000000013 /* nap-watch.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000018 /* nap-watch.caz */; };
 		CAZ001000000000000000014 /* farmyard-mouser.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000019 /* farmyard-mouser.caz */; };
 		CAZ001000000000000000017 /* skill-cycle.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000023 /* skill-cycle.caz */; };
+		CAZ001000000000000000018 /* LowpolyCAT_fixed.stl in Resources */ = {isa = PBXBuildFile; fileRef = CAZ000000000000000000024 /* LowpolyCAT_fixed.stl */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,6 +51,7 @@
 		CAZ000000000000000000018 /* nap-watch.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "nap-watch.caz"; path = "../programs/nap-watch.caz"; sourceTree = SOURCE_ROOT; };
 		CAZ000000000000000000019 /* farmyard-mouser.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "farmyard-mouser.caz"; path = "../programs/farmyard-mouser.caz"; sourceTree = SOURCE_ROOT; };
 		CAZ000000000000000000023 /* skill-cycle.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "skill-cycle.caz"; path = "../programs/skill-cycle.caz"; sourceTree = SOURCE_ROOT; };
+		CAZ000000000000000000024 /* LowpolyCAT_fixed.stl */ = {isa = PBXFileReference; lastKnownFileType = file; name = LowpolyCAT_fixed.stl; path = "../stock/3d_models/LowpolyCAT_fixed.stl"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -69,6 +71,7 @@
 				CAZ003000000000000000002 /* cazmac */,
 				CAZ003000000000000000003 /* Caz C Runtime */,
 				CAZ003000000000000000005 /* Caz Programs */,
+				CAZ003000000000000000006 /* Stock Assets */,
 				CAZ003000000000000000004 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -114,6 +117,14 @@
 				CAZ000000000000000000023 /* skill-cycle.caz */,
 			);
 			name = "Caz Programs";
+			sourceTree = "<group>";
+		};
+		CAZ003000000000000000006 /* Stock Assets */ = {
+			isa = PBXGroup;
+			children = (
+				CAZ000000000000000000024 /* LowpolyCAT_fixed.stl */,
+			);
+			name = "Stock Assets";
 			sourceTree = "<group>";
 		};
 		CAZ003000000000000000004 /* Products */ = {
@@ -187,6 +198,7 @@
 				CAZ001000000000000000013 /* nap-watch.caz in Resources */,
 				CAZ001000000000000000014 /* farmyard-mouser.caz in Resources */,
 				CAZ001000000000000000017 /* skill-cycle.caz in Resources */,
+				CAZ001000000000000000018 /* LowpolyCAT_fixed.stl in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

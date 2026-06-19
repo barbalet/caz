@@ -1,8 +1,9 @@
+import Foundation
 import MetalKit
 import simd
 
 struct CatVertex {
-    var position: SIMD2<Float>
+    var position: SIMD3<Float>
     var color: SIMD4<Float>
 }
 
@@ -14,6 +15,7 @@ final class CatDroidRenderer: NSObject, MTKViewDelegate {
     private var pipelineState: MTLRenderPipelineState?
     private var frame: Float = 0
     private let rig = CazRigGenerated.definition
+    private lazy var catMesh = LowPolyCatMesh.load()
 
     func configure(view: MTKView) {
         guard let device = view.device else { return }
@@ -92,14 +94,18 @@ final class CatDroidRenderer: NSObject, MTKViewDelegate {
         let bodyCenter = SIMD2<Float>(0.12, -0.06 + bodyHeight + crawlDrop + restDrop + pounceLift + bob)
         let bodyRoll = jointNorm(15) * 0.12 + (Float(snapshot.imuRoll) - 128) / 128 * 0.05
 
-        drawRigTorso(vertices: &vertices, body: bodyCenter, scale: scale, roll: bodyRoll, style: style)
-        drawRigLegs(vertices: &vertices, body: bodyCenter, scale: scale, time: time, style: style)
-        drawRigTail(vertices: &vertices, body: bodyCenter, scale: scale, time: time, style: style)
-
-        let headCenter = rigPoint("head", body: bodyCenter, scale: scale)
-            + SIMD2<Float>(jointNorm(0) * 0.09, jointNorm(1) * 0.06)
-        drawRigHead(vertices: &vertices, head: headCenter, scale: scale, style: style)
-        drawRigEars(vertices: &vertices, head: headCenter, scale: scale, style: style)
+        let headCenter: SIMD2<Float>
+        if catMesh.triangles.isEmpty {
+            drawRigTorso(vertices: &vertices, body: bodyCenter, scale: scale, roll: bodyRoll, style: style)
+            drawRigLegs(vertices: &vertices, body: bodyCenter, scale: scale, time: time, style: style)
+            drawRigTail(vertices: &vertices, body: bodyCenter, scale: scale, time: time, style: style)
+            headCenter = rigPoint("head", body: bodyCenter, scale: scale)
+                + SIMD2<Float>(jointNorm(0) * 0.09, jointNorm(1) * 0.06)
+            drawRigHead(vertices: &vertices, head: headCenter, scale: scale, style: style)
+            drawRigEars(vertices: &vertices, head: headCenter, scale: scale, style: style)
+        } else {
+            headCenter = drawLowPolyCat(vertices: &vertices, body: bodyCenter, scale: scale, time: time, style: style)
+        }
         drawEyes(vertices: &vertices, head: headCenter, eyelid: snapshot.eyelid, color: style.eye, glow: style.eyeGlow)
 
         addLine(&vertices,
@@ -191,6 +197,155 @@ final class CatDroidRenderer: NSObject, MTKViewDelegate {
     private func jointPoint(_ jointName: String, body: SIMD2<Float>, scale: Float) -> SIMD2<Float> {
         guard let joint = rig.joint(named: jointName) else { return body }
         return body + joint.origin * scale
+    }
+
+    private struct CatMeshPose {
+        let bodyPitch: Float
+        let bodyRoll: Float
+        let headYaw: Float
+        let headPitch: Float
+        let tailBase: Float
+        let tailTip: Float
+        let leftFrontLeg: Float
+        let rightFrontLeg: Float
+        let leftRearLeg: Float
+        let rightRearLeg: Float
+        let pawSpread: Float
+    }
+
+    private struct ProjectedCatTriangle {
+        let a: SIMD3<Float>
+        let b: SIMD3<Float>
+        let c: SIMD3<Float>
+        let depth: Float
+        let color: SIMD4<Float>
+    }
+
+    private func catMeshPose(time: Float) -> CatMeshPose {
+        let walk = snapshot.activeSkill == SkillID.walk || snapshot.gait == 1
+        let crawl = snapshot.activeSkill == SkillID.crawl
+        let pounce = snapshot.activeSkill == SkillID.pounce
+        let sniff = snapshot.activeSkill == SkillID.sniff
+        let rest = snapshot.activeSkill == SkillID.rest
+
+        let stride: Float = walk ? 0.24 : (pounce ? 0.10 : 0.0)
+        let crawlFold: Float = crawl ? 0.24 : 0.0
+        let frontA = sin(time * 8.5)
+        let frontB = sin(time * 8.5 + Float.pi)
+        let rearA = sin(time * 8.5 + 2.4)
+        let rearB = sin(time * 8.5 + 2.4 + Float.pi)
+        let twitch = snapshot.tailPose == 7 ? sin(time * 18) * 0.14 : 0
+        let highTail: Float = (snapshot.tailPose == 6 || snapshot.tailPose == 8 || pounce) ? 0.46 : 0
+        let curledTail: Float = (snapshot.tailPose == 1 || snapshot.tailPose == 2 || rest) ? 0.34 : 0
+
+        return CatMeshPose(
+            bodyPitch: jointNorm(9) * 0.12 + (pounce ? -0.08 : 0) + (crawl ? 0.05 : 0),
+            bodyRoll: jointNorm(15) * 0.16 + (Float(snapshot.imuRoll) - 128) / 128 * 0.06,
+            headYaw: jointNorm(0) * 0.46 + (Float(snapshot.headYaw) - 128) / 127 * 0.18,
+            headPitch: jointNorm(1) * 0.36 + (sniff ? -0.18 : 0) + (rest ? 0.08 : 0),
+            tailBase: jointNorm(6) * 0.68 + highTail + twitch,
+            tailTip: jointNorm(7) * 0.58 + curledTail + twitch * 0.45,
+            leftFrontLeg: jointNorm(2) * 0.42 + frontA * stride - crawlFold,
+            rightFrontLeg: jointNorm(3) * 0.42 + frontB * stride - crawlFold,
+            leftRearLeg: jointNorm(4) * 0.44 + rearA * stride + (pounce ? 0.18 : 0) + crawlFold * 0.5,
+            rightRearLeg: jointNorm(5) * 0.44 + rearB * stride + (pounce ? 0.18 : 0) + crawlFold * 0.5,
+            pawSpread: jointNorm(14) * 0.060
+        )
+    }
+
+    private func drawLowPolyCat(vertices: inout [CatVertex], body: SIMD2<Float>, scale: Float, time: Float, style: RigStyle) -> SIMD2<Float> {
+        let pose = catMeshPose(time: time)
+        var triangles: [ProjectedCatTriangle] = []
+        triangles.reserveCapacity(catMesh.triangles.count)
+
+        for triangle in catMesh.triangles {
+            let a = transformCatPoint(triangle.a, segment: triangle.segment, pose: pose)
+            let b = transformCatPoint(triangle.b, segment: triangle.segment, pose: pose)
+            let c = transformCatPoint(triangle.c, segment: triangle.segment, pose: pose)
+            let normal = triangleNormal(a, b, c)
+            let color = shadedColor(base: color(for: triangle.segment, style: style), normal: normal)
+            let pa = projectCatPoint(a, body: body, scale: scale)
+            let pb = projectCatPoint(b, body: body, scale: scale)
+            let pc = projectCatPoint(c, body: body, scale: scale)
+            triangles.append(ProjectedCatTriangle(a: pa, b: pb, c: pc, depth: (pa.z + pb.z + pc.z) / 3, color: color))
+        }
+
+        triangles.sort { $0.depth < $1.depth }
+        for triangle in triangles {
+            vertices.append(CatVertex(position: triangle.a, color: triangle.color))
+            vertices.append(CatVertex(position: triangle.b, color: triangle.color))
+            vertices.append(CatVertex(position: triangle.c, color: triangle.color))
+        }
+
+        let headAnchor = transformCatPoint(catMesh.pivot(.head), segment: .head, pose: pose)
+        let projectedHead = projectCatPoint(headAnchor, body: body, scale: scale)
+        return SIMD2<Float>(projectedHead.x, projectedHead.y)
+    }
+
+    private func transformCatPoint(_ point: SIMD3<Float>, segment: LowPolyCatSegment, pose: CatMeshPose) -> SIMD3<Float> {
+        var transformed = point
+        switch segment {
+        case .head:
+            transformed = rotateAround(catMesh.pivot(.head), point: transformed, z: pose.headPitch, y: pose.headYaw)
+        case .tailBase:
+            transformed = rotateAround(catMesh.pivot(.tailBase), point: transformed, z: pose.tailBase)
+        case .tailTip:
+            transformed = rotateAround(catMesh.pivot(.tailBase), point: transformed, z: pose.tailBase)
+            transformed = rotateAround(catMesh.pivot(.tailTip), point: transformed, z: pose.tailTip)
+        case .leftFrontLeg:
+            transformed = rotateAround(catMesh.pivot(.leftFrontLeg), point: transformed, z: pose.leftFrontLeg)
+            transformed.z -= pose.pawSpread
+        case .rightFrontLeg:
+            transformed = rotateAround(catMesh.pivot(.rightFrontLeg), point: transformed, z: pose.rightFrontLeg)
+            transformed.z += pose.pawSpread
+        case .leftRearLeg:
+            transformed = rotateAround(catMesh.pivot(.leftRearLeg), point: transformed, z: pose.leftRearLeg)
+            transformed.z -= pose.pawSpread
+        case .rightRearLeg:
+            transformed = rotateAround(catMesh.pivot(.rightRearLeg), point: transformed, z: pose.rightRearLeg)
+            transformed.z += pose.pawSpread
+        case .body:
+            break
+        }
+
+        let bodyPivot = catMesh.pivot(.body)
+        transformed = rotateAround(bodyPivot, point: transformed, z: pose.bodyPitch, x: pose.bodyRoll)
+        return transformed
+    }
+
+    private func color(for segment: LowPolyCatSegment, style: RigStyle) -> SIMD4<Float> {
+        switch segment {
+        case .body:
+            return style.body
+        case .head:
+            return style.shell
+        case .tailBase, .tailTip:
+            return style.dark
+        case .leftFrontLeg, .rightRearLeg:
+            return style.dark
+        case .rightFrontLeg, .leftRearLeg:
+            return mix(style.dark, style.shell, 0.16)
+        }
+    }
+
+    private func projectCatPoint(_ point: SIMD3<Float>, body: SIMD2<Float>, scale: Float) -> SIMD3<Float> {
+        let ground = body.y - 0.50 * scale
+        let x = body.x + point.x + point.z * 0.26
+        let y = ground + point.y + point.z * 0.07
+        return SIMD3<Float>(x, y, point.z)
+    }
+
+    private func shadedColor(base: SIMD4<Float>, normal: SIMD3<Float>) -> SIMD4<Float> {
+        let light = simd_normalize(SIMD3<Float>(-0.35, 0.82, 0.46))
+        let amount = max(0.40, min(1.12, simd_dot(normal, light) * 0.48 + 0.70))
+        return SIMD4<Float>(base.x * amount, base.y * amount, base.z * amount, base.w)
+    }
+
+    private func triangleNormal(_ a: SIMD3<Float>, _ b: SIMD3<Float>, _ c: SIMD3<Float>) -> SIMD3<Float> {
+        let normal = simd_cross(b - a, c - a)
+        let length = simd_length(normal)
+        guard length > 0.00001 else { return SIMD3<Float>(0, 1, 0) }
+        return normal / length
     }
 
     private func drawRigTorso(vertices: inout [CatVertex], body: SIMD2<Float>, scale: Float, roll: Float, style: RigStyle) {
@@ -394,19 +549,225 @@ final class CatDroidRenderer: NSObject, MTKViewDelegate {
     }
 }
 
+private enum LowPolyCatSegment: CaseIterable {
+    case body
+    case head
+    case tailBase
+    case tailTip
+    case leftFrontLeg
+    case rightFrontLeg
+    case leftRearLeg
+    case rightRearLeg
+}
+
+private struct LowPolyCatTriangle {
+    let a: SIMD3<Float>
+    let b: SIMD3<Float>
+    let c: SIMD3<Float>
+    let segment: LowPolyCatSegment
+}
+
+private struct LowPolyCatMesh {
+    static let targetOverallLength: Float = 1.30
+    static let sourceOverallLength: Float = 175.1535
+
+    let triangles: [LowPolyCatTriangle]
+    private let pivots: [LowPolyCatSegment: SIMD3<Float>]
+
+    func pivot(_ segment: LowPolyCatSegment) -> SIMD3<Float> {
+        pivots[segment] ?? .zero
+    }
+
+    static func load() -> LowPolyCatMesh {
+        guard
+            let url = sourceURL(),
+            let data = try? Data(contentsOf: url),
+            let mesh = parse(data: data)
+        else {
+            return LowPolyCatMesh(triangles: [], pivots: [:])
+        }
+        return mesh
+    }
+
+    private static func sourceURL() -> URL? {
+        if let bundled = Bundle.main.url(forResource: "LowpolyCAT_fixed", withExtension: "stl") {
+            return bundled
+        }
+
+        let fileURL = URL(fileURLWithPath: #filePath)
+        let repositoryRoot = fileURL
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+
+        let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+        let candidates = [
+            repositoryRoot.appendingPathComponent("stock/3d_models/LowpolyCAT_fixed.stl"),
+            workingDirectory.appendingPathComponent("stock/3d_models/LowpolyCAT_fixed.stl"),
+            workingDirectory.appendingPathComponent("../stock/3d_models/LowpolyCAT_fixed.stl")
+        ]
+        return candidates.first { FileManager.default.fileExists(atPath: $0.path) }
+    }
+
+    private static func parse(data: Data) -> LowPolyCatMesh? {
+        guard data.count >= 84 else { return nil }
+        let triangleCount = Int(readUInt32(data, at: 80))
+        guard data.count >= 84 + triangleCount * 50 else { return nil }
+
+        var rawTriangles: [[SIMD3<Float>]] = []
+        rawTriangles.reserveCapacity(triangleCount)
+        var minimum = SIMD3<Float>(Float.greatestFiniteMagnitude, Float.greatestFiniteMagnitude, Float.greatestFiniteMagnitude)
+        var maximum = SIMD3<Float>(-Float.greatestFiniteMagnitude, -Float.greatestFiniteMagnitude, -Float.greatestFiniteMagnitude)
+
+        for index in 0..<triangleCount {
+            let offset = 84 + index * 50 + 12
+            let vertices = (0..<3).map { vertexIndex -> SIMD3<Float> in
+                let vertexOffset = offset + vertexIndex * 12
+                return SIMD3<Float>(
+                    readFloat(data, at: vertexOffset),
+                    readFloat(data, at: vertexOffset + 4),
+                    readFloat(data, at: vertexOffset + 8)
+                )
+            }
+            for vertex in vertices {
+                minimum = simd_min(minimum, vertex)
+                maximum = simd_max(maximum, vertex)
+            }
+            rawTriangles.append(vertices)
+        }
+
+        let dimensions = maximum - minimum
+        guard dimensions.x > 0, dimensions.y > 0, dimensions.z > 0 else { return nil }
+        let sourceLength = max(dimensions.y, 0.0001)
+        let modelScale = targetOverallLength / sourceLength
+        let rawCenter = SIMD3<Float>(
+            (minimum.x + maximum.x) * 0.5,
+            (minimum.y + maximum.y) * 0.5,
+            minimum.z
+        )
+
+        func convert(_ raw: SIMD3<Float>) -> SIMD3<Float> {
+            SIMD3<Float>(
+                -(raw.y - rawCenter.y) * modelScale,
+                (raw.z - rawCenter.z) * modelScale,
+                (raw.x - rawCenter.x) * modelScale
+            )
+        }
+
+        func rawPoint(width: Float, length: Float, height: Float) -> SIMD3<Float> {
+            convert(SIMD3<Float>(
+                minimum.x + dimensions.x * width,
+                minimum.y + dimensions.y * length,
+                minimum.z + dimensions.z * height
+            ))
+        }
+
+        let pivots: [LowPolyCatSegment: SIMD3<Float>] = [
+            .body: rawPoint(width: 0.50, length: 0.46, height: 0.45),
+            .head: rawPoint(width: 0.50, length: 0.69, height: 0.55),
+            .tailBase: rawPoint(width: 0.50, length: 0.24, height: 0.48),
+            .tailTip: rawPoint(width: 0.50, length: 0.10, height: 0.54),
+            .leftFrontLeg: rawPoint(width: 0.30, length: 0.56, height: 0.34),
+            .rightFrontLeg: rawPoint(width: 0.70, length: 0.56, height: 0.34),
+            .leftRearLeg: rawPoint(width: 0.30, length: 0.36, height: 0.34),
+            .rightRearLeg: rawPoint(width: 0.70, length: 0.36, height: 0.34)
+        ]
+
+        let triangles = rawTriangles.map { vertices -> LowPolyCatTriangle in
+            let centroid = (vertices[0] + vertices[1] + vertices[2]) / 3
+            let normalized = (centroid - minimum) / dimensions
+            let segment = classify(width: normalized.x, length: normalized.y, height: normalized.z)
+            return LowPolyCatTriangle(
+                a: convert(vertices[0]),
+                b: convert(vertices[1]),
+                c: convert(vertices[2]),
+                segment: segment
+            )
+        }
+
+        return LowPolyCatMesh(triangles: triangles, pivots: pivots)
+    }
+
+    private static func classify(width: Float, length: Float, height: Float) -> LowPolyCatSegment {
+        if length > 0.67 && height > 0.34 {
+            return .head
+        }
+        if length < 0.12 && height > 0.28 {
+            return .tailTip
+        }
+        if length < 0.26 && height > 0.26 {
+            return .tailBase
+        }
+        if height < 0.42 {
+            if length > 0.50 {
+                return width < 0.50 ? .leftFrontLeg : .rightFrontLeg
+            }
+            return width < 0.50 ? .leftRearLeg : .rightRearLeg
+        }
+        return .body
+    }
+
+    private static func readUInt32(_ data: Data, at offset: Int) -> UInt32 {
+        UInt32(data[offset])
+            | UInt32(data[offset + 1]) << 8
+            | UInt32(data[offset + 2]) << 16
+            | UInt32(data[offset + 3]) << 24
+    }
+
+    private static func readFloat(_ data: Data, at offset: Int) -> Float {
+        Float(bitPattern: readUInt32(data, at: offset))
+    }
+}
+
+private func rotateAround(_ pivot: SIMD3<Float>, point: SIMD3<Float>, z: Float = 0, y: Float = 0, x: Float = 0) -> SIMD3<Float> {
+    var local = point - pivot
+    if z != 0 {
+        let cosine = cos(z)
+        let sine = sin(z)
+        local = SIMD3<Float>(
+            local.x * cosine - local.y * sine,
+            local.x * sine + local.y * cosine,
+            local.z
+        )
+    }
+    if y != 0 {
+        let cosine = cos(y)
+        let sine = sin(y)
+        local = SIMD3<Float>(
+            local.x * cosine + local.z * sine,
+            local.y,
+            -local.x * sine + local.z * cosine
+        )
+    }
+    if x != 0 {
+        let cosine = cos(x)
+        let sine = sin(x)
+        local = SIMD3<Float>(
+            local.x,
+            local.y * cosine - local.z * sine,
+            local.y * sine + local.z * cosine
+        )
+    }
+    return pivot + local
+}
+
+private func mix(_ lhs: SIMD4<Float>, _ rhs: SIMD4<Float>, _ amount: Float) -> SIMD4<Float> {
+    lhs * (1 - amount) + rhs * amount
+}
+
 private func addQuad(_ vertices: inout [CatVertex], x0: Float, y0: Float, x1: Float, y1: Float, color: SIMD4<Float>) {
-    vertices.append(CatVertex(position: SIMD2<Float>(x0, y0), color: color))
-    vertices.append(CatVertex(position: SIMD2<Float>(x1, y0), color: color))
-    vertices.append(CatVertex(position: SIMD2<Float>(x0, y1), color: color))
-    vertices.append(CatVertex(position: SIMD2<Float>(x1, y0), color: color))
-    vertices.append(CatVertex(position: SIMD2<Float>(x1, y1), color: color))
-    vertices.append(CatVertex(position: SIMD2<Float>(x0, y1), color: color))
+    vertices.append(CatVertex(position: SIMD3<Float>(x0, y0, 0), color: color))
+    vertices.append(CatVertex(position: SIMD3<Float>(x1, y0, 0), color: color))
+    vertices.append(CatVertex(position: SIMD3<Float>(x0, y1, 0), color: color))
+    vertices.append(CatVertex(position: SIMD3<Float>(x1, y0, 0), color: color))
+    vertices.append(CatVertex(position: SIMD3<Float>(x1, y1, 0), color: color))
+    vertices.append(CatVertex(position: SIMD3<Float>(x0, y1, 0), color: color))
 }
 
 private func addTriangle(_ vertices: inout [CatVertex], a: SIMD2<Float>, b: SIMD2<Float>, c: SIMD2<Float>, color: SIMD4<Float>) {
-    vertices.append(CatVertex(position: a, color: color))
-    vertices.append(CatVertex(position: b, color: color))
-    vertices.append(CatVertex(position: c, color: color))
+    vertices.append(CatVertex(position: SIMD3<Float>(a.x, a.y, 0), color: color))
+    vertices.append(CatVertex(position: SIMD3<Float>(b.x, b.y, 0), color: color))
+    vertices.append(CatVertex(position: SIMD3<Float>(c.x, c.y, 0), color: color))
 }
 
 private func addEllipse(_ vertices: inout [CatVertex], center: SIMD2<Float>, radius: SIMD2<Float>, color: SIMD4<Float>, segments: Int) {
@@ -414,9 +775,11 @@ private func addEllipse(_ vertices: inout [CatVertex], center: SIMD2<Float>, rad
     for index in 0..<count {
         let a0 = Float(index) / Float(count) * Float.pi * 2
         let a1 = Float(index + 1) / Float(count) * Float.pi * 2
-        vertices.append(CatVertex(position: center, color: color))
-        vertices.append(CatVertex(position: center + SIMD2<Float>(cos(a0) * radius.x, sin(a0) * radius.y), color: color))
-        vertices.append(CatVertex(position: center + SIMD2<Float>(cos(a1) * radius.x, sin(a1) * radius.y), color: color))
+        let outerA = center + SIMD2<Float>(cos(a0) * radius.x, sin(a0) * radius.y)
+        let outerB = center + SIMD2<Float>(cos(a1) * radius.x, sin(a1) * radius.y)
+        vertices.append(CatVertex(position: SIMD3<Float>(center.x, center.y, 0), color: color))
+        vertices.append(CatVertex(position: SIMD3<Float>(outerA.x, outerA.y, 0), color: color))
+        vertices.append(CatVertex(position: SIMD3<Float>(outerB.x, outerB.y, 0), color: color))
     }
 }
 
