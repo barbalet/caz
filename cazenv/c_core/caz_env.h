@@ -69,6 +69,8 @@ typedef struct CazEnvDroidSnapshot {
     float solar_gain;
     float passive_solar_gain;
     float nav_solar_gain;
+    float fallback_solar_gain;
+    float charger_gain;
     float tap_gain;
     float nav_tap_gain;
     float fallback_tap_gain;
@@ -94,7 +96,10 @@ typedef struct CazEnvDroidSnapshot {
     uint8_t eyelid;
     uint8_t reflex_state;
     uint8_t bytecode_program;
+    uint8_t obstacle_state;
     uint32_t nav_transition_count;
+    uint32_t blocked_movement_count;
+    uint32_t blocked_junction_count;
     uint64_t bytecode_instructions;
     uint64_t bytecode_cycles;
 } CazEnvDroidSnapshot;
@@ -156,6 +161,8 @@ typedef struct CazEnvDroid {
     float solar_gain;
     float passive_solar_gain;
     float nav_solar_gain;
+    float fallback_solar_gain;
+    float charger_gain;
     float tap_gain;
     float nav_tap_gain;
     float fallback_tap_gain;
@@ -171,7 +178,10 @@ typedef struct CazEnvDroid {
     uint8_t last_nav_intent;
     uint8_t last_nav_status;
     uint8_t last_nav_cause;
+    uint8_t obstacle_state;
     uint32_t nav_transition_count;
+    uint32_t blocked_movement_count;
+    uint32_t blocked_junction_count;
     CazEnvBytecodeRuntime bytecode;
 } CazEnvDroid;
 
@@ -186,6 +196,12 @@ typedef struct CazEnvState {
 
 void caz_env_init(CazEnvState *state, uint32_t seed);
 int caz_env_load_programs(CazEnvState *state, const char *program_dir, char *error, size_t error_length);
+int caz_env_assign_program(CazEnvState *state,
+                           int index,
+                           CazProgramKind program,
+                           const char *program_dir,
+                           char *error,
+                           size_t error_length);
 void caz_env_step(CazEnvState *state, float dt_seconds);
 int caz_env_fixture_count(void);
 int caz_env_droid_count(void);

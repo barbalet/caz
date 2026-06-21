@@ -1,7 +1,13 @@
 ; name: pose-frame
 ; description: buffers and commits a full 16-slot normalized body pose frame
 
+    JP   setup
+
+INCLUDE "survival.inc"
+
 setup:
+    CALL survival_check
+
     ; Direct joint write first: head yaw clamps from 255 down to its body limit.
     LD   A,JOINT_HEAD_YAW
     OUT  (JOINT_INDEX),A
@@ -101,4 +107,6 @@ setup:
     OUT  (JOINT_INDEX),A
 
 loop:
+    CALL survival_check
+
     JP   loop

@@ -21,7 +21,13 @@ struct EnvDroid: Identifiable {
     let charge: Float
     let feral: Float
     let solarGain: Float
+    let passiveSolarGain: Float
+    let navSolarGain: Float
+    let fallbackSolarGain: Float
+    let chargerGain: Float
     let tapGain: Float
+    let navTapGain: Float
+    let fallbackTapGain: Float
     let speed: Float
     let program: UInt8
     let gait: UInt8
@@ -47,7 +53,10 @@ struct EnvDroid: Identifiable {
     let vocal: UInt8
     let eyelid: UInt8
     let reflexState: UInt8
+    let obstacleState: UInt8
     let navTransitionCount: UInt32
+    let blockedMovementCount: UInt32
+    let blockedJunctionCount: UInt32
 }
 
 struct EnvSnapshot {
@@ -151,7 +160,13 @@ final class CazEnvRuntime: ObservableObject {
                 charge: item.charge,
                 feral: item.feral,
                 solarGain: item.solar_gain,
+                passiveSolarGain: item.passive_solar_gain,
+                navSolarGain: item.nav_solar_gain,
+                fallbackSolarGain: item.fallback_solar_gain,
+                chargerGain: item.charger_gain,
                 tapGain: item.tap_gain,
+                navTapGain: item.nav_tap_gain,
+                fallbackTapGain: item.fallback_tap_gain,
                 speed: item.speed,
                 program: item.program,
                 gait: item.gait,
@@ -177,7 +192,10 @@ final class CazEnvRuntime: ObservableObject {
                 vocal: item.vocal,
                 eyelid: item.eyelid,
                 reflexState: item.reflex_state,
-                navTransitionCount: item.nav_transition_count
+                obstacleState: item.obstacle_state,
+                navTransitionCount: item.nav_transition_count,
+                blockedMovementCount: item.blocked_movement_count,
+                blockedJunctionCount: item.blocked_junction_count
             )
         }
 

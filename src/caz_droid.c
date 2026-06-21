@@ -291,6 +291,19 @@ void caz_droid_init(CazDroid *droid, CazScenario scenario, uint32_t seed)
     droid->curiosity = 96;
     droid->comfort = 144;
     droid->heading = 0;
+    switch (scenario) {
+    case CAZ_SCENARIO_KITCHEN:
+    case CAZ_SCENARIO_NIGHT_PARLOUR:
+        droid->strategy_tendency = 64u;
+        break;
+    case CAZ_SCENARIO_FARMYARD:
+        droid->strategy_tendency = 144u;
+        break;
+    case CAZ_SCENARIO_HEDGEROW:
+    default:
+        droid->strategy_tendency = 220u;
+        break;
+    }
     droid->nav_intent = CAZ_NAV_WANDER;
     update_survival_sensors(droid);
     update_body_sensors(droid);
@@ -416,6 +429,7 @@ uint8_t caz_droid_read_port(void *user, uint8_t port)
     case CAZ_PORT_JUNCTION_BEARING: return droid->junction_bearing;
     case CAZ_PORT_JUNCTION_DISTANCE: return droid->junction_distance;
     case CAZ_PORT_SOLAR_LEVEL: return droid->solar_level;
+    case CAZ_PORT_STRATEGY_TENDENCY: return droid->strategy_tendency;
     case CAZ_PORT_NAV_INTENT: return droid->nav_intent;
     case CAZ_PORT_NAV_STATUS: return droid->nav_status;
     default:
@@ -547,6 +561,7 @@ const char *caz_port_name(uint8_t port)
     case CAZ_PORT_JUNCTION_BEARING: return "JUNCTION_BEARING";
     case CAZ_PORT_JUNCTION_DISTANCE: return "JUNCTION_DISTANCE";
     case CAZ_PORT_SOLAR_LEVEL: return "SOLAR_LEVEL";
+    case CAZ_PORT_STRATEGY_TENDENCY: return "STRATEGY_TENDENCY";
     case CAZ_PORT_GAIT: return "GAIT";
     case CAZ_PORT_HEAD_YAW: return "HEAD_YAW";
     case CAZ_PORT_EAR_POSE: return "EAR_POSE";

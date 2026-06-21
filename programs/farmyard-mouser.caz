@@ -1,7 +1,13 @@
 ; name: farmyard-mouser
 ; description: rural mouser routine tuned for prey rustle, tractor noise, human calls, weather, and glare
 
+    JP   loop
+
+INCLUDE "survival.inc"
+
 loop:
+    CALL survival_check
+
     IN   A,(EAR_PATTERN)
     CP   MACHINE
     JP   Z,machine

@@ -1,7 +1,13 @@
 ; name: loaf-and-groom
 ; description: quiet indoor routine that rests, stretches after motion, and grooms when the room feels safe
 
+    JP   loop
+
+INCLUDE "survival.inc"
+
 loop:
+    CALL survival_check
+
     IN   A,(BATTERY)
     CP   56
     JP   C,fatigue

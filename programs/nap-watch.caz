@@ -1,7 +1,13 @@
 ; name: nap-watch
 ; description: low-energy parlour mode that dozes until motion, human speech, or a startling sound appears
 
+    JP   loop
+
+INCLUDE "survival.inc"
+
 loop:
+    CALL survival_check
+
     IN   A,(EAR_VOLUME)
     CP   210
     JP   NC,startle

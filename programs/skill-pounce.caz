@@ -1,7 +1,13 @@
 ; name: skill-pounce
 ; description: symbolic skill and body-port fixture for pounce/reflex checks
 
+    JP   setup
+
+INCLUDE "survival.inc"
+
 setup:
+    CALL survival_check
+
     LD   A,0
     OUT  (JOINT_INDEX),A
     LD   A,144
@@ -21,6 +27,8 @@ setup:
     OUT  (POSE_FRAME_COMMIT),A
 
 loop:
+    CALL survival_check
+
     LD   A,SKILL_POUNCE
     OUT  (SKILL),A
     LD   A,GAIT_POUNCE

@@ -38,6 +38,7 @@ enum {
     CAZ_PORT_JUNCTION_BEARING = 0x3a,
     CAZ_PORT_JUNCTION_DISTANCE = 0x3b,
     CAZ_PORT_SOLAR_LEVEL = 0x3c,
+    CAZ_PORT_STRATEGY_TENDENCY = 0x3d,
 
     CAZ_PORT_SKILL = 0x50,
     CAZ_PORT_SKILL_ARG = 0x51,
@@ -110,6 +111,7 @@ typedef struct CazDroid {
     uint8_t junction_bearing;
     uint8_t junction_distance;
     uint8_t solar_level;
+    uint8_t strategy_tendency;
     uint8_t nav_intent;
     uint8_t nav_status;
 

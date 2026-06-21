@@ -1,7 +1,13 @@
 ; name: skill-cycle
 ; description: cycles rest, sit, walk, crawl, pounce, sniff, and scratch built-in skills by symbol
 
+    JP   loop
+
+INCLUDE "survival.inc"
+
 loop:
+    CALL survival_check
+
 rest:
     LD   A,SKILL_REST
     OUT  (SKILL),A

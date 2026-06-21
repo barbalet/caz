@@ -31,6 +31,12 @@ typedef struct Constant {
     uint16_t value;
 } Constant;
 
+typedef struct SourceBuffer {
+    char *data;
+    size_t length;
+    size_t capacity;
+} SourceBuffer;
+
 static const Constant constants[] = {
     {"EYE_LUMA", CAZ_PORT_EYE_LUMA},
     {"EYE_MOTION", CAZ_PORT_EYE_MOTION},
@@ -54,6 +60,8 @@ static const Constant constants[] = {
     {"JUNCTION_BEARING", CAZ_PORT_JUNCTION_BEARING},
     {"JUNCTION_DISTANCE", CAZ_PORT_JUNCTION_DISTANCE},
     {"SOLAR_LEVEL", CAZ_PORT_SOLAR_LEVEL},
+    {"STRATEGY_TENDENCY", CAZ_PORT_STRATEGY_TENDENCY},
+    {"FERAL_TENDENCY", CAZ_PORT_STRATEGY_TENDENCY},
     {"GAIT", CAZ_PORT_GAIT},
     {"HEAD_YAW", CAZ_PORT_HEAD_YAW},
     {"EAR_POSE", CAZ_PORT_EAR_POSE},
@@ -853,16 +861,188 @@ static bool read_text_file(const char *path, char **out_text, CazProgramImage *i
     return true;
 }
 
+static bool source_buffer_reserve(SourceBuffer *buffer, size_t extra)
+{
+    size_t required = buffer->length + extra + 1u;
+    char *grown;
+    if (required <= buffer->capacity) {
+        return true;
+    }
+    size_t capacity = buffer->capacity == 0u ? 1024u : buffer->capacity;
+    while (capacity < required) {
+        capacity *= 2u;
+    }
+    grown = (char *)realloc(buffer->data, capacity);
+    if (grown == NULL) {
+        return false;
+    }
+    buffer->data = grown;
+    buffer->capacity = capacity;
+    return true;
+}
+
+static bool source_buffer_append(SourceBuffer *buffer, const char *text, size_t length)
+{
+    if (!source_buffer_reserve(buffer, length)) {
+        return false;
+    }
+    memcpy(buffer->data + buffer->length, text, length);
+    buffer->length += length;
+    buffer->data[buffer->length] = '\0';
+    return true;
+}
+
+static bool source_buffer_append_cstr(SourceBuffer *buffer, const char *text)
+{
+    return source_buffer_append(buffer, text, strlen(text));
+}
+
+static void directory_name(char *buffer, size_t buffer_length, const char *path)
+{
+    const char *slash = path != NULL ? strrchr(path, '/') : NULL;
+    if (buffer_length == 0u) {
+        return;
+    }
+    if (slash == NULL) {
+        copy_text(buffer, buffer_length, ".");
+        return;
+    }
+    if ((size_t)(slash - path) >= buffer_length) {
+        buffer[0] = '\0';
+        return;
+    }
+    memcpy(buffer, path, (size_t)(slash - path));
+    buffer[slash - path] = '\0';
+}
+
+static bool parse_include_directive(char *line, char *include_name, size_t include_name_length)
+{
+    char *text = trim(line);
+    char *start;
+    char *end;
+    const char *directive = NULL;
+
+    if (starts_ci(text, "INCLUDE")) {
+        directive = "INCLUDE";
+    } else if (starts_ci(text, ".INCLUDE")) {
+        directive = ".INCLUDE";
+    } else {
+        return false;
+    }
+
+    text = trim(text + strlen(directive));
+    if (*text != '"') {
+        return false;
+    }
+    start = text + 1;
+    end = strchr(start, '"');
+    if (end == NULL || end == start || end[1] != '\0') {
+        return false;
+    }
+    if ((size_t)(end - start) >= include_name_length) {
+        return false;
+    }
+    memcpy(include_name, start, (size_t)(end - start));
+    include_name[end - start] = '\0';
+    return true;
+}
+
+static bool resolve_include_path(char *buffer,
+                                 size_t buffer_length,
+                                 const char *source_path,
+                                 const char *include_name)
+{
+    char directory[CAZ_PROGRAM_PATH_MAX];
+    int written;
+    if (include_name[0] == '/') {
+        written = snprintf(buffer, buffer_length, "%s", include_name);
+    } else {
+        directory_name(directory, sizeof(directory), source_path);
+        written = snprintf(buffer, buffer_length, "%s/%s", directory, include_name);
+    }
+    return written > 0 && (size_t)written < buffer_length;
+}
+
+static bool expand_includes_into(SourceBuffer *out,
+                                 const char *source,
+                                 const char *source_path,
+                                 unsigned depth,
+                                 CazProgramImage *image)
+{
+    const char *cursor = source;
+    int line_number = 1;
+    if (depth > 8u) {
+        snprintf(image->error, sizeof(image->error), "%s:%d: include nesting is too deep", source_path, line_number);
+        return false;
+    }
+
+    while (*cursor != '\0') {
+        char line[CAZ_MAX_LINE];
+        char line_copy[CAZ_MAX_LINE];
+        char include_name[CAZ_PROGRAM_PATH_MAX];
+        size_t length = 0u;
+        while (cursor[length] != '\0' && cursor[length] != '\n' && length + 1u < sizeof(line)) {
+            line[length] = cursor[length];
+            length++;
+        }
+        line[length] = '\0';
+        copy_text(line_copy, sizeof(line_copy), line);
+
+        if (parse_include_directive(line_copy, include_name, sizeof(include_name))) {
+            char include_path[CAZ_PROGRAM_PATH_MAX];
+            char *include_source = NULL;
+            if (!resolve_include_path(include_path, sizeof(include_path), source_path, include_name)) {
+                snprintf(image->error, sizeof(image->error), "%s:%d: include path is too long: %s", source_path, line_number, include_name);
+                return false;
+            }
+            if (!read_text_file(include_path, &include_source, image)) {
+                char read_error[CAZ_LOADER_ERROR_MAX];
+                copy_text(read_error, sizeof(read_error), image->error);
+                snprintf(image->error, sizeof(image->error), "%s:%d: could not include %s: %s", source_path, line_number, include_name, read_error);
+                return false;
+            }
+            if (!source_buffer_append_cstr(out, "\n") ||
+                !expand_includes_into(out, include_source, include_path, depth + 1u, image) ||
+                !source_buffer_append_cstr(out, "\n")) {
+                free(include_source);
+                if (image->error[0] == '\0') {
+                    copy_text(image->error, sizeof(image->error), "out of memory expanding includes");
+                }
+                return false;
+            }
+            free(include_source);
+        } else {
+            if (!source_buffer_append(out, cursor, length) ||
+                !source_buffer_append_cstr(out, "\n")) {
+                copy_text(image->error, sizeof(image->error), "out of memory expanding includes");
+                return false;
+            }
+        }
+
+        cursor += length;
+        if (*cursor == '\n') {
+            cursor++;
+        }
+        line_number++;
+    }
+    return true;
+}
+
 bool caz_loader_load_file(CazCpu *cpu, const char *path, CazProgramImage *image)
 {
     char *source = NULL;
+    SourceBuffer expanded = {0};
     bool ok;
     memset(image, 0, sizeof(*image));
     copy_text(image->path, sizeof(image->path), path);
     if (!read_text_file(path, &source, image)) {
         return false;
     }
-    ok = caz_loader_assemble_source(source, path, image);
+    ok = expand_includes_into(&expanded, source, path, 0u, image);
+    if (ok) {
+        ok = caz_loader_assemble_source(expanded.data, path, image);
+    }
+    free(expanded.data);
     free(source);
     if (!ok) {
         return false;

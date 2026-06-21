@@ -29,15 +29,15 @@ The middle layer should become the single place where high-level cat intent is t
 
 Active phase: `CazEnv Bytecode Survival`
 
-Last completed cycle: `Cycle 37: Program Registry And Archive Parity`
+Last completed cycle: `Cycle 35: Release Gate For Bytecode-Owned CazEnv`
 
-Current cycle: `Cycle 25: Program Survival Prologue Pattern`
+Current cycle: `None - bytecode survival phase complete in this plan`
 
-Next development action: define and apply the survival prologue pattern so every archived/CazEnv-assigned behaviour can request charger, solar, or junction recovery before relying on C supervisor fallback.
+Next development action: no remaining planned development cycle. If a new miss is discovered, add it to the Audit-Caught Misses table and create a new corrective cycle before claiming broader release readiness.
 
-Dependency note: audit-added Cycle 37 is complete, so Cycle 25 can now operate against the shared 11-program archive registry and the 8-program CazEnv survival participant set.
+Dependency note: Cycles 33, 42, 34, and 35 are complete. A-11 and A-12 are fixed in the current gates, strict bytecode-owned survival is the default harness mode, and Cycle 35 passed the long release gate: `make cazenv-survival-long` reports `matrix-result=PASS failed_cases=0/5 days=30 seeds=5`, with zero supervisor fallback, zero CPU faults, zero depletion, and no failed matrix cases. `make`, `git diff --check`, and the Xcode build also pass.
 
-Progress rule: when the current cycle's exit criteria pass, change that cycle's status to `Done`, update this section to name the next cycle, and mark the next cycle's status as `Current`.
+Progress rule: when the current cycle's exit criteria pass, change that cycle's status to `Done`, update this section to name the next cycle, and mark the next cycle's status as `Current`. If no planned cycle remains, set the current cycle to `None` and keep any future work behind a new audit or phase entry.
 
 Integrity rule: a cycle marked `Done` can be reopened. If later work shows that an exit criterion was incomplete, too weak, or misleading, update that cycle to `Reopened`, add an entry to the Progress Integrity Ledger, and create or adjust a later corrective cycle.
 
@@ -85,6 +85,25 @@ When a misstep is found:
 | 2026-06-21 | Cycle 36 | The harness now has explicit `probes`, `short-compat`, `short-strict`, `long-compat`, and `long-strict` modes. `make cazenv-probes` passes, while `short-compat` records the known first failure at seed `0x0ca7e000`, step `19207`, droid `0`, program `curious-patrol`. | Mark Cycle 36 `Done`. Cycle 24 may now use the strict/compatibility split as a gate, while the long-run survival failure remains unresolved. |
 | 2026-06-21 | Cycle 24 | CazEnv now exposes supervisor fallback event counters for charger returns, solar forage, junction tap attempts, charger loiter, speed overrides, and gait overrides. `short-compat 1 1` reports `fallback-events: charger=131051 solar=84647 junction=6 loiter=130446 speed=583581 gait=583755 total=1513486`, while `short-strict 1 1` reports the same total with `strict=FAIL`. | Mark Cycle 24 `Done`. Compatibility fallback remains available but counted; strict mode fails on fallback use, so compatibility output is not a survival success claim. |
 | 2026-06-21 | Cycle 37 | The loader now owns the shared 11-program registry. `make cazenv-probes` reports `program-registry total=11 survival=8 demo=3 assignable=8 path_only=3 archive_files=11`; `skill-cycle`, `pose-frame`, and `skill-pounce` are demo/path-only for survival planning. Excluding demos moves the return-to-charge probe target from old droid `9` to droid `7`. | Mark Cycle 37 `Done`. Cycle 25 may now add survival prologues against a visible archive/participant split instead of CazEnv's former hidden 10-program table. |
+| 2026-06-21 | Cycle 25 | All 11 archived `.caz` programs now call the shared `survival_check` gate. `make cazenv-regression` forced low battery on every registered program and each emitted bytecode recovery `NAV_INTENT` with no CPU fault or halt. | Mark Cycle 25 `Done`. The short survival run still fails, but no archived program is merely idling or pouncing through forced low battery without requesting recovery. |
+| 2026-06-21 | Cycle 26 | The assembler now expands quoted `INCLUDE` directives before assembly; `programs/survival.inc` is shared by all archived programs and bundled into CazEnv's Xcode resources. A bad include reports `/private/tmp/caz_bad_include.caz:1: could not include missing.inc: ...`. | Mark Cycle 26 `Done`. Includes keep the CPU bytecode unchanged and preserve existing programs. |
+| 2026-06-21 | Cycle 27 | `make cazenv-regression` now runs the registry check, a CLI-style `CazDroid` CPU execution check for all 11 programs, and a CazEnv forced-low-battery adapter check for all 11 programs. It reports `regression-result=PASS programs=11`. | Mark Cycle 27 `Done`. Survival targets now depend on `cazenv-regression` so the experiment cannot skip archive/prologue checks. |
+| 2026-06-21 | Cycle 28 | CazEnv now blocks candidate movement into walls, fixtures, and other droids, feeds blocked state into `TERRAIN`/`EYE_EDGE`, exposes obstacle/block counts in snapshots, and reports obstacle totals in survival summaries. `make cazenv-probes` reports `obstacle-probe blocked=6 obstacle=2 terrain=4 edge=238 nav_status=2`. | Mark Cycle 28 `Done`. The new short survival first failure is bytecode-owned junction recovery blocked/depleted, so Cycle 29 should focus on queue/route strategy rather than basic recovery intent. |
+| 2026-06-21 | Cycle 39 | The probe suite now includes a deterministic full-charger queue with eight occupied slots, a low-charge house waiter, high-sun feral alternate recovery, slot release, slot reassignment, duplicate-slot validation, and no gain while the charger is full. `make cazenv-probes` reports `charger-queue-probe acquired_step=19 ... invalid_slots=0 gain_while_full=0`. | Mark Cycle 39 `Done`. This closes the A-06 queue lifecycle prerequisite before Cycle 29 is declared complete. |
+| 2026-06-21 | Cycle 29 | `programs/survival.inc` now has explicit no-slot charger logic, low-drain bytecode charger waiting using `SKILL_REST`/`GAIT_LOAF`, alternate solar/junction selection under congestion, and bytecode-owned "keep charging" behavior until dock release. | Mark Cycle 29 `Done`. Full charger and queue scenarios pass targeted probes, but broad short survival still fails from a junction/tap route miss rather than charger queue behavior. |
+| 2026-06-21 | Cycle 30 | CazEnv and CLI droids now expose `STRATEGY_TENDENCY`/`FERAL_TENDENCY` to bytecode. The shared survival prologue branches house droids toward formal charger waiting and feral droids toward solar/junction recovery under pressure. `strategy-probe` reports house `nav=1` and feral `nav=2`, with both above zero charge. | Mark Cycle 30 `Done` for deterministic bytecode strategy split and forced-scenario survival. Keep global survival failure visible for Cycle 40/Cycle 41 rather than treating this as long-term viability. |
+| 2026-06-21 | Cycle 38 | Recovery accounting now separates charger gain, passive solar, requested solar, fallback solar, tap, bytecode tap, and fallback tap in seed summaries and first-failure reports. Strict mode fails if supervisor events or fallback gain are nonzero. Probes cover low-sun requested solar, non-bytecode solar denial, non-bytecode charger denial, and non-bytecode tap denial. | Mark Cycle 38 `Done`. The short strict run still fails, but not because fallback gain is hidden; the first failure shows zero charger/fallback gain and a blocked bytecode junction recovery. |
+| 2026-06-21 | Cycle 40 | After Cycles 29/30/38/39, `short-compat 1 1` still fails at seed `0x0ca7e000`, step `28452`, droid `0`, program `curious-patrol`: output `nav=3 status=2 cause=1`, charger slots `8`, junction distance `1.54`, and no tap gain. | Add Miss A-10. Cycle 40 must include this as a forced stress scenario, and Cycle 41 must correct junction reach/blocked tap recovery before Cycle 31 long-run success claims. |
+| 2026-06-21 | Cycle 40 | Added a per-program stress matrix covering open charger, full charger, critical junction, low sun, high sun, obstructed route, and A-10 near-junction reach for all eight survival participants. `make cazenv-stress` reports `stress-result=PASS survival_programs=8 scenarios_per_program=7 excluded_demo=3`. | Mark Cycle 40 `Done`. Demo/path-only programs remain excluded and explicitly reported. |
+| 2026-06-21 | Cycle 41 | A-10 initially failed in the stress matrix for seven programs. CazEnv now gives bytecode-owned `NAV_JUNCTION` recovery a physical crawl approach outside claw reach, records blocked junction counts, and isolates the A-10 probe path from unrelated fixtures. | Mark Cycle 41 `Done`. `make cazenv-stress` now proves A-10 tap gain with `nav_tap > 0`, zero fallback tap, and no first short-run failure at the recorded 1.54 ft no-gain shape. |
+| 2026-06-21 | Cycle 31 | Added `--mode matrix` plus `make cazenv-survival-matrix` for baseline, low-sun, full-charger, distant-junction, and high-obstacle cases. `build/cazenv-survival --mode matrix 1 1` runs all five cases and fails them honestly with `matrix-result=FAIL failed_cases=5/5 days=1 seeds=1`. | Mark Cycle 31 `Done` for matrix machinery and reporting only. Add Miss A-11 and Cycle 42; do not claim long-run survival success. |
+| 2026-06-21 | Cycle 32 | The Swift runtime and overlay now expose charger/passive/requested/fallback solar/tap gains, blocked movement, blocked junction counts, nav cause, and filters for low, charging, solar, tap, empty, fallback, and blocked droids. | Mark Cycle 32 `Done`. `xcodebuild -project cazenv/cazenv.xcodeproj -scheme cazenv -configuration Debug build` succeeds after the overlay return fix. |
+| 2026-06-21 | Cycle 31 | The new matrix and the one-day compatibility run now expose a different first failure: seed `0x0ca7e000`, droid `12`, `stalk-and-pounce`, bytecode `NAV_JUNCTION` or `NAV_CHARGER`, depleted before reaching a distant or obstructed recovery target. Example baseline matrix failure: step `28958`, junction distance `8.44`, obstacle `20`, zero tap/fallback gain. | Add Miss A-11. Cycle 42 must address route/energy feasibility before Cycle 34 strict default or Cycle 35 release claims. Cycle 33 should persist this as an artifact rather than only console output. |
+| 2026-06-21 | Cycle 33 | First-failure artifacts are now written under `build/cazenv-failures/` whenever survival fails, with deterministic names including mode, matrix case, seed, droid, and step. The A-11 investigation produced files such as `short-strict-baseline-seed-0ca7e000-droid-05-step-47271.txt`. | Mark Cycle 33 `Done`. The artifacts are diagnostic output and remain out of source control by default. |
+| 2026-06-21 | Cycle 42 | During A-11 work, a new entry-vector miss was found: programs began by executing `survival.inc` at the reset vector and could `RET` without a matching `CALL`. A trace showed `return-to-charge` falling from `RET` into `pc=0000 sp=0000`; long CLI runs showed corrupted `PC=f1b5 SP=018a`. | Add Miss A-12. Fix it inside Cycle 42 by adding explicit `JP loop` or `JP setup` entries before `INCLUDE "survival.inc"` in every archived program. |
+| 2026-06-21 | Cycle 42 | A-11 is corrected for the current matrix: bytecode recovery keeps moving under low-battery charger/junction recovery, critical blocked recovery can hand off to bytecode `NAV_SOLAR`, and the VM slice is high enough for timely recovery handoffs. | Mark Cycle 42 `Done`. `make cazenv-stress`, `make cazenv-probes`, and `make cazenv-regression` pass. `build/cazenv-survival --mode short-compat 1 1`, `--mode short-strict 1 1`, and `--mode matrix 1 1` all pass; matrix reports `failed_cases=0/5`. |
+| 2026-06-21 | Cycle 34 | Strict bytecode-owned survival is now the default harness mode. Bare `build/cazenv-survival 1 1` reports `mode=short-strict fallback=fail-on-use` and passes. `make cazenv-survival` now depends on the strict target and passes the 14-day/3-seed strict run with zero supervisor fallback. | Mark Cycle 34 `Done`. Compatibility remains explicit through `--mode short-compat` and `make cazenv-survival-compat`; it is not the default success claim. |
+| 2026-06-21 | Cycle 35 | Release-gate work is complete. `make cazenv-survival-long` passes with `matrix-result=PASS failed_cases=0/5 days=30 seeds=5`; every matrix case reports `survival-result=PASS failed_seeds=0/5 mode=matrix fallback=fail-on-use`, with no supervisor fallback, CPU faults, zero charge, final-zero, or depleted droids. | Mark Cycle 35 `Done`, set the current cycle to `None`, and treat the bytecode survival phase as complete unless a later audit adds a new corrective cycle. |
 
 ### Audit-Caught Misses
 
@@ -99,6 +118,9 @@ When a misstep is found:
 | A-07 | Solar recovery has only a sunny single-droid proof. | The solar probe proves requested gain beats passive gain, but the default run records `requested=0.000`; no night/low-sun stress probe exists yet. | Cycle 31 gets night/low-sun matrix requirements; Cycle 38 tracks requested/passive/fallback gains per recovery mode. |
 | A-08 | Failure reporting is too aggregate for iterative survival work. | The harness reports seed-level failure counts but not the first failing droid, step, program, charge, nav intent, or last decisions. | Cycle 33 is strengthened and Cycle 36 makes first-failure capture part of the short development loop. |
 | A-09 | C hardcoded program metadata is still mixed with bytecode behavior. | CazEnv still has a C `program_table` with default speed/gait and its own subset of program names; fallback modes still set speed/gait. | Cycle 24 limits supervisor behavior to explicit compatibility/fallback accounting; Cycle 37 moves program identity toward a shared registry. |
+| A-10 | Bytecode junction recovery can stall just outside usable tap range. | After queue/strategy/accounting work, `short-compat 1 1` still fails at seed `0x0ca7e000`, step `28452`, droid `0`, with bytecode `NAV_JUNCTION`, `status=BLOCKED`, junction distance `1.54`, and no tap gain. | Cycle 40 must add this as a forced stress scenario; Cycle 41 fixes junction approach, tap reach, or alternate recovery handoff before Cycle 31 long-matrix success claims. |
+| A-11 | Bytecode recovery intent can still choose an infeasible distant or obstructed recovery target too late. | After A-10 is fixed, `short-compat 1 1` and `matrix 1 1` fail at seed `0x0ca7e000`, droid `12`, `stalk-and-pounce`: baseline matrix step `28958`, `NAV_JUNCTION`, junction distance `8.44`, obstacle `20`, depleted with zero charger/tap/fallback gain. Full-charger, distant-junction, and high-obstacle cases expose the same class with charger/junction targets too far away. | Cycle 33 must persist this first-failure artifact; Cycle 42 fixes route/energy feasibility before Cycle 34 strict default or Cycle 35 release claims. |
+| A-12 | Program reset vectors entered the shared survival subroutine instead of the program entry label. | Because `INCLUDE "survival.inc"` was the first executable text in each `.caz` file, high-charge programs could execute `survival_check` directly and hit `RET` with no caller. CLI trace showed `pc=0100` executing the include, then `RET` to `pc=0000`; long runs later showed corrupted PC/SP and CazEnv CPU faults. | Cycle 42 adds explicit entry jumps before the include in all archived programs and verifies no CPU faults in regression, stress, short strict, and one-day matrix gates. Cycle 35 must keep checking CPU faults in the long gate. |
 
 ## Design Rules
 
@@ -1011,7 +1033,7 @@ Verification:
 
 Priority: `S5`
 
-Status: Current
+Status: Done
 
 Audit misses addressed: `A-04`
 
@@ -1031,11 +1053,18 @@ Exit criteria:
 - The prologue remains readable in assembly source.
 - Forced low-battery probes show each program choosing a recovery output rather than relying on supervisor fallback.
 
+Verification:
+
+- Added `programs/survival.inc` with a readable `survival_check` gate and recovery branches for charger, solar, and junction.
+- All 11 archived `.caz` files include `survival.inc` and call `survival_check` before normal behaviour or demo loops.
+- `make cazenv-regression` forced low battery on all 11 registered programs and every program emitted `NAV_CHARGER`, `NAV_SOLAR`, or `NAV_JUNCTION` with `cause=1`.
+- The short survival experiment still fails, but the seed-0 first failure now shows bytecode recovery output: `output=(nav=3 status=2 cause=1)`.
+
 ### Cycle 26: Shared Assembly Include Or Macro Support
 
 Priority: `S5`
 
-Status: Pending
+Status: Done
 
 Deliverables:
 
@@ -1050,11 +1079,18 @@ Exit criteria:
 - Bad include paths report a line-numbered assembler error.
 - Existing programs without includes still assemble.
 
+Verification:
+
+- `INCLUDE "survival.inc"` expands before assembly without changing the CPU instruction set or bytecode format.
+- A missing include reports a source and line: `/private/tmp/caz_bad_include.caz:1: could not include missing.inc: could not open /private/tmp/missing.inc`.
+- `make`, `make cazenv-probes`, and `make cazenv-regression` all assemble the include-backed programs successfully.
+- CazEnv's Xcode project now bundles `survival.inc`; `xcodebuild -project cazenv/cazenv.xcodeproj -scheme cazenv -configuration Debug build` copies it into app resources and succeeds.
+
 ### Cycle 27: Bytecode-Owned Behaviour Regression Suite
 
 Priority: `S0`
 
-Status: Pending
+Status: Done
 
 Audit misses addressed: `A-03`, `A-04`
 
@@ -1074,11 +1110,18 @@ Exit criteria:
 - The suite fails if a program has a battery path that never emits a recovery `NAV_INTENT` under forced low charge.
 - The survival experiment depends on this suite or runs it first.
 
+Verification:
+
+- Added `make cazenv-regression`.
+- `make cazenv-regression` runs the registry/archive check, CLI-style `CazDroid` CPU execution for all 11 programs, and CazEnv forced-low-battery checks for all 11 programs.
+- The suite reports `regression-result=PASS programs=11`.
+- `cazenv-survival-compat`, `cazenv-survival-strict`, and `cazenv-survival-long` now depend on `cazenv-regression`.
+
 ### Cycle 28: Collision And Obstacle Feedback
 
 Priority: `S3`
 
-Status: Pending
+Status: Done
 
 Deliverables:
 
@@ -1093,11 +1136,18 @@ Exit criteria:
 - The harness reports whether survival failures came from navigation blockage.
 - Droids no longer pass through major fixtures during recovery routes.
 
+Verification:
+
+- CazEnv now blocks candidate movement into room bounds, fixtures, and other droids while allowing intentional charger docking and junction tapping.
+- Blocked state feeds `TERRAIN` and `EYE_EDGE`, and CazEnv snapshots expose `obstacle_state` and `blocked_movement_count`.
+- `make cazenv-probes` reports `obstacle-probe blocked=6 obstacle=2 terrain=4 edge=238 nav_status=2` and passes.
+- Short survival summaries now include obstacle totals, for example `obstacles: droids=20 blocked=3251603`, and first-failure detail includes `obstacle` and `blocked` fields.
+
 ### Cycle 29: Charger Queue Strategy In Bytecode
 
 Priority: `S5`
 
-Status: Pending
+Status: Done
 
 Audit misses addressed: `A-06`
 
@@ -1116,11 +1166,18 @@ Exit criteria:
 - The queue behaviour remains stable with 20 droids.
 - A droid blocked from charging can later acquire a released slot through bytecode `NAV_CHARGER`, not through hidden reassignment.
 
+Verification:
+
+- `programs/survival.inc` now handles `CHARGER_SLOTS == 0` in bytecode, including low-drain `SKILL_REST`/`GAIT_LOAF` charger waiting, alternate solar/junction selection, and explicit keep-charging behavior while `ENERGY_SOURCE == ENERGY_CHARGER`.
+- `make cazenv-probes` reports full charger waiting as bytecode-owned: `full-charger-probe ... output=(nav=1 status=2 cause=1 gait=0 skill=2 ...)`.
+- `make cazenv-probes` also reports alternate recovery under congestion through the queue soak: `charger-queue-probe ... alternates=878 invalid_slots=0 gain_while_full=0`.
+- Short survival still fails, but first failure now has charger queue ruled out: charger slots are `8`, charger/fallback gain is `0.000000`, and the active issue is bytecode `NAV_JUNCTION` blocked near a junction.
+
 ### Cycle 30: House And Feral Strategy Split In Bytecode
 
 Priority: `S5`
 
-Status: Pending
+Status: Done
 
 Deliverables:
 
@@ -1135,11 +1192,18 @@ Exit criteria:
 - The renderer and logs show which strategy is active.
 - Both strategies pass survival thresholds.
 
+Verification:
+
+- Added bytecode-readable `STRATEGY_TENDENCY`/`FERAL_TENDENCY`, backed by deterministic CLI scenario values and CazEnv's per-droid `feral` value.
+- The shared survival prologue branches house-oriented droids toward formal charger wait/charge behavior and feral-oriented droids toward solar/junction recovery when congestion or risk makes that preferable.
+- `make cazenv-probes` reports `strategy-probe house(nav=1 status=2 strategy=25 skill=2 gait=0 charge=0.298) feral(nav=2 status=5 strategy=229 skill=2 gait=0 charge=0.303)`.
+- This proves the forced strategy split and above-zero survival in that scenario. It is not a long-term survival claim; the short-run failure remains tracked as A-10.
+
 ### Cycle 31: Long-Duration Multi-Seed Survival Matrix
 
 Priority: `S7`
 
-Status: Pending
+Status: Done
 
 Audit misses addressed: `A-07`
 
@@ -1158,11 +1222,18 @@ Exit criteria:
 - Long target can be run before declaring a survival improvement complete.
 - No run is considered passing if supervisor fallback count is nonzero.
 
+Verification:
+
+- Added `--mode matrix`/`long-matrix` and `make cazenv-survival-matrix`; `make cazenv-survival-long` now delegates to the matrix target.
+- Matrix cases currently run: `baseline`, `low-sun`, `full-charger`, `distant-junction`, and `high-obstacle`.
+- `build/cazenv-survival --mode matrix 1 1` runs every case and reports `matrix-result=FAIL failed_cases=5/5 days=1 seeds=1`.
+- This cycle is complete as a matrix/reporting cycle, not as a survival success claim. The failed cases are tracked as A-11/Cycle 42.
+
 ### Cycle 32: Renderer And Overlay Attribution
 
 Priority: `S4`
 
-Status: Pending
+Status: Done
 
 Deliverables:
 
@@ -1177,11 +1248,17 @@ Exit criteria:
 - Strict-mode fallback is visible immediately.
 - Overlay does not obscure the room simulation.
 
+Verification:
+
+- The Swift snapshot now exposes charger gain, passive/requested/fallback solar gain, requested/fallback tap gain, obstacle state, blocked movement count, and blocked junction count.
+- The overlay adds filter controls for all, low, charging, solar, tap, empty, fallback, and blocked droids, plus gain attribution and blocked/junction-blocked counters in each visible row.
+- `xcodebuild -project cazenv/cazenv.xcodeproj -scheme cazenv -configuration Debug build` succeeds.
+
 ### Cycle 33: Failure Artifact Capture
 
 Priority: `S7`
 
-Status: Pending
+Status: Done
 
 Audit misses addressed: `A-01`, `A-08`
 
@@ -1199,11 +1276,17 @@ Exit criteria:
 - Developers do not need to watch the whole simulation to understand the first survival break.
 - Failure artifacts are deterministic for a fixed build and seed.
 
+Verification:
+
+- Survival failures now call `write_failure_artifact()` and write deterministic text reports under `build/cazenv-failures/`.
+- Artifact names include mode, matrix case, seed, droid, and step, for example `short-strict-baseline-seed-0ca7e000-droid-05-step-47271.txt`.
+- Artifacts include the same first-failure and recent-trace details printed to the console.
+
 ### Cycle 34: Strict Bytecode Survival Mode As Default
 
 Priority: `S6`
 
-Status: Pending
+Status: Done
 
 Audit misses addressed: `A-02`
 
@@ -1221,11 +1304,18 @@ Exit criteria:
 - Compatibility mode is clearly labeled and not used for success claims.
 - Docs and harness output use the same terminology.
 
+Verification:
+
+- `build/cazenv-survival 1 1` reports `cazenv harness mode=short-strict fallback=fail-on-use ...` and passes with `survival-result=PASS failed_seeds=0/1`.
+- `make cazenv-survival` now runs `cazenv-survival-strict`, not compatibility mode.
+- `make cazenv-survival` passes the 14-day/3-seed strict run with `survival-result=PASS failed_seeds=0/3 mode=short-strict fallback=fail-on-use`.
+- The strict run reports zero supervisor fallback events and `strict=ok` for all three seeds.
+
 ### Cycle 35: Release Gate For Bytecode-Owned CazEnv
 
 Priority: `S7`
 
-Status: Pending
+Status: Done
 
 Deliverables:
 
@@ -1243,6 +1333,17 @@ Exit criteria:
 - The long survival matrix passes.
 - CazEnv builds in Xcode.
 - The plan records the exact commands and final survival metrics.
+
+Verification:
+
+- `make cazenv-survival-long` passes; it runs the regression and stress gates, then the 30-day/5-seed matrix.
+- The long matrix reports `matrix-result=PASS failed_cases=0/5 days=30 seeds=5`.
+- Baseline, low-sun, full-charger, distant-junction, and high-obstacle matrix cases each report `survival-result=PASS failed_seeds=0/5 mode=matrix fallback=fail-on-use`.
+- The long matrix reports zero supervisor fallback events, zero fallback gain, zero CPU faults, zero zero-charge/depleted/final-zero droids, and `bytecode-runtimes assigned=20 loaded=20 stepping=20 halted=0 faulted=0`.
+- `make` passes.
+- `git diff --check` passes.
+- `make cazenv-survival` passes the default strict 14-day/3-seed gate.
+- `xcodebuild -project cazenv/cazenv.xcodeproj -scheme cazenv -configuration Debug build` passes.
 
 ### Cycle 36: Harness Mode Split And First-Failure Baseline
 
@@ -1315,7 +1416,7 @@ Verification:
 
 Priority: `S4`
 
-Status: Pending
+Status: Done
 
 Audit misses addressed: `A-05`, `A-07`
 
@@ -1335,11 +1436,18 @@ Exit criteria:
 - Bytecode-requested and fallback-requested recovery gains are separately visible in logs and failure artifacts.
 - Targeted probes prove resource accounting for charger, solar, and junction recovery independently.
 
+Verification:
+
+- CazEnv now records and reports charger gain, passive solar, bytecode-requested solar, fallback solar, total tap, bytecode tap, and fallback tap separately in seed summaries and first-failure reports.
+- Strict mode now fails if supervisor fallback events or fallback recovery gain are nonzero.
+- `make cazenv-probes` reports `low-sun-solar-probe ... requested=0.001536 fallback=0.000000`, `non-bytecode-solar-probe ... requested=0.000000 fallback=0.000000`, `non-bytecode-charger-probe ... charger_gain=0.000000`, and the existing non-bytecode tap denial still reports zero tap gain.
+- `build/cazenv-survival --mode short-strict 1 1` still fails, but the first-failure gains are explicit: `charger=0.000000`, `requested_solar=0.000000`, `fallback_solar=0.000000`, `nav_tap=0.000000`, `fallback_tap=0.000000`.
+
 ### Cycle 39: Charger Slot Lifecycle And Queue Soak
 
 Priority: `S5`
 
-Status: Pending
+Status: Done
 
 Audit misses addressed: `A-06`
 
@@ -1359,19 +1467,27 @@ Exit criteria:
 - Queue waiters either survive by alternate recovery or fail with a clear first-failure artifact.
 - The 20-droid queue scenario is deterministic for a fixed seed.
 
+Verification:
+
+- Added `charge_slots_valid` and deterministic queue helpers to the probe harness.
+- `make cazenv-probes` reports `charger-queue-probe acquired_step=19 waiter_slot=0 waiter_charge=0.593 min_waiter=0.300 charger_gain=0.293336 gain_at_full=0.279669 alternates=878 invalid_slots=0 gain_while_full=0 free_slots=7`.
+- The released slot is acquired by a bytecode `NAV_CHARGER` waiter, no duplicate slot state is observed, and no waiter receives charger gain while the charger is full.
+- This closes the A-06 prerequisite before Cycle 29 is declared complete.
+
 ### Cycle 40: Strategy Stress Probes Before Long Survival Claims
 
 Priority: `S7`
 
-Status: Pending
+Status: Done
 
-Audit misses addressed: `A-04`, `A-07`, `A-08`
+Audit misses addressed: `A-04`, `A-07`, `A-08`, `A-10`
 
 Must run before: Cycle 31 long matrix is used for a success claim; Cycle 35 release gate.
 
 Deliverables:
 
 - Add forced-scenario probes for each survival participant program: low battery with open charger, low battery with full charger, critical battery near junction, low sun, high sun, and obstructed route.
+- Include the current A-10 failure shape: bytecode `NAV_JUNCTION`, blocked status, near-junction distance around 1.5 ft, and no tap gain.
 - Require each program to produce a valid recovery `NAV_INTENT` or a proven positive-energy conservation path before high-drain behavior resumes.
 - Include house and feral tendencies in stress probes so Cycle 30 differences are measured under survival pressure.
 - Emit compact per-program pass/fail lines suitable for repeated development cycles.
@@ -1382,3 +1498,75 @@ Exit criteria:
 - Failures name the program, scenario, expected recovery output, actual output, and first unsafe behavior.
 - No long-run survival pass can be claimed until the stress probe suite passes.
 - The plan records any intentionally excluded demo programs and why they are not survival participants.
+
+Verification:
+
+- Added `--mode stress` and `make cazenv-stress`.
+- The stress matrix covers open charger, full charger, critical junction, low sun, high sun, obstructed route, and A-10 near-junction reach.
+- `make cazenv-stress` reports `stress-result=PASS survival_programs=8 scenarios_per_program=7 excluded_demo=3`.
+- Excluded demo/path-only programs are reported as `excluded-demo`: `skill-cycle`, `pose-frame`, and `skill-pounce`.
+
+### Cycle 41: Junction Reach And Blocked Tap Recovery
+
+Priority: `S6`
+
+Status: Done
+
+Audit misses addressed: `A-10`
+
+Must run before: Cycle 31 long matrix is used for a success claim; Cycle 35 release gate.
+
+Deliverables:
+
+- Reproduce the A-10 failure as a targeted deterministic probe: bytecode `NAV_JUNCTION`, blocked or stalled near a junction, distance around 1.5 ft, and no tap gain.
+- Decide whether the correct fix is claw/tap reach, final approach motion, obstacle avoidance around wall junction boxes, or bytecode alternate recovery after repeated blocked tap attempts.
+- Keep any changed tap reach or route tolerance physically plausible for a domestic-cat-sized droid with claws.
+- Add logs for blocked junction recovery duration and the recovery handoff chosen after repeated blocked junction attempts.
+
+Exit criteria:
+
+- The A-10 targeted probe passes without supervisor gain or fallback tap gain.
+- A droid near a junction can either acquire bytecode `NAV_JUNCTION` tap gain or switch to another bytecode recovery path before zero charge.
+- Short survival no longer fails first on the recorded A-10 junction reach shape.
+
+Verification:
+
+- A-10 is now a deterministic stress scenario for every survival participant.
+- CazEnv records `blocked_junction_count` and gives bytecode-owned `NAV_JUNCTION` recovery a physical crawl approach while preserving bytecode ownership of the recovery decision and tap gain.
+- The A-10 probe path is isolated from unrelated charger/tree/bed fixtures so it tests the recorded near-junction miss directly.
+- `make cazenv-stress` passes; each A-10 line reports `nav=3`, `status=4`, `cause=1`, positive `tap`, and `junction_blocked=0`.
+- `build/cazenv-survival --mode short-compat 1 1` still fails, but the first failure is now A-11: droid `12`, `stalk-and-pounce`, a distant/obstructed recovery target, not the recorded 1.54 ft no-gain A-10 shape.
+
+### Cycle 42: Route And Energy Feasibility For Recovery Targets
+
+Priority: `S7`
+
+Status: Done
+
+Audit misses addressed: `A-11`, `A-12`
+
+Must run before: Cycle 34 strict default; Cycle 35 release gate; any Cycle 31 long-matrix success claim.
+
+Deliverables:
+
+- Persist the A-11 first-failure artifact from Cycle 33 and reproduce it as a deterministic forced scenario.
+- Teach bytecode recovery policy to reject or abandon recovery targets that are too distant for current charge and route blockage.
+- Add route/energy feasibility ports or derived thresholds so `.caz` code can choose charger, solar, junction, or low-drain waiting before depletion.
+- Add an emergency bytecode-owned handoff when `NAV_CHARGER` or `NAV_JUNCTION` remains blocked for too long.
+- Keep fallback gain at zero in strict success cases; compatibility fallback may remain counted but must not mask A-11.
+
+Exit criteria:
+
+- The A-11 forced scenario passes without depletion and without fallback gain.
+- `build/cazenv-survival --mode short-compat 1 1` no longer fails first on droid `12` with a distant/obstructed recovery target.
+- `build/cazenv-survival --mode matrix 1 1` improves from the recorded `failed_cases=5/5`; any remaining failures are captured as distinct, named misses.
+- The plan records measured charge, target distance, blocked counts, and selected bytecode recovery handoff.
+
+Verification:
+
+- Added an A-11 forced stress scenario; `make cazenv-stress` reports `stress-result=PASS survival_programs=8 scenarios_per_program=8 excluded_demo=3`.
+- Added explicit entry jumps before `survival.inc` in all archived programs so reset starts at the intended program loop or setup label.
+- `make cazenv-probes` and `make cazenv-regression` pass with no bytecode CPU faults.
+- `build/cazenv-survival --mode short-compat 1 1` passes with `failed_seeds=0/1`.
+- `build/cazenv-survival --mode short-strict 1 1` passes with `failed_seeds=0/1`, zero fallback events, and `strict=ok`.
+- `build/cazenv-survival --mode matrix 1 1` passes all five cases with `matrix-result=PASS failed_cases=0/5 days=1 seeds=1`.

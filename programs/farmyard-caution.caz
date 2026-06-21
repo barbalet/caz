@@ -1,7 +1,13 @@
 ; name: farmyard-caution
 ; description: rural safety routine for machine avoidance, terrain caution, fatigue, and recovery
 
+    JP   loop
+
+INCLUDE "survival.inc"
+
 loop:
+    CALL survival_check
+
     IN   A,(DROPPED)
     CP   1
     JP   NC,recover

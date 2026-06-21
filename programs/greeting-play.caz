@@ -1,7 +1,13 @@
 ; name: greeting-play
 ; description: sociable kitchen sketch for human greeting, playful motion, curiosity, and settling back down
 
+    JP   loop
+
+INCLUDE "survival.inc"
+
 loop:
+    CALL survival_check
+
     IN   A,(BATTERY)
     CP   62
     JP   C,rest

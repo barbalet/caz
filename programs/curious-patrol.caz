@@ -1,7 +1,13 @@
 ; name: curious-patrol
 ; description: general house-cat patrol loop that tracks motion, listens at night, and retreats from loud shocks
 
+    JP   loop
+
+INCLUDE "survival.inc"
+
 loop:
+    CALL survival_check
+
     IN   A,(EAR_VOLUME)
     CP   190
     JP   NC,alarm

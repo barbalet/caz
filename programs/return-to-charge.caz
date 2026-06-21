@@ -1,7 +1,13 @@
 ; name: return-to-charge
 ; description: survival policy for selecting charger, solar, or junction recovery before charge reaches zero
 
+    JP   loop
+
+INCLUDE "survival.inc"
+
 loop:
+    CALL survival_check
+
     IN   A,(BATTERY)
     CP   224
     JP   NC,charged
