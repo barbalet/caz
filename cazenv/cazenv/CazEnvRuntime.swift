@@ -37,7 +37,17 @@ struct EnvDroid: Identifiable {
     let bytecodeHalted: Bool
     let bytecodeFaulted: Bool
     let navIntent: UInt8
+    let navStatus: UInt8
+    let navCause: UInt8
     let skill: UInt8
+    let bytecodeGait: UInt8
+    let headYaw: UInt8
+    let earPose: UInt8
+    let tailPose: UInt8
+    let vocal: UInt8
+    let eyelid: UInt8
+    let reflexState: UInt8
+    let navTransitionCount: UInt32
 }
 
 struct EnvSnapshot {
@@ -157,7 +167,17 @@ final class CazEnvRuntime: ObservableObject {
                 bytecodeHalted: item.bytecode_halted != 0,
                 bytecodeFaulted: item.bytecode_faulted != 0,
                 navIntent: item.nav_intent,
-                skill: item.skill
+                navStatus: item.nav_status,
+                navCause: item.nav_cause,
+                skill: item.skill,
+                bytecodeGait: item.bytecode_gait,
+                headYaw: item.head_yaw,
+                earPose: item.ear_pose,
+                tailPose: item.tail_pose,
+                vocal: item.vocal,
+                eyelid: item.eyelid,
+                reflexState: item.reflex_state,
+                navTransitionCount: item.nav_transition_count
             )
         }
 

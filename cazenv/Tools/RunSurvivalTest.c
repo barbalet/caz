@@ -13,6 +13,11 @@ typedef struct DroidTrack {
     unsigned ever_solar;
     unsigned ever_tapping;
     unsigned ever_zero_charge;
+    unsigned ever_nav_charger;
+    unsigned ever_nav_solar;
+    unsigned ever_nav_junction;
+    unsigned ever_bytecode_recovery;
+    unsigned ever_supervisor_recovery;
 } DroidTrack;
 
 static const char *mode_name(unsigned mode)
@@ -132,6 +137,61 @@ static void print_sample_ports(const CazEnvState *state)
            caz_env_debug_read_port(state, 0, CAZ_PORT_NAV_STATUS));
 }
 
+static void print_sample_output(const CazEnvState *state, int index)
+{
+    const CazEnvDroid *droid = &state->droids[index];
+    const CazEnvBytecodeRuntime *runtime = &droid->bytecode;
+    printf("sample-output droid=%d program=%s output=(nav=%u status=%u cause=%u gait=%u skill=%u head=%u ear=%u tail=%u vocal=%u eyelid=%u) motion=(mode=%u speed=%.2f target=%.2f/%.2f transitions=%u)\n",
+           index,
+           caz_env_bytecode_program_name(state, index),
+           runtime->output.nav_intent,
+           droid->nav_status,
+           droid->nav_cause,
+           runtime->output.gait,
+           runtime->output.skill,
+           runtime->output.head_yaw,
+           runtime->output.ear_pose,
+           runtime->output.tail_pose,
+           runtime->output.vocal,
+           runtime->output.eyelid,
+           droid->mode,
+           droid->speed,
+           droid->target_x,
+           droid->target_z,
+           droid->nav_transition_count);
+}
+
+static int run_nav_probe(void)
+{
+    CazEnvState state;
+    char load_error[512];
+    const int index = 9;
+
+    caz_env_init(&state, 0x0ca7e042u);
+    if (!caz_env_load_programs(&state, "programs", load_error, sizeof(load_error))) {
+        fprintf(stderr, "%s\n", load_error);
+        return 0;
+    }
+
+    state.droids[index].charge = 0.30f;
+    state.droids[index].feral = 0.0f;
+    state.droids[index].mode = CAZ_ENV_DROID_PROGRAM;
+    state.droids[index].nav_cause = CAZ_ENV_NAV_CAUSE_NONE;
+    state.droids[index].target_x = state.droids[index].x;
+    state.droids[index].target_z = state.droids[index].z;
+
+    for (int step = 0; step < 180; step++) {
+        caz_env_step(&state, 0.2f);
+    }
+
+    printf("nav-probe ");
+    print_sample_output(&state, index);
+    return state.droids[index].bytecode.output.nav_intent != CAZ_NAV_WANDER &&
+           state.droids[index].nav_status != CAZ_NAV_STATUS_IDLE &&
+           state.droids[index].nav_status != CAZ_NAV_STATUS_BLOCKED &&
+           state.droids[index].nav_cause == CAZ_ENV_NAV_CAUSE_BYTECODE;
+}
+
 int main(int argc, char **argv)
 {
     const int days = argc > 1 ? atoi(argv[1]) : 14;
@@ -150,6 +210,11 @@ int main(int argc, char **argv)
            seed_count,
            dt_seconds,
            caz_env_droid_count());
+
+    if (!run_nav_probe()) {
+        fprintf(stderr, "nav-probe failed: return-to-charge.caz did not request a usable recovery navigation mode\n");
+        return 1;
+    }
 
     int failed_seeds = 0;
     for (int seed_index = 0; seed_index < seed_count; seed_index++) {
@@ -177,6 +242,11 @@ int main(int argc, char **argv)
             tracks[index].ever_solar = 0u;
             tracks[index].ever_tapping = 0u;
             tracks[index].ever_zero_charge = 0u;
+            tracks[index].ever_nav_charger = 0u;
+            tracks[index].ever_nav_solar = 0u;
+            tracks[index].ever_nav_junction = 0u;
+            tracks[index].ever_bytecode_recovery = 0u;
+            tracks[index].ever_supervisor_recovery = 0u;
         }
 
         for (long step = 0; step < total_steps; step++) {
@@ -194,6 +264,12 @@ int main(int argc, char **argv)
                 tracks[index].ever_tapping |= droid->mode == CAZ_ENV_DROID_TAP_JUNCTION ||
                                               droid->energy_source == CAZ_ENV_ENERGY_JUNCTION;
                 tracks[index].ever_zero_charge |= droid->charge <= 0.000001f;
+                tracks[index].ever_nav_charger |= droid->bytecode.output.nav_intent == CAZ_NAV_CHARGER;
+                tracks[index].ever_nav_solar |= droid->bytecode.output.nav_intent == CAZ_NAV_SOLAR;
+                tracks[index].ever_nav_junction |= droid->bytecode.output.nav_intent == CAZ_NAV_JUNCTION;
+                tracks[index].ever_bytecode_recovery |= droid->nav_cause == CAZ_ENV_NAV_CAUSE_BYTECODE &&
+                                                         droid->bytecode.output.nav_intent != CAZ_NAV_WANDER;
+                tracks[index].ever_supervisor_recovery |= droid->nav_cause == CAZ_ENV_NAV_CAUSE_SUPERVISOR;
             }
         }
 
@@ -204,6 +280,11 @@ int main(int argc, char **argv)
         int ever_solar = 0;
         int ever_tapping = 0;
         int ever_zero_charge = 0;
+        int ever_nav_charger = 0;
+        int ever_nav_solar = 0;
+        int ever_nav_junction = 0;
+        int ever_bytecode_recovery = 0;
+        int ever_supervisor_recovery = 0;
         int final_zero_charge = 0;
         float final_minimum_charge = FLT_MAX;
         float observed_minimum_charge = FLT_MAX;
@@ -231,6 +312,11 @@ int main(int argc, char **argv)
             ever_solar += tracks[index].ever_solar ? 1 : 0;
             ever_tapping += tracks[index].ever_tapping ? 1 : 0;
             ever_zero_charge += tracks[index].ever_zero_charge ? 1 : 0;
+            ever_nav_charger += tracks[index].ever_nav_charger ? 1 : 0;
+            ever_nav_solar += tracks[index].ever_nav_solar ? 1 : 0;
+            ever_nav_junction += tracks[index].ever_nav_junction ? 1 : 0;
+            ever_bytecode_recovery += tracks[index].ever_bytecode_recovery ? 1 : 0;
+            ever_supervisor_recovery += tracks[index].ever_supervisor_recovery ? 1 : 0;
             final_zero_charge += droid->charge <= 0.000001f ? 1 : 0;
         }
 
@@ -253,6 +339,12 @@ int main(int argc, char **argv)
         for (unsigned mode = 0; mode < 7u; mode++) {
             printf(" %s=%d", mode_name(mode), final_modes[mode]);
         }
+        printf(" nav: charger=%d solar=%d junction=%d cause: bytecode-nav=%d supervisor=%d",
+               ever_nav_charger,
+               ever_nav_solar,
+               ever_nav_junction,
+               ever_bytecode_recovery,
+               ever_supervisor_recovery);
         const int seed_failed = ever_zero_charge > 0 || ever_depleted > 0 || final_zero_charge > 0;
         if (seed_failed) {
             failed_seeds++;
@@ -261,6 +353,8 @@ int main(int argc, char **argv)
         if (seed_index == 0) {
             count_bytecode_runtimes(&state);
             print_sample_ports(&state);
+            print_sample_output(&state, 0);
+            print_sample_output(&state, 9);
         }
     }
 

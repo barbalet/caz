@@ -42,6 +42,13 @@ typedef enum CazEnvEnergySource {
     CAZ_ENV_ENERGY_JUNCTION = 3
 } CazEnvEnergySource;
 
+typedef enum CazEnvNavCause {
+    CAZ_ENV_NAV_CAUSE_NONE = 0,
+    CAZ_ENV_NAV_CAUSE_BYTECODE = 1,
+    CAZ_ENV_NAV_CAUSE_SUPERVISOR = 2,
+    CAZ_ENV_NAV_CAUSE_FAILURE = 3
+} CazEnvNavCause;
+
 typedef struct CazEnvFixtureSnapshot {
     uint8_t type;
     float x;
@@ -72,8 +79,18 @@ typedef struct CazEnvDroidSnapshot {
     uint8_t bytecode_halted;
     uint8_t bytecode_faulted;
     uint8_t nav_intent;
+    uint8_t nav_status;
+    uint8_t nav_cause;
     uint8_t skill;
+    uint8_t bytecode_gait;
+    uint8_t head_yaw;
+    uint8_t ear_pose;
+    uint8_t tail_pose;
+    uint8_t vocal;
+    uint8_t eyelid;
+    uint8_t reflex_state;
     uint8_t bytecode_program;
+    uint32_t nav_transition_count;
     uint64_t bytecode_instructions;
     uint64_t bytecode_cycles;
 } CazEnvDroidSnapshot;
@@ -132,6 +149,12 @@ typedef struct CazEnvDroid {
     uint8_t mode;
     uint8_t charging_slot;
     uint8_t energy_source;
+    uint8_t nav_status;
+    uint8_t nav_cause;
+    uint8_t last_nav_intent;
+    uint8_t last_nav_status;
+    uint8_t last_nav_cause;
+    uint32_t nav_transition_count;
     CazEnvBytecodeRuntime bytecode;
 } CazEnvDroid;
 

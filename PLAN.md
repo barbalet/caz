@@ -29,11 +29,11 @@ The middle layer should become the single place where high-level cat intent is t
 
 Active phase: `CazEnv Bytecode Survival`
 
-Last completed cycle: `Cycle 18: Bytecode Instruction Budget And Tick Order`
+Last completed cycle: `Cycle 20: NAV_INTENT Bridge To Room Goals`
 
-Current cycle: `Cycle 19: Output Port Bridge To CazEnv Motion`
+Current cycle: `Cycle 21: Charger Docking Under Bytecode Control`
 
-Next development action: convert bytecode output latches such as `GAIT`, `SKILL`, `HEAD_YAW`, and `NAV_INTENT` into interpreted CazEnv movement and steering, then reduce reliance on the C supervisor's hardcoded program profiles.
+Next development action: make charger docking and queuing depend on bytecode `NAV_CHARGER` requests and charger slot availability, with visible blocked/loitering behaviour when all slots are full.
 
 Progress rule: when the current cycle's exit criteria pass, change that cycle's status to `Done`, update this section to name the next cycle, and mark the next cycle's status as `Current`.
 
@@ -70,6 +70,8 @@ When a misstep is found:
 | 2026-06-21 | Cycle 16 | CazEnv survival/environment ports now return bounded deterministic values. Survival logs show `sample-ports droid=0 battery=97 charger=(bearing=15 distance=113 slots=8) junction=(bearing=128 distance=30) solar=89 energy=0 nav=0/0`. | Mark Cycle 16 `Done` for charger, junction, solar, battery, energy, and nav adapter work. Richer eye, ear, terrain, IMU, lifted, dropped, and reflex sensing remains Cycle 17. |
 | 2026-06-21 | Cycle 17 | CazEnv body and behaviour ports now return changing context-derived values. `make cazenv-survival` logs eye, ear, body, terrain, reflex, and survival port samples at start and after simulation. | Mark Cycle 17 `Done`. Terrain remains a low ordinal caution signal because archived programs use `TERRAIN >= 4`; broad object proximity is exposed through `EYE_EDGE`. |
 | 2026-06-21 | Cycle 18 | CazEnv now enables loaded VM runtimes with a fixed budget of one bytecode instruction per droid per environment step. A 14-day/3-seed run completed with `stepping=20 halted=0 faulted=0` and seed-0 final `instructions=120960000`. | Mark Cycle 18 `Done`. This proves bounded bytecode execution and deterministic tick order, but the C supervisor still owns movement and energy decisions until Cycles 19-20 bridge VM outputs into behaviour. |
+| 2026-06-21 | Cycle 19 | Bytecode output latches now drive normal interpreted motion. Survival logs show `sample-output droid=0 ... gait=4 ... motion=(mode=1 speed=1.25 ...)`, and the renderer consumes bytecode head, tail, scratch/tap, and reflex state. | Mark Cycle 19 `Done`. Normal movement no longer depends on hardcoded per-program speed profiles, though supervisor recovery still has fallback speed overrides until Cycle 24. |
+| 2026-06-21 | Cycle 20 | `NAV_INTENT` now maps to charger, solar, and junction goals. The nav probe shows `return-to-charge.caz` producing bytecode-caused recovery: `nav=3 status=4 cause=1`. The default survival run still reports `cause: bytecode-nav=2 supervisor=18`. | Mark Cycle 20 `Done` for bytecode-requested NAV goal execution. Do not treat this as strict bytecode-owned survival; Cycle 24 must remove/fail supervisor fallback and Cycle 25 must add survival prologues to non-recovery programs. |
 
 ## Design Rules
 
@@ -816,7 +818,7 @@ Verification:
 
 Priority: `S4`
 
-Status: Current
+Status: Done
 
 Deliverables:
 
@@ -831,11 +833,17 @@ Exit criteria:
 - Movement stops or changes when the program changes `GAIT` or `SKILL`.
 - C hardcoded program speed profiles are no longer needed for normal behaviour.
 
+Verification:
+
+- `make cazenv-survival` logs raw output latches beside interpreted motion, including `sample-output droid=0 ... gait=4 ... head=64 ... motion=(mode=1 speed=1.25 ...)`.
+- CazEnv snapshots and the Swift overlay now expose `NAV_INTENT`, `NAV_STATUS`, nav cause, raw `GAIT`, `SKILL`, `HEAD_YAW`, `EAR_POSE`, `TAIL_POSE`, `VOCAL`, `EYELID`, reflex state, and nav transition count.
+- The renderer uses bytecode head yaw and tail pose, shows scratch/tap claws from bytecode skill/nav status, and tints active reflex states.
+
 ### Cycle 20: NAV_INTENT Bridge To Room Goals
 
 Priority: `S4`
 
-Status: Pending
+Status: Done
 
 Deliverables:
 
@@ -847,14 +855,20 @@ Deliverables:
 Exit criteria:
 
 - `return-to-charge.caz` can drive a droid toward charging, solar, or junction recovery in CazEnv.
-- The environment does not choose recovery mode until bytecode requests it.
+- Bytecode-requested recovery goals take precedence over environment fallback.
 - Recovery logs show `NAV_INTENT` as the primary cause.
+
+Verification:
+
+- `make cazenv-survival` runs a `return-to-charge.caz` nav probe that ends with `output=(nav=3 status=4 cause=1 gait=5 skill=8 ...)`, proving bytecode-requested junction recovery reaches tapping status.
+- The default 14-day/3-seed survival run passes with `survival-result=PASS failed_seeds=0/3`, `stepping=20 halted=0 faulted=0 instructions=120960000` for seed 0.
+- The same run reports `nav: charger=2 solar=0 junction=0 cause: bytecode-nav=2 supervisor=18`, so most recovery is still supervisor fallback. This is expected until Cycles 24-25 and must not be mistaken for strict bytecode-owned survival.
 
 ### Cycle 21: Charger Docking Under Bytecode Control
 
 Priority: `S4`
 
-Status: Pending
+Status: Current
 
 Deliverables:
 

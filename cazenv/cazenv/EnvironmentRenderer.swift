@@ -286,7 +286,11 @@ final class EnvironmentRenderer: NSObject, MTKViewDelegate {
             return
         }
 
-        let pose = EnvCatPose(gait: droid.gait, mode: droid.mode, phase: time * 4.0 + Float(droid.id) * 0.77)
+        let pose = EnvCatPose(gait: droid.gait,
+                              mode: droid.mode,
+                              headCommand: droid.headYaw,
+                              tailCommand: droid.tailPose,
+                              phase: time * 4.0 + Float(droid.id) * 0.77)
         let baseColor = droidColor(droid)
         for triangle in catMesh.triangles {
             var a = catMesh.transform(triangle.a, segment: triangle.segment, pose: pose)
@@ -298,7 +302,7 @@ final class EnvironmentRenderer: NSObject, MTKViewDelegate {
             let normal = normalFor(a, b, c)
             triangles.append(WorldTriangle(a: a, b: b, c: c, color: shade(baseColor, normal: normal)))
         }
-        addDroidClaws(droid, active: droid.mode == 6, to: &triangles)
+        addDroidClaws(droid, active: droid.mode == 6 || droid.skill == 8 || droid.navStatus == 4, to: &triangles)
     }
 
     private func addDroidClaws(_ droid: EnvDroid, active: Bool, to triangles: inout [WorldTriangle]) {
@@ -327,6 +331,9 @@ final class EnvironmentRenderer: NSObject, MTKViewDelegate {
         }
         if droid.mode == 6 {
             return SIMD4<Float>(0.82, 0.43, 0.14, 1)
+        }
+        if droid.reflexState != 0 {
+            return SIMD4<Float>(0.86, 0.78, 0.20, 1)
         }
         if droid.mode == 2 || droid.charge < 0.22 {
             return SIMD4<Float>(0.88, 0.54, 0.18, 1)
@@ -426,13 +433,15 @@ private struct EnvCatPose {
     let leftRearLeg: Float
     let rightRearLeg: Float
 
-    init(gait: UInt8, mode: UInt8, phase: Float) {
+    init(gait: UInt8, mode: UInt8, headCommand: UInt8, tailCommand: UInt8, phase: Float) {
         let moving = gait == 1 || gait == 2 || gait == 3 || mode == 2 || mode == 6
         let stride: Float = moving ? 0.36 : 0.05
         let pounceBias: Float = gait == 3 ? 0.22 : 0
-        headYaw = sin(phase * 0.55) * 0.18
-        tailBase = sin(phase * 0.82) * 0.22 + (mode == 2 || mode == 6 ? 0.34 : 0.08)
-        tailTip = sin(phase * 1.1 + 0.8) * (mode == 6 ? 0.40 : 0.28)
+        let commandedHead = (Float(headCommand) - 128) / 127 * 0.46
+        let commandedTail = Float(tailCommand) / 8 * 0.34
+        headYaw = commandedHead + sin(phase * 0.55) * 0.10
+        tailBase = sin(phase * 0.82) * 0.18 + commandedTail + (mode == 2 || mode == 6 ? 0.24 : 0.02)
+        tailTip = sin(phase * 1.1 + 0.8) * (mode == 6 ? 0.40 : 0.26)
         leftFrontLeg = sin(phase) * stride
         rightFrontLeg = sin(phase + .pi) * stride
         leftRearLeg = sin(phase + 2.35) * stride + pounceBias
