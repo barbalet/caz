@@ -29,13 +29,13 @@ The middle layer should become the single place where high-level cat intent is t
 
 Active phase: `CazEnv Bytecode Survival`
 
-Last completed cycle: `Cycle 36: Harness Mode Split And First-Failure Baseline`
+Last completed cycle: `Cycle 37: Program Registry And Archive Parity`
 
-Current cycle: `Cycle 24: Supervisor Attribution Gate Before Demotion`
+Current cycle: `Cycle 25: Program Survival Prologue Pattern`
 
-Next development action: add explicit CazEnv compatibility and strict recovery modes to the simulator core, count every supervisor/fallback decision by recovery type, and make strict mode fail on fallback use without removing compatibility diagnostics prematurely.
+Next development action: define and apply the survival prologue pattern so every archived/CazEnv-assigned behaviour can request charger, solar, or junction recovery before relying on C supervisor fallback.
 
-Dependency note: audit-added Cycle 36 is complete, so Cycle 24 can now use the split probe/compatibility/strict harness modes as its development gate.
+Dependency note: audit-added Cycle 37 is complete, so Cycle 25 can now operate against the shared 11-program archive registry and the 8-program CazEnv survival participant set.
 
 Progress rule: when the current cycle's exit criteria pass, change that cycle's status to `Done`, update this section to name the next cycle, and mark the next cycle's status as `Current`.
 
@@ -83,6 +83,8 @@ When a misstep is found:
 | 2026-06-21 | Cycle 15 | CazEnv loads the 10-entry CazEnv program table, while `programs/` currently contains 11 `.caz` files and the CLI named-program registry exposes only four. | Keep Cycle 15 `Done` for CazEnv runtime loading. Add Miss A-03 and Cycle 37; strengthen Cycle 27. |
 | 2026-06-21 | Cycle 23 | Junction tap gain now requires bytecode `NAV_JUNCTION`; the junction probe reports `nav=3 status=4 cause=1` with `nav_tap=0.004222` and `fallback_tap=0.000000`. Missing-junction and non-bytecode tap probes both block without junction energy. | Mark Cycle 23 `Done`. Keep broader recovery-gain attribution in Cycle 38 because Cycle 23 only adds tap-specific attribution. |
 | 2026-06-21 | Cycle 36 | The harness now has explicit `probes`, `short-compat`, `short-strict`, `long-compat`, and `long-strict` modes. `make cazenv-probes` passes, while `short-compat` records the known first failure at seed `0x0ca7e000`, step `19207`, droid `0`, program `curious-patrol`. | Mark Cycle 36 `Done`. Cycle 24 may now use the strict/compatibility split as a gate, while the long-run survival failure remains unresolved. |
+| 2026-06-21 | Cycle 24 | CazEnv now exposes supervisor fallback event counters for charger returns, solar forage, junction tap attempts, charger loiter, speed overrides, and gait overrides. `short-compat 1 1` reports `fallback-events: charger=131051 solar=84647 junction=6 loiter=130446 speed=583581 gait=583755 total=1513486`, while `short-strict 1 1` reports the same total with `strict=FAIL`. | Mark Cycle 24 `Done`. Compatibility fallback remains available but counted; strict mode fails on fallback use, so compatibility output is not a survival success claim. |
+| 2026-06-21 | Cycle 37 | The loader now owns the shared 11-program registry. `make cazenv-probes` reports `program-registry total=11 survival=8 demo=3 assignable=8 path_only=3 archive_files=11`; `skill-cycle`, `pose-frame`, and `skill-pounce` are demo/path-only for survival planning. Excluding demos moves the return-to-charge probe target from old droid `9` to droid `7`. | Mark Cycle 37 `Done`. Cycle 25 may now add survival prologues against a visible archive/participant split instead of CazEnv's former hidden 10-program table. |
 
 ### Audit-Caught Misses
 
@@ -977,7 +979,7 @@ Verification:
 
 Priority: `S6`
 
-Status: Current
+Status: Done
 
 Audit misses addressed: `A-02`, `A-09`
 
@@ -997,11 +999,19 @@ Exit criteria:
 - The default development target makes its mode clear in its first output line.
 - CazEnv still prevents undefined states such as invalid charge, invalid slots, or out-of-room coordinates.
 
+Verification:
+
+- `make cazenv-probes` passes with `program-registry total=11 survival=8 demo=3 assignable=8 path_only=3 archive_files=11` followed by `probe-result=PASS`.
+- `build/cazenv-survival --mode short-compat 1 1` reports `cazenv harness mode=short-compat fallback=allowed-counted ...` and fails honestly with supervisor attribution: `fallback-events: charger=131051 solar=84647 junction=6 loiter=130446 speed=583581 gait=583755 total=1513486 result=FAIL`.
+- `build/cazenv-survival --mode short-strict 1 1` reports `cazenv harness mode=short-strict fallback=fail-on-use ...`, includes the same fallback event breakdown, and adds `strict=FAIL`, proving strict mode fails on fallback use.
+- `make` succeeds.
+- `xcodebuild -project cazenv/cazenv.xcodeproj -scheme cazenv -configuration Debug build` succeeds.
+
 ### Cycle 25: Program Survival Prologue Pattern
 
 Priority: `S5`
 
-Status: Pending
+Status: Current
 
 Audit misses addressed: `A-04`
 
@@ -1271,7 +1281,7 @@ Verification:
 
 Priority: `S2`
 
-Status: Pending
+Status: Done
 
 Audit misses addressed: `A-03`, `A-04`, `A-09`
 
@@ -1291,6 +1301,15 @@ Exit criteria:
 - CazEnv program assignment is derived from or checked against the same registry.
 - No `.caz` source file is silently ignored by survival/regression planning.
 - The plan records which programs are survival participants and which are renderer/pose demos.
+
+Verification:
+
+- `build/caz --list` lists all 11 archived programs by documented name.
+- Survival/CazEnv participants: `curious-patrol`, `nap-watch`, `farmyard-mouser`, `loaf-and-groom`, `stalk-and-pounce`, `farmyard-caution`, `greeting-play`, and `return-to-charge`.
+- Demo/path-only programs excluded from CazEnv survival assignment until wrapped or given survival prologues: `skill-cycle`, `pose-frame`, and `skill-pounce`.
+- `make cazenv-probes` runs the archive parity check and reports `program-registry total=11 survival=8 demo=3 assignable=8 path_only=3 archive_files=11`.
+- CazEnv no longer owns a private 10-program table; assignment is derived from loader metadata, and missing files, duplicate names, or archive/registry mismatches fail the probe visibly.
+- Because demo programs are no longer assigned to survival droids, `return-to-charge` probe coverage moved from old droid `9` to droid `7`; the probes now report `program=return-to-charge` at droid `7`.
 
 ### Cycle 38: Recovery Gain Attribution And Resource Accounting
 

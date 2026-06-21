@@ -874,10 +874,85 @@ bool caz_loader_load_file(CazCpu *cpu, const char *path, CazProgramImage *image)
     return true;
 }
 
+static const CazProgramMetadata program_registry[CAZ_PROGRAM_COUNT] = {
+    {CAZ_PROGRAM_CURIOUS_PATROL,
+     "curious-patrol",
+     "general house-cat patrol loop that tracks motion, listens at night, and retreats from loud shocks",
+     1u, 1u, 2.2f, 1u},
+    {CAZ_PROGRAM_NAP_WATCH,
+     "nap-watch",
+     "low-energy parlour mode that dozes until motion, human speech, or a startling sound appears",
+     1u, 1u, 0.35f, 0u},
+    {CAZ_PROGRAM_FARMYARD_MOUSER,
+     "farmyard-mouser",
+     "rural mouser routine tuned for prey rustle, tractor noise, human calls, weather, and glare",
+     1u, 1u, 1.8f, 2u},
+    {CAZ_PROGRAM_SKILL_CYCLE,
+     "skill-cycle",
+     "cycles rest, sit, walk, crawl, pounce, sniff, and scratch built-in skills by symbol",
+     0u, 0u, 1.5f, 1u},
+    {CAZ_PROGRAM_LOAF_AND_GROOM,
+     "loaf-and-groom",
+     "quiet indoor routine that rests, stretches after motion, and grooms when the room feels safe",
+     1u, 1u, 0.25f, 0u},
+    {CAZ_PROGRAM_STALK_AND_POUNCE,
+     "stalk-and-pounce",
+     "hedgerow hunting sketch that crouches, stalks, pounces, and recovers from startled footing",
+     1u, 1u, 2.6f, 3u},
+    {CAZ_PROGRAM_FARMYARD_CAUTION,
+     "farmyard-caution",
+     "rural safety routine for machine avoidance, terrain caution, fatigue, and recovery",
+     1u, 1u, 1.1f, 4u},
+    {CAZ_PROGRAM_GREETING_PLAY,
+     "greeting-play",
+     "sociable kitchen sketch for human greeting, playful motion, curiosity, and settling back down",
+     1u, 1u, 1.9f, 1u},
+    {CAZ_PROGRAM_POSE_FRAME,
+     "pose-frame",
+     "buffers and commits a full 16-slot normalized body pose frame",
+     0u, 0u, 0.75f, 5u},
+    {CAZ_PROGRAM_RETURN_TO_CHARGE,
+     "return-to-charge",
+     "survival policy for selecting charger, solar, or junction recovery before charge reaches zero",
+     1u, 1u, 2.4f, 1u},
+    {CAZ_PROGRAM_SKILL_POUNCE,
+     "skill-pounce",
+     "symbolic skill and body-port fixture for pounce/reflex checks",
+     0u, 0u, 2.85f, 3u}
+};
+
+size_t caz_loader_program_count(void)
+{
+    return sizeof(program_registry) / sizeof(program_registry[0]);
+}
+
+const CazProgramMetadata *caz_loader_program_metadata(CazProgramKind kind)
+{
+    for (size_t index = 0u; index < caz_loader_program_count(); index++) {
+        if (program_registry[index].kind == kind) {
+            return &program_registry[index];
+        }
+    }
+    return NULL;
+}
+
+const CazProgramMetadata *caz_loader_program_metadata_at(size_t index)
+{
+    if (index >= caz_loader_program_count()) {
+        return NULL;
+    }
+    return &program_registry[index];
+}
+
 bool caz_loader_program_path(CazProgramKind kind, const char *program_dir, char *buffer, size_t buffer_length)
 {
+    const CazProgramMetadata *metadata = caz_loader_program_metadata(kind);
     const char *dir = (program_dir != NULL && program_dir[0] != '\0') ? program_dir : "programs";
-    int written = snprintf(buffer, buffer_length, "%s/%s.caz", dir, caz_loader_program_name(kind));
+    int written;
+    if (metadata == NULL || buffer == NULL || buffer_length == 0u) {
+        return false;
+    }
+    written = snprintf(buffer, buffer_length, "%s/%s.caz", dir, metadata->name);
     return written > 0 && (size_t)written < buffer_length;
 }
 
@@ -889,7 +964,7 @@ bool caz_loader_load_named(CazCpu *cpu,
     char path[CAZ_PROGRAM_PATH_MAX];
     if (!caz_loader_program_path(kind, program_dir, path, sizeof(path))) {
         memset(image, 0, sizeof(*image));
-        copy_text(image->error, sizeof(image->error), "program path is too long");
+        copy_text(image->error, sizeof(image->error), "program path is too long or unknown");
         return false;
     }
     return caz_loader_load_file(cpu, path, image);
@@ -897,13 +972,30 @@ bool caz_loader_load_named(CazCpu *cpu,
 
 bool caz_loader_parse_program_name(const char *name, CazProgramKind *kind)
 {
-    if (equals_ci(name, "curious-patrol") || equals_ci(name, "patrol")) {
+    if (name == NULL || kind == NULL) {
+        return false;
+    }
+    for (size_t index = 0u; index < caz_loader_program_count(); index++) {
+        if (equals_ci(name, program_registry[index].name)) {
+            *kind = program_registry[index].kind;
+            return true;
+        }
+    }
+    if (equals_ci(name, "patrol")) {
         *kind = CAZ_PROGRAM_CURIOUS_PATROL;
-    } else if (equals_ci(name, "nap-watch") || equals_ci(name, "nap")) {
+    } else if (equals_ci(name, "nap")) {
         *kind = CAZ_PROGRAM_NAP_WATCH;
-    } else if (equals_ci(name, "farmyard-mouser") || equals_ci(name, "mouser")) {
+    } else if (equals_ci(name, "mouser")) {
         *kind = CAZ_PROGRAM_FARMYARD_MOUSER;
-    } else if (equals_ci(name, "return-to-charge") || equals_ci(name, "charge")) {
+    } else if (equals_ci(name, "caution")) {
+        *kind = CAZ_PROGRAM_FARMYARD_CAUTION;
+    } else if (equals_ci(name, "groom") || equals_ci(name, "loaf")) {
+        *kind = CAZ_PROGRAM_LOAF_AND_GROOM;
+    } else if (equals_ci(name, "pounce")) {
+        *kind = CAZ_PROGRAM_STALK_AND_POUNCE;
+    } else if (equals_ci(name, "greeting") || equals_ci(name, "play")) {
+        *kind = CAZ_PROGRAM_GREETING_PLAY;
+    } else if (equals_ci(name, "charge")) {
         *kind = CAZ_PROGRAM_RETURN_TO_CHARGE;
     } else {
         return false;
@@ -913,39 +1005,26 @@ bool caz_loader_parse_program_name(const char *name, CazProgramKind *kind)
 
 const char *caz_loader_program_name(CazProgramKind kind)
 {
-    switch (kind) {
-    case CAZ_PROGRAM_CURIOUS_PATROL: return "curious-patrol";
-    case CAZ_PROGRAM_NAP_WATCH: return "nap-watch";
-    case CAZ_PROGRAM_FARMYARD_MOUSER: return "farmyard-mouser";
-    case CAZ_PROGRAM_RETURN_TO_CHARGE: return "return-to-charge";
-    default: return "unknown";
-    }
+    const CazProgramMetadata *metadata = caz_loader_program_metadata(kind);
+    return metadata != NULL ? metadata->name : "unknown";
 }
 
 const char *caz_loader_program_description(CazProgramKind kind)
 {
-    switch (kind) {
-    case CAZ_PROGRAM_CURIOUS_PATROL:
-        return "general house-cat patrol loop that tracks motion, listens at night, and retreats from loud shocks";
-    case CAZ_PROGRAM_NAP_WATCH:
-        return "low-energy parlour mode that dozes until motion, human speech, or a startling sound appears";
-    case CAZ_PROGRAM_FARMYARD_MOUSER:
-        return "rural mouser routine tuned for prey rustle, tractor noise, human calls, weather, and glare";
-    case CAZ_PROGRAM_RETURN_TO_CHARGE:
-        return "survival routine that selects charger, solar, or junction recovery before charge reaches zero";
-    default:
-        return "unknown";
-    }
+    const CazProgramMetadata *metadata = caz_loader_program_metadata(kind);
+    return metadata != NULL ? metadata->description : "unknown";
 }
 
 void caz_loader_print_programs(FILE *out)
 {
-    fprintf(out, "curious-patrol  programs/curious-patrol.caz  - %s\n",
-            caz_loader_program_description(CAZ_PROGRAM_CURIOUS_PATROL));
-    fprintf(out, "nap-watch       programs/nap-watch.caz       - %s\n",
-            caz_loader_program_description(CAZ_PROGRAM_NAP_WATCH));
-    fprintf(out, "farmyard-mouser programs/farmyard-mouser.caz - %s\n",
-            caz_loader_program_description(CAZ_PROGRAM_FARMYARD_MOUSER));
-    fprintf(out, "return-to-charge programs/return-to-charge.caz - %s\n",
-            caz_loader_program_description(CAZ_PROGRAM_RETURN_TO_CHARGE));
+    for (size_t index = 0u; index < caz_loader_program_count(); index++) {
+        const CazProgramMetadata *metadata = &program_registry[index];
+        fprintf(out,
+                "%-17s programs/%s.caz - %s [%s%s]\n",
+                metadata->name,
+                metadata->name,
+                metadata->description,
+                metadata->survival_participant ? "survival" : "demo",
+                metadata->cazenv_assignable ? ", cazenv" : ", path-only");
+    }
 }

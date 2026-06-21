@@ -19,8 +19,26 @@ typedef enum CazProgramKind {
     CAZ_PROGRAM_CURIOUS_PATROL = 0,
     CAZ_PROGRAM_NAP_WATCH,
     CAZ_PROGRAM_FARMYARD_MOUSER,
-    CAZ_PROGRAM_RETURN_TO_CHARGE
+    CAZ_PROGRAM_SKILL_CYCLE,
+    CAZ_PROGRAM_LOAF_AND_GROOM,
+    CAZ_PROGRAM_STALK_AND_POUNCE,
+    CAZ_PROGRAM_FARMYARD_CAUTION,
+    CAZ_PROGRAM_GREETING_PLAY,
+    CAZ_PROGRAM_POSE_FRAME,
+    CAZ_PROGRAM_RETURN_TO_CHARGE,
+    CAZ_PROGRAM_SKILL_POUNCE,
+    CAZ_PROGRAM_COUNT
 } CazProgramKind;
+
+typedef struct CazProgramMetadata {
+    CazProgramKind kind;
+    const char *name;
+    const char *description;
+    uint8_t survival_participant;
+    uint8_t cazenv_assignable;
+    float default_speed;
+    uint8_t default_gait;
+} CazProgramMetadata;
 
 typedef struct CazProgramImage {
     uint8_t bytes[CAZ_PROGRAM_MAX];
@@ -42,6 +60,9 @@ bool caz_loader_program_path(CazProgramKind kind,
                              char *buffer,
                              size_t buffer_length);
 bool caz_loader_parse_program_name(const char *name, CazProgramKind *kind);
+size_t caz_loader_program_count(void);
+const CazProgramMetadata *caz_loader_program_metadata(CazProgramKind kind);
+const CazProgramMetadata *caz_loader_program_metadata_at(size_t index);
 const char *caz_loader_program_name(CazProgramKind kind);
 const char *caz_loader_program_description(CazProgramKind kind);
 void caz_loader_print_programs(FILE *out);

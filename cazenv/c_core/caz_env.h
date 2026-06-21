@@ -13,7 +13,7 @@
 #define CAZ_ENV_DROID_COUNT 20
 #define CAZ_ENV_FIXTURE_COUNT 21
 #define CAZ_ENV_CHARGE_SLOT_COUNT 8
-#define CAZ_ENV_PROGRAM_COUNT 10
+#define CAZ_ENV_PROGRAM_COUNT ((int)CAZ_PROGRAM_COUNT)
 
 typedef enum CazEnvFixtureType {
     CAZ_ENV_FIXTURE_CHARGER = 1,
@@ -125,6 +125,15 @@ typedef struct CazEnvBytecodeRuntime {
     uint8_t faulted;
 } CazEnvBytecodeRuntime;
 
+typedef struct CazEnvSupervisorMetrics {
+    uint64_t charger_returns;
+    uint64_t solar_forages;
+    uint64_t junction_taps;
+    uint64_t charger_loiters;
+    uint64_t speed_overrides;
+    uint64_t gait_overrides;
+} CazEnvSupervisorMetrics;
+
 typedef struct CazEnvFixture {
     uint8_t type;
     float x;
@@ -172,6 +181,7 @@ typedef struct CazEnvState {
     CazEnvFixture fixtures[CAZ_ENV_FIXTURE_COUNT];
     CazEnvDroid droids[CAZ_ENV_DROID_COUNT];
     int8_t charge_slots[CAZ_ENV_CHARGE_SLOT_COUNT];
+    CazEnvSupervisorMetrics supervisor_metrics;
 } CazEnvState;
 
 void caz_env_init(CazEnvState *state, uint32_t seed);

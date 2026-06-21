@@ -8,26 +8,48 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct CazEnvProgramMotion {
-    const char *name;
-    float speed;
-    uint8_t gait;
-} CazEnvProgramMotion;
-
-static const CazEnvProgramMotion program_table[CAZ_ENV_PROGRAM_COUNT] = {
-    {"curious-patrol", 2.2f, 1u},
-    {"nap-watch", 0.35f, 0u},
-    {"farmyard-mouser", 1.8f, 2u},
-    {"skill-cycle", 1.5f, 1u},
-    {"loaf-and-groom", 0.25f, 0u},
-    {"stalk-and-pounce", 2.6f, 3u},
-    {"farmyard-caution", 1.1f, 4u},
-    {"greeting-play", 1.9f, 1u},
-    {"pose-frame", 0.75f, 5u},
-    {"return-to-charge", 2.4f, 1u}
-};
-
 #define CAZ_ENV_VM_INSTRUCTIONS_PER_TICK 1u
+
+static const CazProgramMetadata *program_metadata_for(uint8_t program)
+{
+    const CazProgramMetadata *metadata = caz_loader_program_metadata((CazProgramKind)program);
+    return metadata != NULL ? metadata : caz_loader_program_metadata(CAZ_PROGRAM_RETURN_TO_CHARGE);
+}
+
+static int assignable_program_count(void)
+{
+    int count = 0;
+    for (size_t index = 0u; index < caz_loader_program_count(); index++) {
+        const CazProgramMetadata *metadata = caz_loader_program_metadata_at(index);
+        if (metadata != NULL && metadata->cazenv_assignable) {
+            count++;
+        }
+    }
+    return count;
+}
+
+static uint8_t assignable_program_for_droid(int droid_index)
+{
+    const int count = assignable_program_count();
+    const int target = count > 0 ? droid_index % count : 0;
+    int seen = 0;
+    for (size_t index = 0u; index < caz_loader_program_count(); index++) {
+        const CazProgramMetadata *metadata = caz_loader_program_metadata_at(index);
+        if (metadata == NULL || !metadata->cazenv_assignable) {
+            continue;
+        }
+        if (seen == target) {
+            return (uint8_t)metadata->kind;
+        }
+        seen++;
+    }
+    return (uint8_t)CAZ_PROGRAM_RETURN_TO_CHARGE;
+}
+
+static void restore_assigned_program_identity(int droid_index, CazEnvDroid *droid)
+{
+    droid->program = assignable_program_for_droid(droid_index);
+}
 
 static float clampf(float value, float minimum, float maximum)
 {
@@ -846,17 +868,18 @@ static void bytecode_write_port(void *user, uint8_t port, uint8_t value)
 static void initialize_bytecode_runtime(CazEnvState *state, int droid_index, CazEnvDroid *droid, uint8_t program)
 {
     CazEnvBytecodeRuntime *runtime = &droid->bytecode;
+    const CazProgramMetadata *metadata = program_metadata_for(program);
     memset(runtime, 0, sizeof(*runtime));
     runtime->state = state;
     runtime->assigned_program = program;
     runtime->droid_index = (uint8_t)droid_index;
     runtime->output.nav_intent = CAZ_NAV_WANDER;
-    runtime->output.gait = program_table[program].gait;
+    runtime->output.gait = metadata->default_gait;
     runtime->output.head_yaw = 128u;
     runtime->output.ear_pose = 1u;
     runtime->output.tail_pose = 2u;
     runtime->output.eyelid = 180u;
-    snprintf(runtime->image.name, sizeof(runtime->image.name), "%s", program_table[program].name);
+    snprintf(runtime->image.name, sizeof(runtime->image.name), "%s", metadata->name);
     snprintf(runtime->image.description,
              sizeof(runtime->image.description),
              "%s",
@@ -890,6 +913,7 @@ void caz_env_init(CazEnvState *state, uint32_t seed)
 
     state->rng = seed == 0u ? 0x0ca7e11du : seed;
     state->elapsed_seconds = 0.0f;
+    memset(&state->supervisor_metrics, 0, sizeof(state->supervisor_metrics));
     for (int slot = 0; slot < CAZ_ENV_CHARGE_SLOT_COUNT; slot++) {
         state->charge_slots[slot] = -1;
     }
@@ -924,8 +948,8 @@ void caz_env_init(CazEnvState *state, uint32_t seed)
         droid->tap_gain = 0.0f;
         droid->nav_tap_gain = 0.0f;
         droid->fallback_tap_gain = 0.0f;
-        droid->program = (uint8_t)(index % CAZ_ENV_PROGRAM_COUNT);
-        droid->gait = program_table[droid->program].gait;
+        restore_assigned_program_identity(index, droid);
+        droid->gait = program_metadata_for(droid->program)->default_gait;
         droid->mode = CAZ_ENV_DROID_PROGRAM;
         droid->charging_slot = 255u;
         droid->energy_source = CAZ_ENV_ENERGY_BATTERY;
@@ -936,7 +960,7 @@ void caz_env_init(CazEnvState *state, uint32_t seed)
         droid->last_nav_cause = 255u;
         droid->nav_transition_count = 0u;
         droid->phase = random_range(state, 0.0f, 6.2831852f);
-        droid->speed = program_table[droid->program].speed;
+        droid->speed = program_metadata_for(droid->program)->default_speed;
         initialize_bytecode_runtime(state, index, droid, droid->program);
         assign_random_target(state, droid);
     }
@@ -958,28 +982,20 @@ int caz_env_load_programs(CazEnvState *state, const char *program_dir, char *err
     for (int index = 0; index < CAZ_ENV_DROID_COUNT; index++) {
         CazEnvDroid *droid = &state->droids[index];
         CazEnvBytecodeRuntime *runtime = &droid->bytecode;
-        char path[CAZ_PROGRAM_PATH_MAX];
-        const char *name = program_table[runtime->assigned_program].name;
-        const int written = snprintf(path, sizeof(path), "%s/%s.caz", dir, name);
-        if (written <= 0 || (size_t)written >= sizeof(path)) {
-            if (error != NULL && error_length > 0u) {
-                snprintf(error, error_length, "CazEnv program path is too long for droid %d program %s", index, name);
-            }
-            return 0;
-        }
+        const CazProgramMetadata *metadata = program_metadata_for(runtime->assigned_program);
 
         runtime->image_loaded = 0u;
         runtime->faulted = 0u;
         runtime->stepping_enabled = 0u;
         caz_cpu_init(&runtime->cpu, bytecode_read_port, bytecode_write_port, runtime);
-        if (!caz_loader_load_file(&runtime->cpu, path, &runtime->image)) {
+        if (!caz_loader_load_named(&runtime->cpu, metadata->kind, dir, &runtime->image)) {
             if (error != NULL && error_length > 0u) {
                 snprintf(error,
                          error_length,
                          "CazEnv failed to load droid %d program %s from %s: %s",
                          index,
-                         name,
-                         path,
+                         metadata->name,
+                         runtime->image.path,
                          runtime->image.error);
             }
             return 0;
@@ -1065,25 +1081,30 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
                 const int junction = nearest_junction_index(state, droid->x, droid->z);
                 if (junction >= 0) {
                     droid->mode = CAZ_ENV_DROID_TAP_JUNCTION;
-                    droid->program = 9u;
+                    droid->program = (uint8_t)CAZ_PROGRAM_RETURN_TO_CHARGE;
                     droid->target_x = state->fixtures[junction].x;
                     droid->target_z = state->fixtures[junction].z;
                     droid->nav_cause = CAZ_ENV_NAV_CAUSE_SUPERVISOR;
+                    state->supervisor_metrics.junction_taps++;
                 }
             } else if (droid->charge <= 0.28f && droid->feral > 0.42f) {
                 droid->mode = CAZ_ENV_DROID_SOLAR_FORAGE;
-                droid->program = 9u;
+                droid->program = (uint8_t)CAZ_PROGRAM_RETURN_TO_CHARGE;
                 droid->speed = 0.0f;
                 droid->gait = 0u;
                 droid->target_x = droid->x;
                 droid->target_z = droid->z;
                 droid->nav_cause = CAZ_ENV_NAV_CAUSE_SUPERVISOR;
+                state->supervisor_metrics.solar_forages++;
+                state->supervisor_metrics.speed_overrides++;
+                state->supervisor_metrics.gait_overrides++;
             } else if (droid->charge <= 0.22f) {
                 droid->mode = CAZ_ENV_DROID_RETURN_TO_CHARGE;
-                droid->program = 9u;
+                droid->program = (uint8_t)CAZ_PROGRAM_RETURN_TO_CHARGE;
                 droid->target_x = charger_x(state);
                 droid->target_z = charger_z(state);
                 droid->nav_cause = CAZ_ENV_NAV_CAUSE_SUPERVISOR;
+                state->supervisor_metrics.charger_returns++;
             }
         }
 
@@ -1103,7 +1124,7 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
             record_nav_state(droid, nav_intent, CAZ_NAV_STATUS_DOCKED, droid->nav_cause);
             if (droid->charge >= 0.98f) {
                 release_charge_slot(state, index);
-                droid->program = (uint8_t)(index % (CAZ_ENV_PROGRAM_COUNT - 1));
+                restore_assigned_program_identity(index, droid);
                 droid->mode = CAZ_ENV_DROID_PROGRAM;
                 droid->nav_cause = CAZ_ENV_NAV_CAUSE_NONE;
                 set_target_from_output(droid, droid->bytecode.output.gait, droid->bytecode.output.head_yaw);
@@ -1127,9 +1148,13 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
                 droid->target_x = fixture->x;
                 droid->target_z = fixture->z;
                 if (!bytecode_tap) {
+                    state->supervisor_metrics.gait_overrides++;
                     droid->gait = 5u;
                 }
                 if (junction_distance < 0.95f) {
+                    if (!bytecode_tap) {
+                        state->supervisor_metrics.speed_overrides++;
+                    }
                     droid->speed = 0.0f;
                     if (bytecode_tap) {
                         const float tap_gain = dt_seconds / 900.0f;
@@ -1139,7 +1164,7 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
                         droid->energy_source = CAZ_ENV_ENERGY_JUNCTION;
                         record_nav_state(droid, nav_intent, CAZ_NAV_STATUS_TAPPING, droid->nav_cause);
                         if (droid->charge >= 0.74f) {
-                            droid->program = (uint8_t)(index % (CAZ_ENV_PROGRAM_COUNT - 1));
+                            restore_assigned_program_identity(index, droid);
                             droid->mode = CAZ_ENV_DROID_PROGRAM;
                             droid->energy_source = CAZ_ENV_ENERGY_BATTERY;
                             droid->nav_cause = CAZ_ENV_NAV_CAUSE_NONE;
@@ -1151,6 +1176,7 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
                     }
                 } else {
                     if (!bytecode_tap && droid->speed < 1.0f) {
+                        state->supervisor_metrics.speed_overrides++;
                         droid->speed = 1.0f;
                     }
                     record_nav_state(droid,
@@ -1164,6 +1190,10 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
             }
         } else if (droid->mode == CAZ_ENV_DROID_SOLAR_FORAGE) {
             droid->energy_source = CAZ_ENV_ENERGY_SOLAR;
+            if (droid->nav_cause != CAZ_ENV_NAV_CAUSE_BYTECODE) {
+                state->supervisor_metrics.speed_overrides++;
+                state->supervisor_metrics.gait_overrides++;
+            }
             droid->gait = 0u;
             droid->speed = 0.0f;
             droid->target_x = droid->x;
@@ -1176,7 +1206,7 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
             }
             record_nav_state(droid, nav_intent, CAZ_NAV_STATUS_SOLAR, droid->nav_cause);
             if (droid->nav_cause != CAZ_ENV_NAV_CAUSE_BYTECODE && droid->charge >= 0.55f) {
-                droid->program = (uint8_t)(index % (CAZ_ENV_PROGRAM_COUNT - 1));
+                restore_assigned_program_identity(index, droid);
                 droid->mode = CAZ_ENV_DROID_PROGRAM;
                 droid->energy_source = CAZ_ENV_ENERGY_BATTERY;
                 droid->nav_cause = CAZ_ENV_NAV_CAUSE_NONE;
@@ -1187,8 +1217,10 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
             droid->target_x = charger_x(state);
             droid->target_z = charger_z(state);
             if (!bytecode_cause) {
+                state->supervisor_metrics.gait_overrides++;
                 droid->gait = 1u;
                 if (droid->speed < 1.6f) {
+                    state->supervisor_metrics.speed_overrides++;
                     droid->speed = 1.6f;
                 }
             }
@@ -1201,6 +1233,11 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
                         record_nav_state(droid, nav_intent, CAZ_NAV_STATUS_DOCKED, droid->nav_cause);
                         continue;
                     }
+                }
+                if (!bytecode_cause) {
+                    state->supervisor_metrics.charger_loiters++;
+                    state->supervisor_metrics.speed_overrides++;
+                    state->supervisor_metrics.gait_overrides++;
                 }
                 droid->speed = bytecode_cause ? 0.35f : 0.0f;
                 droid->gait = bytecode_cause ? droid->gait : 0u;
@@ -1328,10 +1365,7 @@ void caz_env_droid_snapshot(const CazEnvState *state, int index, CazEnvDroidSnap
 
 const char *caz_env_program_name(uint8_t program)
 {
-    if (program >= CAZ_ENV_PROGRAM_COUNT) {
-        return "unknown";
-    }
-    return program_table[program].name;
+    return program_metadata_for(program)->name;
 }
 
 const char *caz_env_bytecode_program_name(const CazEnvState *state, int index)

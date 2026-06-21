@@ -1,6 +1,7 @@
 #include "../c_core/caz_env.h"
 #include "../../src/caz_droid.h"
 
+#include <dirent.h>
 #include <float.h>
 #include <math.h>
 #include <stdint.h>
@@ -368,6 +369,16 @@ static void print_sample_output(const CazEnvState *state, int index)
            droid->nav_transition_count);
 }
 
+static uint64_t supervisor_metric_total(const CazEnvSupervisorMetrics *metrics)
+{
+    return metrics->charger_returns +
+           metrics->solar_forages +
+           metrics->junction_taps +
+           metrics->charger_loiters +
+           metrics->speed_overrides +
+           metrics->gait_overrides;
+}
+
 static void record_recovery_trace(DroidTrack *track, long step, const CazEnvDroid *droid)
 {
     const int recovery_context = droid->bytecode.output.nav_intent != CAZ_NAV_WANDER ||
@@ -490,11 +501,108 @@ static int load_probe_programs(CazEnvState *state, char *load_error, size_t load
     return 1;
 }
 
+static int has_caz_suffix(const char *name)
+{
+    const size_t length = strlen(name);
+    return length > 4u && strcmp(name + length - 4u, ".caz") == 0;
+}
+
+static int registry_name_count(const char *name)
+{
+    int count = 0;
+    for (size_t index = 0u; index < caz_loader_program_count(); index++) {
+        const CazProgramMetadata *metadata = caz_loader_program_metadata_at(index);
+        if (metadata != NULL && strcmp(metadata->name, name) == 0) {
+            count++;
+        }
+    }
+    return count;
+}
+
+static int run_program_registry_probe(void)
+{
+    DIR *dir;
+    struct dirent *entry;
+    int archive_files = 0;
+    int survival = 0;
+    int demo = 0;
+    int assignable = 0;
+    int ok = 1;
+
+    for (size_t index = 0u; index < caz_loader_program_count(); index++) {
+        const CazProgramMetadata *metadata = caz_loader_program_metadata_at(index);
+        CazCpu cpu;
+        CazProgramImage image;
+        if (metadata == NULL) {
+            fprintf(stderr, "program-registry missing metadata at index %zu\n", index);
+            ok = 0;
+            continue;
+        }
+        if (registry_name_count(metadata->name) != 1) {
+            fprintf(stderr, "program-registry duplicate name %s\n", metadata->name);
+            ok = 0;
+        }
+        if (metadata->cazenv_assignable && !metadata->survival_participant) {
+            fprintf(stderr, "program-registry assigns non-survival program %s to CazEnv\n", metadata->name);
+            ok = 0;
+        }
+        survival += metadata->survival_participant ? 1 : 0;
+        demo += metadata->survival_participant ? 0 : 1;
+        assignable += metadata->cazenv_assignable ? 1 : 0;
+        caz_cpu_init(&cpu, NULL, NULL, NULL);
+        if (!caz_loader_load_named(&cpu, metadata->kind, "programs", &image)) {
+            fprintf(stderr, "program-registry could not load %s: %s\n", metadata->name, image.error);
+            ok = 0;
+        } else if (strcmp(image.name, metadata->name) != 0) {
+            fprintf(stderr,
+                    "program-registry name mismatch for %s: source metadata says %s\n",
+                    metadata->name,
+                    image.name);
+            ok = 0;
+        }
+    }
+
+    dir = opendir("programs");
+    if (dir == NULL) {
+        fprintf(stderr, "program-registry could not open programs directory\n");
+        return 0;
+    }
+    while ((entry = readdir(dir)) != NULL) {
+        char name[CAZ_PROGRAM_NAME_MAX];
+        const size_t length = strlen(entry->d_name);
+        if (!has_caz_suffix(entry->d_name)) {
+            continue;
+        }
+        archive_files++;
+        if (length - 4u >= sizeof(name)) {
+            fprintf(stderr, "program-registry archive filename too long: %s\n", entry->d_name);
+            ok = 0;
+            continue;
+        }
+        memcpy(name, entry->d_name, length - 4u);
+        name[length - 4u] = '\0';
+        if (registry_name_count(name) != 1) {
+            fprintf(stderr, "program-registry archive file is not registered exactly once: %s\n", entry->d_name);
+            ok = 0;
+        }
+    }
+    closedir(dir);
+
+    printf("program-registry total=%zu survival=%d demo=%d assignable=%d path_only=%d archive_files=%d\n",
+           caz_loader_program_count(),
+           survival,
+           demo,
+           assignable,
+           (int)caz_loader_program_count() - assignable,
+           archive_files);
+    return ok && archive_files == (int)caz_loader_program_count();
+}
+
 static int run_nav_probe(void)
 {
     CazEnvState state;
     char load_error[512];
-    const int index = 9;
+    const int index = 7;
 
     caz_env_init(&state, 0x0ca7e042u);
     if (!load_probe_programs(&state, load_error, sizeof(load_error))) {
@@ -524,7 +632,7 @@ static int run_charger_probe(void)
 {
     CazEnvState state;
     char load_error[512];
-    const int index = 9;
+    const int index = 7;
 
     caz_env_init(&state, 0x0ca7e143u);
     if (!load_probe_programs(&state, load_error, sizeof(load_error))) {
@@ -555,7 +663,7 @@ static int run_full_charger_probe(void)
 {
     CazEnvState state;
     char load_error[512];
-    const int index = 9;
+    const int index = 7;
 
     caz_env_init(&state, 0x0ca7e144u);
     if (!load_probe_programs(&state, load_error, sizeof(load_error))) {
@@ -590,7 +698,7 @@ static int run_solar_probe(void)
 {
     CazEnvState state;
     char load_error[512];
-    const int index = 9;
+    const int index = 7;
 
     caz_env_init(&state, 0x0ca7e145u);
     if (!load_probe_programs(&state, load_error, sizeof(load_error))) {
@@ -634,7 +742,7 @@ static int run_junction_probe(void)
 {
     CazEnvState state;
     char load_error[512];
-    const int index = 9;
+    const int index = 7;
 
     caz_env_init(&state, 0x0ca7e146u);
     if (!load_probe_programs(&state, load_error, sizeof(load_error))) {
@@ -676,7 +784,7 @@ static int run_missing_junction_probe(void)
 {
     CazEnvState state;
     char load_error[512];
-    const int index = 9;
+    const int index = 7;
 
     caz_env_init(&state, 0x0ca7e147u);
     if (!load_probe_programs(&state, load_error, sizeof(load_error))) {
@@ -746,6 +854,10 @@ static int run_non_bytecode_tap_probe(void)
 
 static int run_all_probes(void)
 {
+    if (!run_program_registry_probe()) {
+        fprintf(stderr, "program-registry-probe failed: programs/ archive and loader registry differ\n");
+        return 0;
+    }
     if (!run_nav_probe()) {
         fprintf(stderr, "nav-probe failed: return-to-charge.caz did not request a usable recovery navigation mode\n");
         return 0;
@@ -867,6 +979,8 @@ static int run_survival(const HarnessOptions *options)
         float tap_gain_sum = 0.0f;
         float nav_tap_gain_sum = 0.0f;
         float fallback_tap_gain_sum = 0.0f;
+        const CazEnvSupervisorMetrics supervisor_metrics = state.supervisor_metrics;
+        const uint64_t supervisor_events = supervisor_metric_total(&supervisor_metrics);
 
         for (int index = 0; index < CAZ_ENV_DROID_COUNT; index++) {
             const CazEnvDroid *droid = &state.droids[index];
@@ -929,7 +1043,15 @@ static int run_survival(const HarnessOptions *options)
                ever_nav_junction,
                ever_bytecode_recovery,
                ever_supervisor_recovery);
-        const int strict_failed = strict && ever_supervisor_recovery > 0;
+        printf(" fallback-events: charger=%llu solar=%llu junction=%llu loiter=%llu speed=%llu gait=%llu total=%llu",
+               (unsigned long long)supervisor_metrics.charger_returns,
+               (unsigned long long)supervisor_metrics.solar_forages,
+               (unsigned long long)supervisor_metrics.junction_taps,
+               (unsigned long long)supervisor_metrics.charger_loiters,
+               (unsigned long long)supervisor_metrics.speed_overrides,
+               (unsigned long long)supervisor_metrics.gait_overrides,
+               (unsigned long long)supervisor_events);
+        const int strict_failed = strict && supervisor_events > 0u;
         const int seed_failed = ever_zero_charge > 0 ||
                                 ever_depleted > 0 ||
                                 final_zero_charge > 0 ||
@@ -945,7 +1067,7 @@ static int run_survival(const HarnessOptions *options)
             count_bytecode_runtimes(&state);
             print_sample_ports(&state);
             print_sample_output(&state, 0);
-            print_sample_output(&state, 9);
+            print_sample_output(&state, 7);
         }
     }
 
