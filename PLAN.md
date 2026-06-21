@@ -29,11 +29,11 @@ The middle layer should become the single place where high-level cat intent is t
 
 Active phase: `CazEnv Bytecode Survival`
 
-Last completed cycle: `Cycle 14: Per-Droid Bytecode Runtime State`
+Last completed cycle: `Cycle 18: Bytecode Instruction Budget And Tick Order`
 
-Current cycle: `Cycle 15: Program Loading In CazEnv`
+Current cycle: `Cycle 19: Output Port Bridge To CazEnv Motion`
 
-Next development action: load actual `.caz` bytecode images into each CazEnv droid runtime from the app bundle or repository path, then surface load failures with useful program names and paths.
+Next development action: convert bytecode output latches such as `GAIT`, `SKILL`, `HEAD_YAW`, and `NAV_INTENT` into interpreted CazEnv movement and steering, then reduce reliance on the C supervisor's hardcoded program profiles.
 
 Progress rule: when the current cycle's exit criteria pass, change that cycle's status to `Done`, update this section to name the next cycle, and mark the next cycle's status as `Current`.
 
@@ -66,6 +66,10 @@ When a misstep is found:
 | 2026-06-21 | Cycle 12 | The survival harness now passes, but the pass is still environment-supervisor assisted. It is not proof of bytecode-owned survival. | Keep Cycle 12 `Done` because it established the experiment contract and current harness. Track bytecode ownership explicitly in Cycles 13-24 and make strict bytecode-owned survival the default in Cycle 34. |
 | 2026-06-21 | Cycle 12 | `Done` reflects the current workspace state. The CazEnv project and `return-to-charge.caz` are still new workspace changes until they are committed or otherwise accepted. | Treat Cycle 12 as implemented in the workspace, not as a release checkpoint. Cycle 35 must record final commands and metrics before the bytecode survival phase is complete. |
 | 2026-06-21 | Cycle 14 | Per-droid VM runtimes are assigned and visible, but bytecode images are not loaded yet: `make cazenv-survival` reports `assigned=20 loaded=0 stepping=0 instructions=0`. | Keep Cycle 14 `Done` as runtime-state scaffolding. Cycle 15 remains responsible for actual `.caz` program loading. |
+| 2026-06-21 | Cycle 15 | CazEnv now loads bytecode images for all 20 droids. `make cazenv-survival` reports `assigned=20 loaded=20 stepping=0 faulted=0 instructions=0`. | Mark Cycle 15 `Done`. This proves program loading, not bytecode-owned survival; VM stepping remains Cycle 18. |
+| 2026-06-21 | Cycle 16 | CazEnv survival/environment ports now return bounded deterministic values. Survival logs show `sample-ports droid=0 battery=97 charger=(bearing=15 distance=113 slots=8) junction=(bearing=128 distance=30) solar=89 energy=0 nav=0/0`. | Mark Cycle 16 `Done` for charger, junction, solar, battery, energy, and nav adapter work. Richer eye, ear, terrain, IMU, lifted, dropped, and reflex sensing remains Cycle 17. |
+| 2026-06-21 | Cycle 17 | CazEnv body and behaviour ports now return changing context-derived values. `make cazenv-survival` logs eye, ear, body, terrain, reflex, and survival port samples at start and after simulation. | Mark Cycle 17 `Done`. Terrain remains a low ordinal caution signal because archived programs use `TERRAIN >= 4`; broad object proximity is exposed through `EYE_EDGE`. |
+| 2026-06-21 | Cycle 18 | CazEnv now enables loaded VM runtimes with a fixed budget of one bytecode instruction per droid per environment step. A 14-day/3-seed run completed with `stepping=20 halted=0 faulted=0` and seed-0 final `instructions=120960000`. | Mark Cycle 18 `Done`. This proves bounded bytecode execution and deterministic tick order, but the C supervisor still owns movement and energy decisions until Cycles 19-20 bridge VM outputs into behaviour. |
 
 ## Design Rules
 
@@ -713,7 +717,7 @@ Exit criteria:
 
 Priority: `S2`
 
-Status: Current
+Status: Done
 
 Deliverables:
 
@@ -728,11 +732,16 @@ Exit criteria:
 - Missing or invalid program files fail visibly rather than silently falling back to C profiles.
 - The program assignment table no longer needs to encode speed and gait as the source of behaviour truth.
 
+Verification:
+
+- `make cazenv-survival` reports `assigned=20 loaded=20 stepping=0 faulted=0 instructions=0` and `survival-result=PASS failed_seeds=0/3`.
+- `xcodebuild -project cazenv/cazenv.xcodeproj -target cazenv -configuration Debug CODE_SIGNING_ALLOWED=NO build` succeeds.
+
 ### Cycle 16: Environment Sensor Port Adapter
 
 Priority: `S3`
 
-Status: Pending
+Status: Done
 
 Deliverables:
 
@@ -749,11 +758,16 @@ Exit criteria:
 - Port values are deterministic for a fixed seed and step count.
 - Values are bounded to `0..255` and documented when saturated.
 
+Verification:
+
+- `make cazenv-survival` prints sample survival ports with bounded values: `battery=97`, `charger=(bearing=15 distance=113 slots=8)`, `junction=(bearing=128 distance=30)`, `solar=89`, `energy=0`, `nav=0/0`.
+- `build/caz --program return-to-charge --steps 8 --sample-every 4` loads and runs the bytecode path.
+
 ### Cycle 17: Body And Behaviour Sensor Port Adapter
 
 Priority: `S3`
 
-Status: Pending
+Status: Done
 
 Deliverables:
 
@@ -768,11 +782,16 @@ Exit criteria:
 - Motion, edge, sound, and terrain readings change with room context.
 - Sensor generation can be inspected in survival logs.
 
+Verification:
+
+- `make cazenv-survival` logs body/perception ports such as `eye=(luma=86 motion=175 edge=111 colour=128)`, `ear=(volume=75 pitch=113 bearing=231 pattern=0)`, and `body=(roll=121 pitch=123 lifted=0 dropped=0 terrain=1 reflex=0)`.
+- The same run later logs changed values for droid 0, including `eye=(luma=89 motion=87 edge=39 colour=128)` and `body=(roll=124 pitch=137 lifted=0 dropped=0 terrain=1 reflex=0)`.
+
 ### Cycle 18: Bytecode Instruction Budget And Tick Order
 
 Priority: `S2`
 
-Status: Pending
+Status: Done
 
 Deliverables:
 
@@ -787,11 +806,17 @@ Exit criteria:
 - CPU faults or halted programs are visible in the harness and app overlay.
 - Repeated runs with the same seed produce the same result.
 
+Verification:
+
+- `make cazenv-survival` completes the default 14-day/3-seed harness with `survival-result=PASS failed_seeds=0/3`; seed 0 ends with `stepping=20 halted=0 faulted=0 instructions=120960000`.
+- Two repeated `build/cazenv-survival 1 1` runs produce identical metrics, including `instructions=8640000` and `survival-result=PASS failed_seeds=0/1`.
+- `xcodebuild -project cazenv/cazenv.xcodeproj -target cazenv -configuration Debug CODE_SIGNING_ALLOWED=NO build` succeeds and the app overlay distinguishes `run`, `halt`, `fault`, `off`, and unloaded VM states.
+
 ### Cycle 19: Output Port Bridge To CazEnv Motion
 
 Priority: `S4`
 
-Status: Pending
+Status: Current
 
 Deliverables:
 

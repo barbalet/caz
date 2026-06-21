@@ -1,6 +1,7 @@
 #ifndef CAZ_ENV_H
 #define CAZ_ENV_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "../../src/caz_cpu.h"
@@ -68,6 +69,7 @@ typedef struct CazEnvDroidSnapshot {
     uint8_t energy_source;
     uint8_t bytecode_loaded;
     uint8_t bytecode_stepping_enabled;
+    uint8_t bytecode_halted;
     uint8_t bytecode_faulted;
     uint8_t nav_intent;
     uint8_t skill;
@@ -94,7 +96,9 @@ typedef struct CazEnvBytecodeRuntime {
     CazCpu cpu;
     CazProgramImage image;
     CazEnvBytecodeOutput output;
+    struct CazEnvState *state;
     uint8_t assigned_program;
+    uint8_t droid_index;
     uint8_t image_loaded;
     uint8_t stepping_enabled;
     uint8_t faulted;
@@ -140,6 +144,7 @@ typedef struct CazEnvState {
 } CazEnvState;
 
 void caz_env_init(CazEnvState *state, uint32_t seed);
+int caz_env_load_programs(CazEnvState *state, const char *program_dir, char *error, size_t error_length);
 void caz_env_step(CazEnvState *state, float dt_seconds);
 int caz_env_fixture_count(void);
 int caz_env_droid_count(void);
@@ -147,5 +152,6 @@ void caz_env_fixture_snapshot(const CazEnvState *state, int index, CazEnvFixture
 void caz_env_droid_snapshot(const CazEnvState *state, int index, CazEnvDroidSnapshot *out_snapshot);
 const char *caz_env_program_name(uint8_t program);
 const char *caz_env_bytecode_program_name(const CazEnvState *state, int index);
+uint8_t caz_env_debug_read_port(const CazEnvState *state, int index, uint8_t port);
 
 #endif

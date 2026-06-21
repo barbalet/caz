@@ -34,6 +34,7 @@ struct EnvDroid: Identifiable {
     let bytecodeCycles: UInt64
     let bytecodeLoaded: Bool
     let bytecodeSteppingEnabled: Bool
+    let bytecodeHalted: Bool
     let bytecodeFaulted: Bool
     let navIntent: UInt8
     let skill: UInt8
@@ -43,8 +44,9 @@ struct EnvSnapshot {
     let elapsed: Float
     let fixtures: [EnvFixture]
     let droids: [EnvDroid]
+    let loadError: String?
 
-    static let empty = EnvSnapshot(elapsed: 0, fixtures: [], droids: [])
+    static let empty = EnvSnapshot(elapsed: 0, fixtures: [], droids: [], loadError: nil)
 }
 
 @MainActor
@@ -54,9 +56,11 @@ final class CazEnvRuntime: ObservableObject {
     private var state = CazEnvState()
     private var timer: Timer?
     private var lastTick = Date()
+    private var loadError: String?
 
     init() {
         caz_env_init(&state, 0x20260621)
+        loadPrograms()
         snapshot = makeSnapshot()
         start()
     }
@@ -67,8 +71,23 @@ final class CazEnvRuntime: ObservableObject {
 
     func reset() {
         caz_env_init(&state, UInt32(Date().timeIntervalSince1970))
+        loadPrograms()
         snapshot = makeSnapshot()
         lastTick = Date()
+    }
+
+    private func loadPrograms() {
+        guard let resourceURL = Bundle.main.resourceURL else {
+            loadError = "CazEnv failed to locate app resource directory"
+            return
+        }
+
+        var error = [CChar](repeating: 0, count: 512)
+        let ok = resourceURL.withUnsafeFileSystemRepresentation { path -> Bool in
+            guard let path else { return false }
+            return caz_env_load_programs(&state, path, &error, error.count) != 0
+        }
+        loadError = ok ? nil : String(cString: error)
     }
 
     private func start() {
@@ -135,12 +154,13 @@ final class CazEnvRuntime: ObservableObject {
                 bytecodeCycles: item.bytecode_cycles,
                 bytecodeLoaded: item.bytecode_loaded != 0,
                 bytecodeSteppingEnabled: item.bytecode_stepping_enabled != 0,
+                bytecodeHalted: item.bytecode_halted != 0,
                 bytecodeFaulted: item.bytecode_faulted != 0,
                 navIntent: item.nav_intent,
                 skill: item.skill
             )
         }
 
-        return EnvSnapshot(elapsed: state.elapsed_seconds, fixtures: fixtures, droids: droids)
+        return EnvSnapshot(elapsed: state.elapsed_seconds, fixtures: fixtures, droids: droids, loadError: loadError)
     }
 }

@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 typedef struct CazEnvProgramMotion {
@@ -26,6 +27,8 @@ static const CazEnvProgramMotion program_table[CAZ_ENV_PROGRAM_COUNT] = {
     {"return-to-charge", 2.4f, 1u}
 };
 
+#define CAZ_ENV_VM_INSTRUCTIONS_PER_TICK 1u
+
 static float clampf(float value, float minimum, float maximum)
 {
     if (value < minimum) {
@@ -35,6 +38,41 @@ static float clampf(float value, float minimum, float maximum)
         return maximum;
     }
     return value;
+}
+
+static uint8_t clamp_u8(int value)
+{
+    if (value < 0) {
+        return 0u;
+    }
+    if (value > 255) {
+        return 255u;
+    }
+    return (uint8_t)value;
+}
+
+static uint8_t normalized_distance(float distance, float maximum)
+{
+    if (maximum <= 0.0f) {
+        return 255u;
+    }
+    return clamp_u8((int)(distance / maximum * 255.0f));
+}
+
+static float daylight_at(float elapsed_seconds)
+{
+    return 0.35f + 0.65f * fmaxf(0.0f, sinf(elapsed_seconds * 6.2831852f / 1800.0f));
+}
+
+static float wrap_pi(float angle)
+{
+    while (angle > 3.1415926f) {
+        angle -= 6.2831852f;
+    }
+    while (angle < -3.1415926f) {
+        angle += 6.2831852f;
+    }
+    return angle;
 }
 
 static uint32_t next_random(CazEnvState *state)
@@ -91,6 +129,348 @@ static int nearest_junction_index(const CazEnvState *state, float x, float z)
         }
     }
     return nearest;
+}
+
+static uint8_t available_charge_slots(const CazEnvState *state)
+{
+    uint8_t count = 0u;
+    for (int slot = 0; slot < CAZ_ENV_CHARGE_SLOT_COUNT; slot++) {
+        if (state->charge_slots[slot] < 0) {
+            count++;
+        }
+    }
+    return count;
+}
+
+static uint8_t bearing_to_target(const CazEnvDroid *droid, float target_x, float target_z)
+{
+    const float dx = target_x - droid->x;
+    const float dz = target_z - droid->z;
+    const float target_yaw = atan2f(dx, dz);
+    const float delta = wrap_pi(target_yaw - droid->yaw);
+    return clamp_u8((int)(128.0f + delta * 127.0f / 3.1415926f));
+}
+
+static uint8_t distance_to_target(const CazEnvDroid *droid, float target_x, float target_z)
+{
+    const float distance = sqrtf(distance2(droid->x, droid->z, target_x, target_z));
+    return normalized_distance(distance, CAZ_ENV_ROOM_LENGTH_FT);
+}
+
+static uint32_t sensor_hash(const CazEnvState *state, int droid_index, uint32_t salt)
+{
+    uint32_t value = state->rng ^
+                     (uint32_t)(droid_index * 0x9e3779b9u) ^
+                     (uint32_t)(state->elapsed_seconds * 4.0f) ^
+                     salt;
+    value ^= value >> 16;
+    value *= 0x7feb352du;
+    value ^= value >> 15;
+    value *= 0x846ca68bu;
+    value ^= value >> 16;
+    return value;
+}
+
+static float fixture_radius(const CazEnvFixture *fixture)
+{
+    return (fixture->width + fixture->length) * 0.25f;
+}
+
+static float wall_clearance(const CazEnvDroid *droid)
+{
+    const float x_clearance = CAZ_ENV_ROOM_WIDTH_FT * 0.5f - fabsf(droid->x);
+    const float z_clearance = CAZ_ENV_ROOM_LENGTH_FT * 0.5f - fabsf(droid->z);
+    return fminf(x_clearance, z_clearance);
+}
+
+static float nearest_fixture_clearance(const CazEnvState *state,
+                                       const CazEnvDroid *droid,
+                                       float *out_x,
+                                       float *out_z,
+                                       uint8_t *out_type)
+{
+    float nearest = 1000000.0f;
+    for (int index = 0; index < CAZ_ENV_FIXTURE_COUNT; index++) {
+        const CazEnvFixture *fixture = &state->fixtures[index];
+        const float clearance = sqrtf(distance2(droid->x, droid->z, fixture->x, fixture->z)) -
+                                fixture_radius(fixture) -
+                                0.55f;
+        if (clearance < nearest) {
+            nearest = clearance;
+            if (out_x != NULL) {
+                *out_x = fixture->x;
+            }
+            if (out_z != NULL) {
+                *out_z = fixture->z;
+            }
+            if (out_type != NULL) {
+                *out_type = fixture->type;
+            }
+        }
+    }
+    return nearest;
+}
+
+static float nearest_droid_clearance(const CazEnvState *state,
+                                     int droid_index,
+                                     float *out_x,
+                                     float *out_z,
+                                     float *out_speed)
+{
+    const CazEnvDroid *droid = &state->droids[droid_index];
+    float nearest = 1000000.0f;
+    for (int index = 0; index < CAZ_ENV_DROID_COUNT; index++) {
+        if (index == droid_index) {
+            continue;
+        }
+        const CazEnvDroid *other = &state->droids[index];
+        const float clearance = sqrtf(distance2(droid->x, droid->z, other->x, other->z)) - 1.1f;
+        if (clearance < nearest) {
+            nearest = clearance;
+            if (out_x != NULL) {
+                *out_x = other->x;
+            }
+            if (out_z != NULL) {
+                *out_z = other->z;
+            }
+            if (out_speed != NULL) {
+                *out_speed = other->speed;
+            }
+        }
+    }
+    return nearest;
+}
+
+static float proximity_from_clearance(float clearance, float range)
+{
+    if (clearance <= 0.0f) {
+        return 1.0f;
+    }
+    if (clearance >= range || range <= 0.0f) {
+        return 0.0f;
+    }
+    return 1.0f - clearance / range;
+}
+
+static uint8_t terrain_for_droid(const CazEnvState *state, int droid_index)
+{
+    const CazEnvDroid *droid = &state->droids[droid_index];
+    const float wall = proximity_from_clearance(wall_clearance(droid), 2.4f);
+    const float fixture = proximity_from_clearance(nearest_fixture_clearance(state, droid, NULL, NULL, NULL), 2.0f);
+    const float other = proximity_from_clearance(nearest_droid_clearance(state, droid_index, NULL, NULL, NULL), 1.6f);
+    const float motion = clampf(droid->speed / 2.6f, 0.0f, 1.0f) * 0.35f;
+    const float caution = fmaxf(wall, fmaxf(fixture, other)) + motion;
+    if (caution >= 1.05f) {
+        return 5u;
+    }
+    if (caution >= 0.82f) {
+        return 4u;
+    }
+    if (caution >= 0.58f) {
+        return 3u;
+    }
+    if (caution >= 0.34f) {
+        return 2u;
+    }
+    if (caution >= 0.12f) {
+        return 1u;
+    }
+    return 0u;
+}
+
+static uint8_t eye_edge_for_droid(const CazEnvState *state, int droid_index)
+{
+    const CazEnvDroid *droid = &state->droids[droid_index];
+    const float wall = proximity_from_clearance(wall_clearance(droid), 4.0f);
+    const float fixture = proximity_from_clearance(nearest_fixture_clearance(state, droid, NULL, NULL, NULL), 4.5f);
+    const float other = proximity_from_clearance(nearest_droid_clearance(state, droid_index, NULL, NULL, NULL), 4.0f);
+    const float proximity = fmaxf(wall, fmaxf(fixture, other));
+    return clamp_u8(28 + (int)(proximity * 210.0f) + (int)(sensor_hash(state, droid_index, 0x1201u) & 15u));
+}
+
+static uint8_t eye_motion_for_droid(const CazEnvState *state, int droid_index)
+{
+    const CazEnvDroid *droid = &state->droids[droid_index];
+    float other_speed = 0.0f;
+    const float other_clearance = nearest_droid_clearance(state, droid_index, NULL, NULL, &other_speed);
+    const float other_signal = proximity_from_clearance(other_clearance, 7.0f) * (80.0f + other_speed * 48.0f);
+    const float own_signal = clampf(droid->speed / 2.6f, 0.0f, 1.0f) * 64.0f;
+    return clamp_u8(10 + (int)own_signal + (int)other_signal + (int)(sensor_hash(state, droid_index, 0x1101u) & 23u));
+}
+
+static uint8_t eye_luma_for_droid(const CazEnvState *state, int droid_index)
+{
+    const CazEnvDroid *droid = &state->droids[droid_index];
+    const float daylight = daylight_at(state->elapsed_seconds);
+    uint8_t fixture_type = 0u;
+    const float fixture_clearance = nearest_fixture_clearance(state, droid, NULL, NULL, &fixture_type);
+    float shade = 0.0f;
+    if (fixture_type == CAZ_ENV_FIXTURE_TREE_TALL ||
+        fixture_type == CAZ_ENV_FIXTURE_TREE_MID ||
+        fixture_type == CAZ_ENV_FIXTURE_TREE_COMPACT) {
+        shade = proximity_from_clearance(fixture_clearance, 3.0f) * 0.28f;
+    } else if (fixture_type == CAZ_ENV_FIXTURE_CAT_BED) {
+        shade = proximity_from_clearance(fixture_clearance, 1.6f) * 0.12f;
+    }
+    return clamp_u8((int)((daylight - shade) * 255.0f));
+}
+
+static uint8_t ear_pattern_for_droid(const CazEnvState *state, int droid_index)
+{
+    const CazEnvDroid *droid = &state->droids[droid_index];
+    uint8_t fixture_type = 0u;
+    const float fixture_clearance = nearest_fixture_clearance(state, droid, NULL, NULL, &fixture_type);
+    float other_speed = 0.0f;
+    const float other_clearance = nearest_droid_clearance(state, droid_index, NULL, NULL, &other_speed);
+    const uint32_t beat = sensor_hash(state, droid_index, 0x2301u) % 97u;
+
+    if ((fixture_type == CAZ_ENV_FIXTURE_CHARGER || fixture_type == CAZ_ENV_FIXTURE_JUNCTION_BOX) &&
+        fixture_clearance < 2.4f) {
+        return 4u;
+    }
+    if (other_clearance < 3.2f && other_speed > 1.2f) {
+        return 1u;
+    }
+    if (other_clearance < 2.5f) {
+        return 2u;
+    }
+    if (beat < 5u && wall_clearance(droid) < 3.5f) {
+        return 3u;
+    }
+    if (beat >= 5u && beat < 9u) {
+        return 1u;
+    }
+    return 0u;
+}
+
+static void ear_source_for_droid(const CazEnvState *state,
+                                 int droid_index,
+                                 uint8_t pattern,
+                                 float *out_x,
+                                 float *out_z)
+{
+    const CazEnvDroid *droid = &state->droids[droid_index];
+    *out_x = droid->x;
+    *out_z = droid->z + 1.0f;
+
+    if (pattern == 1u || pattern == 2u) {
+        nearest_droid_clearance(state, droid_index, out_x, out_z, NULL);
+    } else if (pattern == 4u) {
+        const int junction = nearest_junction_index(state, droid->x, droid->z);
+        const float charger_distance = distance2(droid->x, droid->z, charger_x(state), charger_z(state));
+        const float junction_distance = junction >= 0
+                                      ? distance2(droid->x, droid->z, state->fixtures[junction].x, state->fixtures[junction].z)
+                                      : 1000000.0f;
+        if (junction >= 0 && junction_distance < charger_distance) {
+            *out_x = state->fixtures[junction].x;
+            *out_z = state->fixtures[junction].z;
+        } else {
+            *out_x = charger_x(state);
+            *out_z = charger_z(state);
+        }
+    }
+}
+
+static uint8_t ear_volume_for_droid(const CazEnvState *state, int droid_index)
+{
+    const uint8_t pattern = ear_pattern_for_droid(state, droid_index);
+    float other_speed = 0.0f;
+    const float other_clearance = nearest_droid_clearance(state, droid_index, NULL, NULL, &other_speed);
+    int volume = 18 + (int)(sensor_hash(state, droid_index, 0x2001u) & 31u);
+    volume += (int)(proximity_from_clearance(other_clearance, 6.0f) * (50.0f + other_speed * 28.0f));
+    if (pattern == 1u) {
+        volume += 42;
+    } else if (pattern == 2u) {
+        volume += 56;
+    } else if (pattern == 3u) {
+        volume += 72;
+    } else if (pattern == 4u) {
+        volume += 116;
+    }
+    return clamp_u8(volume);
+}
+
+static uint8_t ear_pitch_for_pattern(uint8_t pattern, const CazEnvState *state, int droid_index)
+{
+    const int noise = (int)(sensor_hash(state, droid_index, 0x2101u) & 31u);
+    switch (pattern) {
+    case 1u:
+        return clamp_u8(176 + noise);
+    case 2u:
+        return clamp_u8(108 + noise);
+    case 3u:
+        return clamp_u8(76 + noise);
+    case 4u:
+        return clamp_u8(42 + noise);
+    default:
+        return clamp_u8(96 + noise);
+    }
+}
+
+static uint8_t lifted_for_droid(const CazEnvState *state, int droid_index)
+{
+    const CazEnvDroid *droid = &state->droids[droid_index];
+    uint8_t fixture_type = 0u;
+    const float fixture_clearance = nearest_fixture_clearance(state, droid, NULL, NULL, &fixture_type);
+    if ((fixture_type == CAZ_ENV_FIXTURE_TREE_TALL ||
+         fixture_type == CAZ_ENV_FIXTURE_TREE_MID ||
+         fixture_type == CAZ_ENV_FIXTURE_TREE_COMPACT) &&
+        fixture_clearance < 0.35f &&
+        (sensor_hash(state, droid_index, 0x3201u) & 31u) == 0u) {
+        return 1u;
+    }
+    return 0u;
+}
+
+static uint8_t dropped_for_droid(const CazEnvState *state, int droid_index)
+{
+    const CazEnvDroid *droid = &state->droids[droid_index];
+    if (terrain_for_droid(state, droid_index) >= 5u &&
+        droid->speed > 1.9f &&
+        (sensor_hash(state, droid_index, 0x3301u) & 63u) == 0u) {
+        return 1u;
+    }
+    return 0u;
+}
+
+static uint8_t imu_roll_for_droid(const CazEnvState *state, int droid_index)
+{
+    const CazEnvDroid *droid = &state->droids[droid_index];
+    const float sway = sinf(droid->phase) * (4.0f + droid->speed * 4.0f);
+    const int terrain = (int)terrain_for_droid(state, droid_index);
+    return clamp_u8(128 + (int)sway + terrain * 3 - 6);
+}
+
+static uint8_t imu_pitch_for_droid(const CazEnvState *state, int droid_index)
+{
+    const CazEnvDroid *droid = &state->droids[droid_index];
+    const float bob = cosf(droid->phase * 0.7f) * (3.0f + droid->speed * 3.0f);
+    const int mode_offset = droid->mode == CAZ_ENV_DROID_CHARGING ? -4 :
+                            droid->mode == CAZ_ENV_DROID_TAP_JUNCTION ? 8 : 0;
+    return clamp_u8(128 + (int)bob + mode_offset);
+}
+
+static uint8_t reflex_for_droid(const CazEnvState *state, int droid_index, const CazEnvBytecodeRuntime *runtime)
+{
+    const CazEnvDroid *droid = &state->droids[droid_index];
+    if (droid->charge < 0.13f && runtime->output.gait != 0u) {
+        return CAZ_BODY_REFLEX_LOW_BATTERY;
+    }
+    if (dropped_for_droid(state, droid_index) != 0u) {
+        return CAZ_BODY_REFLEX_DROPPED;
+    }
+    if (lifted_for_droid(state, droid_index) != 0u) {
+        return CAZ_BODY_REFLEX_LIFTED;
+    }
+    if (abs((int)imu_roll_for_droid(state, droid_index) - 128) > 18 ||
+        abs((int)imu_pitch_for_droid(state, droid_index) - 128) > 18) {
+        return CAZ_BODY_REFLEX_BALANCE;
+    }
+    if (terrain_for_droid(state, droid_index) >= 4u &&
+        (runtime->output.gait == 3u || runtime->output.gait == 4u)) {
+        return CAZ_BODY_REFLEX_TERRAIN_CAUTION;
+    }
+    return CAZ_BODY_REFLEX_CLEAR;
 }
 
 static void assign_random_target(CazEnvState *state, CazEnvDroid *droid)
@@ -211,11 +591,127 @@ static void release_charge_slot(CazEnvState *state, int droid_index)
     droid->charging_slot = 255u;
 }
 
+static uint8_t nav_status_for_droid(const CazEnvDroid *droid)
+{
+    switch (droid->mode) {
+    case CAZ_ENV_DROID_RETURN_TO_CHARGE:
+        return CAZ_NAV_STATUS_RUNNING;
+    case CAZ_ENV_DROID_CHARGING:
+        return CAZ_NAV_STATUS_DOCKED;
+    case CAZ_ENV_DROID_DEPLETED:
+        return CAZ_NAV_STATUS_BLOCKED;
+    case CAZ_ENV_DROID_SOLAR_FORAGE:
+        return CAZ_NAV_STATUS_SOLAR;
+    case CAZ_ENV_DROID_TAP_JUNCTION:
+        return droid->speed <= 0.01f ? CAZ_NAV_STATUS_TAPPING : CAZ_NAV_STATUS_RUNNING;
+    default:
+        return CAZ_NAV_STATUS_IDLE;
+    }
+}
+
+static uint8_t read_env_port(const CazEnvBytecodeRuntime *runtime, uint8_t port)
+{
+    if (runtime == NULL ||
+        runtime->state == NULL ||
+        runtime->droid_index >= CAZ_ENV_DROID_COUNT) {
+        return 0xffu;
+    }
+
+    const CazEnvState *state = runtime->state;
+    const CazEnvDroid *droid = &state->droids[runtime->droid_index];
+    const int droid_index = runtime->droid_index;
+    const int junction_index = nearest_junction_index(state, droid->x, droid->z);
+    const float daylight = daylight_at(state->elapsed_seconds);
+    const uint8_t ear_pattern = ear_pattern_for_droid(state, droid_index);
+    float ear_x = droid->x;
+    float ear_z = droid->z;
+    ear_source_for_droid(state, droid_index, ear_pattern, &ear_x, &ear_z);
+
+    switch (port) {
+    case CAZ_PORT_EYE_LUMA:
+        return eye_luma_for_droid(state, droid_index);
+    case CAZ_PORT_EYE_MOTION:
+        return eye_motion_for_droid(state, droid_index);
+    case CAZ_PORT_EYE_EDGE:
+        return eye_edge_for_droid(state, droid_index);
+    case CAZ_PORT_EYE_COLOUR_TEMP:
+        return clamp_u8(96 + (int)(daylight * 92.0f));
+    case CAZ_PORT_EAR_VOLUME:
+        return ear_volume_for_droid(state, droid_index);
+    case CAZ_PORT_EAR_PITCH:
+        return ear_pitch_for_pattern(ear_pattern, state, droid_index);
+    case CAZ_PORT_EAR_BEARING:
+        return bearing_to_target(droid, ear_x, ear_z);
+    case CAZ_PORT_EAR_PATTERN:
+        return ear_pattern;
+    case CAZ_PORT_IMU_ROLL:
+        return imu_roll_for_droid(state, droid_index);
+    case CAZ_PORT_IMU_PITCH:
+        return imu_pitch_for_droid(state, droid_index);
+    case CAZ_PORT_LIFTED:
+        return lifted_for_droid(state, droid_index);
+    case CAZ_PORT_DROPPED:
+        return dropped_for_droid(state, droid_index);
+    case CAZ_PORT_BATTERY:
+        return clamp_u8((int)(droid->charge * 255.0f));
+    case CAZ_PORT_TERRAIN:
+        return terrain_for_droid(state, droid_index);
+    case CAZ_PORT_ENERGY_SOURCE:
+        return droid->energy_source;
+    case CAZ_PORT_CHARGER_BEARING:
+        return bearing_to_target(droid, charger_x(state), charger_z(state));
+    case CAZ_PORT_CHARGER_DISTANCE:
+        return distance_to_target(droid, charger_x(state), charger_z(state));
+    case CAZ_PORT_CHARGER_SLOTS:
+        return available_charge_slots(state);
+    case CAZ_PORT_JUNCTION_BEARING:
+        return junction_index >= 0
+             ? bearing_to_target(droid, state->fixtures[junction_index].x, state->fixtures[junction_index].z)
+             : 128u;
+    case CAZ_PORT_JUNCTION_DISTANCE:
+        return junction_index >= 0
+             ? distance_to_target(droid, state->fixtures[junction_index].x, state->fixtures[junction_index].z)
+             : 255u;
+    case CAZ_PORT_SOLAR_LEVEL:
+        return clamp_u8((int)(daylight * 255.0f));
+    case CAZ_PORT_GAIT:
+        return runtime->output.gait;
+    case CAZ_PORT_HEAD_YAW:
+        return runtime->output.head_yaw;
+    case CAZ_PORT_EAR_POSE:
+        return runtime->output.ear_pose;
+    case CAZ_PORT_TAIL_POSE:
+        return runtime->output.tail_pose;
+    case CAZ_PORT_VOCAL:
+        return runtime->output.vocal;
+    case CAZ_PORT_EYELID:
+        return runtime->output.eyelid;
+    case CAZ_PORT_SKILL:
+        return runtime->output.skill;
+    case CAZ_PORT_SKILL_ARG:
+        return runtime->output.skill_arg;
+    case CAZ_PORT_SKILL_STATUS:
+        return reflex_for_droid(state, droid_index, runtime) != CAZ_BODY_REFLEX_CLEAR
+             ? CAZ_BODY_SKILL_REFLEX
+             : (runtime->output.skill == CAZ_BODY_SKILL_NONE ? CAZ_BODY_SKILL_IDLE : CAZ_BODY_SKILL_READY);
+    case CAZ_PORT_REFLEX_STATE:
+        return reflex_for_droid(state, droid_index, runtime);
+    case CAZ_PORT_NAV_INTENT:
+        return runtime->output.nav_intent;
+    case CAZ_PORT_NAV_STATUS:
+        return nav_status_for_droid(droid);
+    case CAZ_PORT_JOINT_INDEX:
+        return runtime->output.selected_joint;
+    case CAZ_PORT_JOINT_ANGLE:
+        return runtime->output.pending_joint_angle;
+    default:
+        return 0xffu;
+    }
+}
+
 static uint8_t bytecode_read_port(void *user, uint8_t port)
 {
-    (void)user;
-    (void)port;
-    return 0xffu;
+    return read_env_port((const CazEnvBytecodeRuntime *)user, port);
 }
 
 static void bytecode_write_port(void *user, uint8_t port, uint8_t value)
@@ -264,11 +760,13 @@ static void bytecode_write_port(void *user, uint8_t port, uint8_t value)
     }
 }
 
-static void initialize_bytecode_runtime(CazEnvDroid *droid, uint8_t program)
+static void initialize_bytecode_runtime(CazEnvState *state, int droid_index, CazEnvDroid *droid, uint8_t program)
 {
     CazEnvBytecodeRuntime *runtime = &droid->bytecode;
     memset(runtime, 0, sizeof(*runtime));
+    runtime->state = state;
     runtime->assigned_program = program;
+    runtime->droid_index = (uint8_t)droid_index;
     runtime->output.nav_intent = CAZ_NAV_WANDER;
     runtime->output.gait = program_table[program].gait;
     runtime->output.head_yaw = 128u;
@@ -279,7 +777,7 @@ static void initialize_bytecode_runtime(CazEnvDroid *droid, uint8_t program)
     snprintf(runtime->image.description,
              sizeof(runtime->image.description),
              "%s",
-             "assigned in CazEnv; bytecode image loading is scheduled for Cycle 15");
+             "assigned in CazEnv; host must load the bytecode image before stepping");
     caz_cpu_init(&runtime->cpu, bytecode_read_port, bytecode_write_port, runtime);
 }
 
@@ -290,8 +788,14 @@ static void step_bytecode_runtime(CazEnvDroid *droid)
         return;
     }
 
-    if (caz_cpu_step(&runtime->cpu) < 0) {
-        runtime->faulted = 1u;
+    for (uint8_t count = 0u; count < CAZ_ENV_VM_INSTRUCTIONS_PER_TICK; count++) {
+        if (runtime->cpu.halted) {
+            return;
+        }
+        if (caz_cpu_step(&runtime->cpu) < 0) {
+            runtime->faulted = 1u;
+            return;
+        }
     }
 }
 
@@ -340,9 +844,58 @@ void caz_env_init(CazEnvState *state, uint32_t seed)
         droid->energy_source = CAZ_ENV_ENERGY_BATTERY;
         droid->phase = random_range(state, 0.0f, 6.2831852f);
         droid->speed = program_table[droid->program].speed;
-        initialize_bytecode_runtime(droid, droid->program);
+        initialize_bytecode_runtime(state, index, droid, droid->program);
         assign_random_target(state, droid);
     }
+}
+
+int caz_env_load_programs(CazEnvState *state, const char *program_dir, char *error, size_t error_length)
+{
+    const char *dir = (program_dir != NULL && program_dir[0] != '\0') ? program_dir : "programs";
+    if (error != NULL && error_length > 0u) {
+        error[0] = '\0';
+    }
+    if (state == NULL) {
+        if (error != NULL && error_length > 0u) {
+            snprintf(error, error_length, "CazEnv program loading failed: state is null");
+        }
+        return 0;
+    }
+
+    for (int index = 0; index < CAZ_ENV_DROID_COUNT; index++) {
+        CazEnvDroid *droid = &state->droids[index];
+        CazEnvBytecodeRuntime *runtime = &droid->bytecode;
+        char path[CAZ_PROGRAM_PATH_MAX];
+        const char *name = program_table[runtime->assigned_program].name;
+        const int written = snprintf(path, sizeof(path), "%s/%s.caz", dir, name);
+        if (written <= 0 || (size_t)written >= sizeof(path)) {
+            if (error != NULL && error_length > 0u) {
+                snprintf(error, error_length, "CazEnv program path is too long for droid %d program %s", index, name);
+            }
+            return 0;
+        }
+
+        runtime->image_loaded = 0u;
+        runtime->faulted = 0u;
+        runtime->stepping_enabled = 0u;
+        caz_cpu_init(&runtime->cpu, bytecode_read_port, bytecode_write_port, runtime);
+        if (!caz_loader_load_file(&runtime->cpu, path, &runtime->image)) {
+            if (error != NULL && error_length > 0u) {
+                snprintf(error,
+                         error_length,
+                         "CazEnv failed to load droid %d program %s from %s: %s",
+                         index,
+                         name,
+                         path,
+                         runtime->image.error);
+            }
+            return 0;
+        }
+        runtime->image_loaded = 1u;
+        runtime->stepping_enabled = 1u;
+    }
+
+    return 1;
 }
 
 void caz_env_step(CazEnvState *state, float dt_seconds)
@@ -574,6 +1127,7 @@ void caz_env_droid_snapshot(const CazEnvState *state, int index, CazEnvDroidSnap
     out_snapshot->energy_source = droid->energy_source;
     out_snapshot->bytecode_loaded = droid->bytecode.image_loaded;
     out_snapshot->bytecode_stepping_enabled = droid->bytecode.stepping_enabled;
+    out_snapshot->bytecode_halted = droid->bytecode.cpu.halted ? 1u : 0u;
     out_snapshot->bytecode_faulted = droid->bytecode.faulted;
     out_snapshot->nav_intent = droid->bytecode.output.nav_intent;
     out_snapshot->skill = droid->bytecode.output.skill;
@@ -601,4 +1155,12 @@ const char *caz_env_bytecode_program_name(const CazEnvState *state, int index)
         return runtime->image.name;
     }
     return caz_env_program_name(runtime->assigned_program);
+}
+
+uint8_t caz_env_debug_read_port(const CazEnvState *state, int index, uint8_t port)
+{
+    if (state == NULL || index < 0 || index >= CAZ_ENV_DROID_COUNT) {
+        return 0xffu;
+    }
+    return read_env_port(&state->droids[index].bytecode, port);
 }

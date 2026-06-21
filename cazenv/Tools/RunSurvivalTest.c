@@ -1,4 +1,5 @@
 #include "../c_core/caz_env.h"
+#include "../../src/caz_droid.h"
 
 #include <float.h>
 #include <stdio.h>
@@ -79,6 +80,7 @@ static void count_bytecode_runtimes(const CazEnvState *state)
     int assigned = 0;
     int loaded = 0;
     int stepping = 0;
+    int halted = 0;
     int faulted = 0;
     uint64_t instructions = 0u;
 
@@ -87,16 +89,47 @@ static void count_bytecode_runtimes(const CazEnvState *state)
         assigned += runtime->image.name[0] != '\0' ? 1 : 0;
         loaded += runtime->image_loaded ? 1 : 0;
         stepping += runtime->stepping_enabled ? 1 : 0;
+        halted += runtime->cpu.halted ? 1 : 0;
         faulted += runtime->faulted ? 1 : 0;
         instructions += runtime->cpu.instructions;
     }
 
-    printf("bytecode-runtimes assigned=%d loaded=%d stepping=%d faulted=%d instructions=%llu\n",
+    printf("bytecode-runtimes assigned=%d loaded=%d stepping=%d halted=%d faulted=%d instructions=%llu\n",
            assigned,
            loaded,
            stepping,
+           halted,
            faulted,
            (unsigned long long)instructions);
+}
+
+static void print_sample_ports(const CazEnvState *state)
+{
+    printf("sample-ports droid=0 eye=(luma=%u motion=%u edge=%u colour=%u) ear=(volume=%u pitch=%u bearing=%u pattern=%u) body=(roll=%u pitch=%u lifted=%u dropped=%u terrain=%u reflex=%u) survival=(battery=%u charger=%u/%u/%u junction=%u/%u solar=%u energy=%u nav=%u/%u)\n",
+           caz_env_debug_read_port(state, 0, CAZ_PORT_EYE_LUMA),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_EYE_MOTION),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_EYE_EDGE),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_EYE_COLOUR_TEMP),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_EAR_VOLUME),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_EAR_PITCH),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_EAR_BEARING),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_EAR_PATTERN),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_IMU_ROLL),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_IMU_PITCH),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_LIFTED),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_DROPPED),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_TERRAIN),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_REFLEX_STATE),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_BATTERY),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_CHARGER_BEARING),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_CHARGER_DISTANCE),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_CHARGER_SLOTS),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_JUNCTION_BEARING),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_JUNCTION_DISTANCE),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_SOLAR_LEVEL),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_ENERGY_SOURCE),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_NAV_INTENT),
+           caz_env_debug_read_port(state, 0, CAZ_PORT_NAV_STATUS));
 }
 
 int main(int argc, char **argv)
@@ -123,11 +156,17 @@ int main(int argc, char **argv)
         CazEnvState state;
         DroidTrack tracks[CAZ_ENV_DROID_COUNT];
         const uint32_t seed = 0x0ca7e000u + (uint32_t)seed_index;
+        char load_error[512];
 
         caz_env_init(&state, seed);
+        if (!caz_env_load_programs(&state, "programs", load_error, sizeof(load_error))) {
+            fprintf(stderr, "%s\n", load_error);
+            return 1;
+        }
         if (seed_index == 0) {
             count_fixtures(&state);
             count_bytecode_runtimes(&state);
+            print_sample_ports(&state);
         }
 
         for (int index = 0; index < CAZ_ENV_DROID_COUNT; index++) {
@@ -219,6 +258,10 @@ int main(int argc, char **argv)
             failed_seeds++;
         }
         printf(" result=%s\n", seed_failed ? "FAIL" : "PASS");
+        if (seed_index == 0) {
+            count_bytecode_runtimes(&state);
+            print_sample_ports(&state);
+        }
     }
 
     printf("survival-result=%s failed_seeds=%d/%d\n",

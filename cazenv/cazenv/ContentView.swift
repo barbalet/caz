@@ -35,11 +35,18 @@ struct ContentView: View {
                 metric("JBOX", "\(runtime.snapshot.fixtures.filter { $0.type == 7 }.count)")
                 metric("CHARGING", "\(runtime.snapshot.droids.filter { $0.mode == 3 }.count)/8")
                 metric("TAP", "\(runtime.snapshot.droids.filter { $0.mode == 6 }.count)")
-                metric("VM", "\(runtime.snapshot.droids.filter { $0.bytecodeSteppingEnabled }.count)/\(runtime.snapshot.droids.count)")
+                metric("VM LOAD", "\(runtime.snapshot.droids.filter { $0.bytecodeLoaded }.count)/\(runtime.snapshot.droids.count)")
             }
 
             Divider()
                 .background(.white.opacity(0.22))
+
+            if let loadError = runtime.snapshot.loadError {
+                Text(loadError)
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(.red)
+                    .lineLimit(3)
+            }
 
             VStack(alignment: .leading, spacing: 5) {
                 ForEach(runtime.snapshot.droids.prefix(8)) { droid in
@@ -113,7 +120,18 @@ struct ContentView: View {
     }
 
     private func vmSummary(_ droid: EnvDroid) -> String {
-        let state = droid.bytecodeFaulted ? "fault" : (droid.bytecodeSteppingEnabled ? "run" : "off")
+        let state: String
+        if droid.bytecodeFaulted {
+            state = "fault"
+        } else if droid.bytecodeHalted {
+            state = "halt"
+        } else if !droid.bytecodeLoaded {
+            state = "unload"
+        } else if droid.bytecodeSteppingEnabled {
+            state = "run"
+        } else {
+            state = "off"
+        }
         return "vm:\(state) \(droid.bytecodeProgramName) #\(droid.bytecodeInstructions)"
     }
 
