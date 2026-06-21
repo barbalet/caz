@@ -21,7 +21,7 @@ CAZENV_SURVIVAL_SOURCES := \
 	src/caz_droid.c \
 	src/caz_loader.c
 
-.PHONY: all run cazenv-survival clean
+.PHONY: all run cazenv-probes cazenv-survival cazenv-survival-compat cazenv-survival-strict cazenv-survival-long clean
 
 all: $(TARGET)
 
@@ -35,8 +35,19 @@ $(BUILD_DIR)/%.o: src/%.c src/caz_cpu.h src/caz_body.h src/caz_droid.h src/caz_o
 run: $(TARGET)
 	$(TARGET) --program farmyard-mouser --scenario farmyard --steps 48
 
-cazenv-survival: $(CAZENV_SURVIVAL)
-	$(CAZENV_SURVIVAL) 14 3
+cazenv-probes: $(CAZENV_SURVIVAL)
+	$(CAZENV_SURVIVAL) --mode probes
+
+cazenv-survival: cazenv-survival-compat
+
+cazenv-survival-compat: $(CAZENV_SURVIVAL)
+	$(CAZENV_SURVIVAL) --mode short-compat 14 3
+
+cazenv-survival-strict: $(CAZENV_SURVIVAL)
+	$(CAZENV_SURVIVAL) --mode short-strict 14 3
+
+cazenv-survival-long: $(CAZENV_SURVIVAL)
+	$(CAZENV_SURVIVAL) --mode long-strict 30 5
 
 $(CAZENV_SURVIVAL): $(CAZENV_SURVIVAL_SOURCES) cazenv/c_core/caz_env.h
 	mkdir -p $(BUILD_DIR)

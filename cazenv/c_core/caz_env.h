@@ -67,7 +67,11 @@ typedef struct CazEnvDroidSnapshot {
     float charge;
     float feral;
     float solar_gain;
+    float passive_solar_gain;
+    float nav_solar_gain;
     float tap_gain;
+    float nav_tap_gain;
+    float fallback_tap_gain;
     float speed;
     uint8_t program;
     uint8_t gait;
@@ -141,7 +145,11 @@ typedef struct CazEnvDroid {
     float charge;
     float feral;
     float solar_gain;
+    float passive_solar_gain;
+    float nav_solar_gain;
     float tap_gain;
+    float nav_tap_gain;
+    float fallback_tap_gain;
     float speed;
     float phase;
     uint8_t program;
