@@ -25,6 +25,48 @@ Target flow:
 
 The middle layer should become the single place where high-level cat intent is turned into servo-safe body motion.
 
+## Current Development Stage
+
+Active phase: `CazEnv Bytecode Survival`
+
+Last completed cycle: `Cycle 14: Per-Droid Bytecode Runtime State`
+
+Current cycle: `Cycle 15: Program Loading In CazEnv`
+
+Next development action: load actual `.caz` bytecode images into each CazEnv droid runtime from the app bundle or repository path, then surface load failures with useful program names and paths.
+
+Progress rule: when the current cycle's exit criteria pass, change that cycle's status to `Done`, update this section to name the next cycle, and mark the next cycle's status as `Current`.
+
+Integrity rule: a cycle marked `Done` can be reopened. If later work shows that an exit criterion was incomplete, too weak, or misleading, update that cycle to `Reopened`, add an entry to the Progress Integrity Ledger, and create or adjust a later corrective cycle.
+
+## Progress Integrity
+
+Progress must be tracked honestly. A completed cycle means the listed exit criteria passed in the current workspace at the time it was marked, not that the design is permanently correct or release-ready.
+
+Status vocabulary:
+
+- `Pending`: planned but not started.
+- `Current`: the cycle that should be worked next.
+- `Done`: implemented and verified against the cycle's current exit criteria.
+- `Reopened`: previously marked done, but later evidence showed missing or incorrect work.
+- `Blocked`: cannot proceed without a decision, dependency, or external input.
+- `Superseded`: replaced by a later plan entry; keep a note explaining the replacement.
+
+When a misstep is found:
+
+1. Add an entry to the Progress Integrity Ledger with the date, affected cycle, evidence, and correction.
+2. Reopen the original cycle if its own exit criteria were not actually met.
+3. If the original exit criteria were met but proved too weak, leave the old cycle `Done` and add a new corrective cycle or amend a pending cycle.
+4. Record verification commands and measured results, not just intent.
+
+### Progress Integrity Ledger
+
+| Date | Cycle | Finding | Action |
+| --- | --- | --- | --- |
+| 2026-06-21 | Cycle 12 | The survival harness now passes, but the pass is still environment-supervisor assisted. It is not proof of bytecode-owned survival. | Keep Cycle 12 `Done` because it established the experiment contract and current harness. Track bytecode ownership explicitly in Cycles 13-24 and make strict bytecode-owned survival the default in Cycle 34. |
+| 2026-06-21 | Cycle 12 | `Done` reflects the current workspace state. The CazEnv project and `return-to-charge.caz` are still new workspace changes until they are committed or otherwise accepted. | Treat Cycle 12 as implemented in the workspace, not as a release checkpoint. Cycle 35 must record final commands and metrics before the bytecode survival phase is complete. |
+| 2026-06-21 | Cycle 14 | Per-droid VM runtimes are assigned and visible, but bytecode images are not loaded yet: `make cazenv-survival` reports `assigned=20 loaded=0 stepping=0 instructions=0`. | Keep Cycle 14 `Done` as runtime-state scaffolding. Cycle 15 remains responsible for actual `.caz` program loading. |
+
 ## Design Rules
 
 - Keep `.caz` programs readable as animal behaviour scripts.
@@ -573,3 +615,499 @@ Third-party body assets should remain optional until their license and redistrib
 - The CazMac body rig is derived from the OpenCat simple URDF or an equivalent checked-in intermediate generated from it.
 - Nybble STL parts are used only as documented visual references or optional converted mesh attachments.
 - CazMac renders visible body differences for at least rest, sit, walk, crawl, pounce, sniff, and scratch.
+
+## Next Phase: CazEnv Bytecode Survival
+
+This phase turns CazEnv from an environment-supervised simulator into a bytecode-governed survival experiment. Seven cycles would hide too many integration risks. The work should be split into 24 chronological cycles so each cycle can be run, measured, and reverted independently if it weakens long-term survival.
+
+The target control flow is:
+
+```text
+CazEnv room state
+    -> per-droid Caz VM input ports
+    -> .caz bytecode survival and behaviour policy
+    -> NAV_INTENT, SKILL, GAIT, HEAD_YAW, and pose outputs
+    -> CazEnv physics, charger, solar, junction, and renderer
+    -> survival experiment metrics
+```
+
+The C environment may keep hard safety assertions, but it should stop being the primary decision maker. A successful experiment must show that recovery transitions came from `.caz` output through ports such as `NAV_INTENT`, not from hidden C thresholds.
+
+### Bytecode Survival Priorities
+
+| Priority | Element | Reason |
+| --- | --- | --- |
+| `S0` | Repeatable experiment and failure criteria. | Every change must prove it has not reduced survival. |
+| `S1` | Shared VM integration. | CazEnv needs the same bytecode machinery as the CLI and CazMac. |
+| `S2` | Per-droid runtime state. | Twenty droids need independent CPUs, programs, outputs, and metrics. |
+| `S3` | Environment port adapter. | Bytecode can only own survival if it can sense chargers, solar, junctions, slots, obstacles, and charge. |
+| `S4` | Actuator and navigation intent bridge. | CazEnv must obey bytecode outputs through physics rather than hardcoded policy branches. |
+| `S5` | Program survival prologues. | Every behaviour program must check energy before playful, house-cat, or feral-cat actions. |
+| `S6` | Supervisor demotion. | C hardcoded recovery should become a measured fallback or test failure, not normal operation. |
+| `S7` | Long-run confidence. | Survival claims need many seeds, longer durations, and regression artifacts. |
+
+## CazEnv Bytecode Survival Development Cycles
+
+### Cycle 12: Survival Experiment Contract
+
+Priority: `S0`
+
+Status: Done
+
+Deliverables:
+
+- Add a repeatable CazEnv survival harness.
+- Make the harness fail when any droid reaches zero charge, enters depleted state, or ends at zero charge.
+- Add `make cazenv-survival` as the standard command for the experiment.
+- Add survival and navigation language ports: `ENERGY_SOURCE`, `CHARGER_BEARING`, `CHARGER_DISTANCE`, `CHARGER_SLOTS`, `JUNCTION_BEARING`, `JUNCTION_DISTANCE`, `SOLAR_LEVEL`, `NAV_INTENT`, and `NAV_STATUS`.
+- Update `programs/return-to-charge.caz` into a reference survival policy.
+- Fix the known zero-charge accounting hole in the current CazEnv C supervisor.
+
+Exit criteria:
+
+- `make` succeeds.
+- `build/caz --program return-to-charge --steps 8` exercises the new symbols.
+- `make cazenv-survival` passes the current 14-day, 3-seed, 20-droid run.
+- CazEnv still builds in Xcode.
+
+### Cycle 13: Shared VM Build Integration For CazEnv
+
+Priority: `S1`
+
+Status: Done
+
+Deliverables:
+
+- Add the shared Caz VM, loader, body, and droid source files to the CazEnv Xcode target or a common static library target.
+- Avoid copying VM code into CazEnv-specific files.
+- Keep CazEnv's room simulation in `cazenv/c_core` and VM/language mechanics in `src/`.
+- Add a small compile-time adapter boundary so CazEnv can use the VM without depending on CLI-only `main.c`.
+
+Exit criteria:
+
+- CazEnv links against the shared VM sources.
+- The CLI still builds with `make`.
+- No duplicate VM implementation exists under `cazenv/`.
+- Xcode build succeeds.
+
+### Cycle 14: Per-Droid Bytecode Runtime State
+
+Priority: `S2`
+
+Status: Done
+
+Deliverables:
+
+- Extend each CazEnv droid with a `CazCpu` instance or an equivalent owned runtime wrapper.
+- Add assigned program image metadata per droid; actual `.caz` image loading remains Cycle 15.
+- Store VM output latch state per droid: `NAV_INTENT`, `SKILL`, `GAIT`, `HEAD_YAW`, `EAR_POSE`, `TAIL_POSE`, `VOCAL`, `EYELID`, and selected joint or pose-frame outputs.
+- Preserve deterministic initialization from the CazEnv seed.
+
+Exit criteria:
+
+- All 20 droids can be initialized with independent bytecode runtime state.
+- A debug snapshot can report each droid's assigned bytecode program and VM instruction count.
+- CazEnv still runs if VM stepping is disabled by a temporary feature flag.
+
+### Cycle 15: Program Loading In CazEnv
+
+Priority: `S2`
+
+Status: Current
+
+Deliverables:
+
+- Load `.caz` programs from the app bundle or repository path in the same naming scheme as the CLI.
+- Assign archived programs to the 20 droids deterministically.
+- Load `return-to-charge.caz` as an actual bytecode routine rather than just a C profile name.
+- Surface load failures with useful program names and paths.
+
+Exit criteria:
+
+- Every CazEnv droid has a loaded bytecode image.
+- Missing or invalid program files fail visibly rather than silently falling back to C profiles.
+- The program assignment table no longer needs to encode speed and gait as the source of behaviour truth.
+
+### Cycle 16: Environment Sensor Port Adapter
+
+Priority: `S3`
+
+Status: Pending
+
+Deliverables:
+
+- Implement CazEnv VM read callbacks for existing body ports and new survival ports.
+- Map `BATTERY` to normalized droid charge.
+- Map charger bearing, distance, and slots from actual charger geometry and occupancy.
+- Map junction bearing and distance from nearest usable junction box.
+- Map `SOLAR_LEVEL` from the room's daylight/ambient-light model.
+- Map `ENERGY_SOURCE` from actual current recovery state.
+
+Exit criteria:
+
+- A `.caz` program can read CazEnv-specific charger, junction, solar, and battery values.
+- Port values are deterministic for a fixed seed and step count.
+- Values are bounded to `0..255` and documented when saturated.
+
+### Cycle 17: Body And Behaviour Sensor Port Adapter
+
+Priority: `S3`
+
+Status: Pending
+
+Deliverables:
+
+- Provide CazEnv readings for eye, ear, terrain, IMU, lifted, dropped, and reflex ports.
+- Derive eye and ear values from room activity, nearby droids, fixtures, and simple noise models.
+- Derive terrain and collision caution from beds, trees, charger, walls, and other droids.
+- Keep readings simple and deterministic before adding richer perception.
+
+Exit criteria:
+
+- Existing archived behaviour programs can run in CazEnv without seeing only constant `0xff` fallback values.
+- Motion, edge, sound, and terrain readings change with room context.
+- Sensor generation can be inspected in survival logs.
+
+### Cycle 18: Bytecode Instruction Budget And Tick Order
+
+Priority: `S2`
+
+Status: Pending
+
+Deliverables:
+
+- Define a fixed instruction budget per simulation tick per droid.
+- Step each droid's VM before applying movement and energy updates.
+- Decide how halted or faulted CPUs are represented in survival metrics.
+- Ensure VM stepping cost remains acceptable with 20 droids.
+
+Exit criteria:
+
+- CazEnv can run all 20 VMs for a normal frame without obvious slowdown.
+- CPU faults or halted programs are visible in the harness and app overlay.
+- Repeated runs with the same seed produce the same result.
+
+### Cycle 19: Output Port Bridge To CazEnv Motion
+
+Priority: `S4`
+
+Status: Pending
+
+Deliverables:
+
+- Convert bytecode `GAIT`, `SKILL`, and `HEAD_YAW` outputs into movement targets or steering.
+- Keep the body middle layer's reflex outputs visible to the renderer.
+- Preserve CazMac-compatible meanings for coarse outputs.
+- Add a debug mode that shows raw output latches beside interpreted motion state.
+
+Exit criteria:
+
+- A simple `.caz` program can cause visible CazEnv movement through output ports alone.
+- Movement stops or changes when the program changes `GAIT` or `SKILL`.
+- C hardcoded program speed profiles are no longer needed for normal behaviour.
+
+### Cycle 20: NAV_INTENT Bridge To Room Goals
+
+Priority: `S4`
+
+Status: Pending
+
+Deliverables:
+
+- Implement `NAV_WANDER`, `NAV_CHARGER`, `NAV_SOLAR`, and `NAV_JUNCTION` as bytecode-requested room goals.
+- Convert requested goals into targets while still obeying physics, walls, occupancy, and fixture collisions.
+- Set `NAV_STATUS` to running, blocked, docked, tapping, solar, or idle based on the executed result.
+- Log each transition with its cause: bytecode output, fallback, or failure.
+
+Exit criteria:
+
+- `return-to-charge.caz` can drive a droid toward charging, solar, or junction recovery in CazEnv.
+- The environment does not choose recovery mode until bytecode requests it.
+- Recovery logs show `NAV_INTENT` as the primary cause.
+
+### Cycle 21: Charger Docking Under Bytecode Control
+
+Priority: `S4`
+
+Status: Pending
+
+Deliverables:
+
+- Make charger docking happen only after a droid requests `NAV_CHARGER` and reaches the charger.
+- Report available slots through `CHARGER_SLOTS`.
+- Set `NAV_STATUS=DOCKED` while charging.
+- Handle full charger occupancy as blocked or loitering without hidden teleporting.
+
+Exit criteria:
+
+- Droids can queue or loiter when all eight slots are occupied.
+- Bytecode can observe slot availability and choose a different strategy.
+- Charging from empty still takes about 10 simulated minutes.
+
+### Cycle 22: Solar Recovery Under Bytecode Control
+
+Priority: `S4`
+
+Status: Pending
+
+Deliverables:
+
+- Make enhanced solar recovery happen only after `NAV_SOLAR`.
+- Keep passive solar as a very small environmental background value if needed, but measure it separately.
+- Stop motion or reduce drain when the bytecode chooses solar conservation.
+- Set `NAV_STATUS=SOLAR` while solar recovery is active.
+
+Exit criteria:
+
+- A droid can survive by intentionally entering solar recovery.
+- The harness distinguishes passive solar gain from program-requested solar recovery.
+- Solar recovery cannot hide a zero-charge event.
+
+### Cycle 23: Junction Tapping Under Bytecode Control
+
+Priority: `S4`
+
+Status: Pending
+
+Deliverables:
+
+- Make junction tapping happen only after `NAV_JUNCTION`.
+- Require a reachable junction and appropriate distance before granting tap gain.
+- Set `NAV_STATUS=TAPPING` while energy is recovered from a junction.
+- Keep claw/scratch animation tied to bytecode skill or nav status.
+
+Exit criteria:
+
+- A droid can intentionally route to and tap a junction.
+- Failed or unreachable junction attempts report blocked status.
+- Tap energy is credited only when the droid is near a junction.
+
+### Cycle 24: Supervisor Demotion Pass
+
+Priority: `S6`
+
+Status: Pending
+
+Deliverables:
+
+- Remove or disable normal hardcoded low-charge mode selection in `caz_env_step`.
+- Keep C code only for physics, energy accounting, actuator execution, and hard safety assertions.
+- Add a counter for every time CazEnv uses a fallback not requested by bytecode.
+- Make fallback use fail the strict survival experiment.
+
+Exit criteria:
+
+- A strict run fails if droids survive only because of hidden C supervisor decisions.
+- The default experiment reports zero supervisor recoveries.
+- CazEnv still prevents undefined states such as invalid charge, invalid slots, or out-of-room coordinates.
+
+### Cycle 25: Program Survival Prologue Pattern
+
+Priority: `S5`
+
+Status: Pending
+
+Deliverables:
+
+- Define a standard survival prologue for `.caz` programs.
+- Apply the prologue to all archived behaviour programs or introduce assembler include support for shared prologue code.
+- Ensure every program checks `BATTERY` before high-drain behaviours.
+- Branch to charger, solar, or junction logic before playful or exploratory routines.
+
+Exit criteria:
+
+- Every named program in `programs/` has an energy check path.
+- No archived program can pounce, stalk, retreat, or wander indefinitely while below the survival threshold.
+- The prologue remains readable in assembly source.
+
+### Cycle 26: Shared Assembly Include Or Macro Support
+
+Priority: `S5`
+
+Status: Pending
+
+Deliverables:
+
+- Add minimal assembler support for shared includes or macros if duplicated prologues become brittle.
+- Keep the CPU bytecode unchanged.
+- Document include resolution and error reporting.
+- Move common survival policy into a shared source fragment only after the direct version is proven.
+
+Exit criteria:
+
+- Program source can reuse survival logic without copy-paste drift.
+- Bad include paths report a line-numbered assembler error.
+- Existing programs without includes still assemble.
+
+### Cycle 27: Bytecode-Owned Behaviour Regression Suite
+
+Priority: `S0`
+
+Status: Pending
+
+Deliverables:
+
+- Add a command or script that runs every named `.caz` program through the CLI and CazEnv bytecode adapter.
+- Check for assembler errors, CPU faults, invalid ports, and halted programs.
+- Record expected minimum survival outputs from `return-to-charge.caz`.
+- Add regression output compact enough for repeated development cycles.
+
+Exit criteria:
+
+- One command verifies that all archived programs assemble and execute.
+- A failed program reports the source file and failure mode.
+- The survival experiment depends on this suite or runs it first.
+
+### Cycle 28: Collision And Obstacle Feedback
+
+Priority: `S3`
+
+Status: Pending
+
+Deliverables:
+
+- Add simple collision/obstacle sensing for walls, beds, trees, charger, junctions, and other droids.
+- Feed obstacle state into `EYE_EDGE`, `TERRAIN`, or a new documented port if existing ports are too overloaded.
+- Let bytecode respond before CazEnv clamps or redirects movement.
+- Log blocked movement events.
+
+Exit criteria:
+
+- Programs can detect that a chosen route is blocked.
+- The harness reports whether survival failures came from navigation blockage.
+- Droids no longer pass through major fixtures during recovery routes.
+
+### Cycle 29: Charger Queue Strategy In Bytecode
+
+Priority: `S5`
+
+Status: Pending
+
+Deliverables:
+
+- Add bytecode logic for low charge when `CHARGER_SLOTS == 0`.
+- Choose solar or junction instead of waiting blindly when the queue is risky.
+- Introduce a low-drain loiter/rest strategy near the charger when waiting is safe.
+- Keep this logic visible in source, not hidden in C.
+
+Exit criteria:
+
+- Full charger scenarios do not cause zero-charge failures.
+- Logs show bytecode choosing alternate recovery when slots are unavailable.
+- The queue behaviour remains stable with 20 droids.
+
+### Cycle 30: House And Feral Strategy Split In Bytecode
+
+Priority: `S5`
+
+Status: Pending
+
+Deliverables:
+
+- Expose a deterministic house/feral tendency or strategy input to bytecode.
+- Make house-oriented programs prefer formal charging and beds.
+- Make feral-oriented programs prefer solar conservation, hiding/resting, and junction tapping when safe.
+- Keep both strategies genetically the same domestic-cat body and program family.
+
+Exit criteria:
+
+- House and feral behaviour differences are produced by bytecode decisions.
+- The renderer and logs show which strategy is active.
+- Both strategies pass survival thresholds.
+
+### Cycle 31: Long-Duration Multi-Seed Survival Matrix
+
+Priority: `S7`
+
+Status: Pending
+
+Deliverables:
+
+- Expand `make cazenv-survival` or add a longer target for 30-day and 100-day simulated runs.
+- Run more seeds, including stress seeds with crowded charger placement and difficult junction positions.
+- Record min charge, supervisor fallback count, recharge count, solar count, tap count, blocked nav count, and CPU fault count.
+- Keep the default short target fast enough for frequent development.
+
+Exit criteria:
+
+- Short target remains suitable for every development cycle.
+- Long target can be run before declaring a survival improvement complete.
+- No run is considered passing if supervisor fallback count is nonzero.
+
+### Cycle 32: Renderer And Overlay Attribution
+
+Priority: `S4`
+
+Status: Pending
+
+Deliverables:
+
+- Show each droid's current program, `NAV_INTENT`, `NAV_STATUS`, battery, and energy source in the CazEnv overlay.
+- Distinguish bytecode-requested recovery from fallback recovery.
+- Keep the room readable when 20 droids are present.
+- Add optional filters for depleted, low battery, charging, solar, and tapping states.
+
+Exit criteria:
+
+- A visual inspection can tell why a droid is moving toward a charger, solar patch, or junction.
+- Strict-mode fallback is visible immediately.
+- Overlay does not obscure the room simulation.
+
+### Cycle 33: Failure Artifact Capture
+
+Priority: `S7`
+
+Status: Pending
+
+Deliverables:
+
+- On survival failure, write a compact report with seed, step, droid index, program, charge, nav intent, nav status, energy source, position, and last several recovery decisions.
+- Optionally serialize a replay seed and step range.
+- Keep artifacts out of source control by default.
+
+Exit criteria:
+
+- A failed run gives enough data to reproduce the failure.
+- Developers do not need to watch the whole simulation to understand the first survival break.
+- Failure artifacts are deterministic for a fixed build and seed.
+
+### Cycle 34: Strict Bytecode Survival Mode As Default
+
+Priority: `S6`
+
+Status: Pending
+
+Deliverables:
+
+- Make strict bytecode-owned survival the default harness mode.
+- Keep any legacy supervisor mode behind an explicit compatibility option.
+- Update documentation to define "survival" as bytecode-owned, not merely environment-assisted.
+- Remove stale wording that implies CazEnv owns normal return-to-charge decisions.
+
+Exit criteria:
+
+- The default experiment fails if `.caz` programs do not issue valid survival outputs.
+- Compatibility mode is clearly labeled and not used for success claims.
+- Docs and harness output use the same terminology.
+
+### Cycle 35: Release Gate For Bytecode-Owned CazEnv
+
+Priority: `S7`
+
+Status: Pending
+
+Deliverables:
+
+- Run the CLI regression suite, CazEnv strict survival short run, CazEnv strict survival long run, and Xcode build.
+- Review logs for supervisor fallback, CPU faults, zero charge, depleted state, blocked navigation, and invalid port usage.
+- Update this plan with measured results.
+- Mark the bytecode survival phase complete only if all checks pass.
+
+Exit criteria:
+
+- `make` succeeds.
+- All named `.caz` programs assemble and execute.
+- CazEnv strict survival passes with zero supervisor fallbacks.
+- The long survival matrix passes.
+- CazEnv builds in Xcode.
+- The plan records the exact commands and final survival metrics.

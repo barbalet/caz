@@ -1,0 +1,425 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		ENV001000000000000000001 /* CazEnvApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000001 /* CazEnvApp.swift */; };
+		ENV001000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000002 /* ContentView.swift */; };
+		ENV001000000000000000003 /* CazEnvRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000003 /* CazEnvRuntime.swift */; };
+		ENV001000000000000000004 /* MetalEnvironmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000004 /* MetalEnvironmentView.swift */; };
+		ENV001000000000000000005 /* EnvironmentRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000005 /* EnvironmentRenderer.swift */; };
+		ENV001000000000000000006 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000006 /* Shaders.metal */; };
+		ENV001000000000000000007 /* caz_env.c in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000007 /* caz_env.c */; };
+		ENV001000000000000000008 /* LowpolyCAT_fixed.stl in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000010 /* LowpolyCAT_fixed.stl */; };
+		ENV001000000000000000009 /* curious-patrol.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000011 /* curious-patrol.caz */; };
+		ENV001000000000000000010 /* nap-watch.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000012 /* nap-watch.caz */; };
+		ENV001000000000000000011 /* farmyard-mouser.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000013 /* farmyard-mouser.caz */; };
+		ENV001000000000000000012 /* skill-cycle.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000014 /* skill-cycle.caz */; };
+		ENV001000000000000000013 /* loaf-and-groom.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000015 /* loaf-and-groom.caz */; };
+		ENV001000000000000000014 /* stalk-and-pounce.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000016 /* stalk-and-pounce.caz */; };
+		ENV001000000000000000015 /* farmyard-caution.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000017 /* farmyard-caution.caz */; };
+		ENV001000000000000000016 /* greeting-play.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000018 /* greeting-play.caz */; };
+		ENV001000000000000000017 /* pose-frame.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000019 /* pose-frame.caz */; };
+		ENV001000000000000000018 /* return-to-charge.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000020 /* return-to-charge.caz */; };
+		ENV001000000000000000019 /* caz_cpu.c in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000022 /* caz_cpu.c */; };
+		ENV001000000000000000020 /* caz_body.c in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000024 /* caz_body.c */; };
+		ENV001000000000000000021 /* caz_droid.c in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000026 /* caz_droid.c */; };
+		ENV001000000000000000022 /* caz_loader.c in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000028 /* caz_loader.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		ENV000000000000000000001 /* CazEnvApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CazEnvApp.swift; sourceTree = "<group>"; };
+		ENV000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		ENV000000000000000000003 /* CazEnvRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CazEnvRuntime.swift; sourceTree = "<group>"; };
+		ENV000000000000000000004 /* MetalEnvironmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalEnvironmentView.swift; sourceTree = "<group>"; };
+		ENV000000000000000000005 /* EnvironmentRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentRenderer.swift; sourceTree = "<group>"; };
+		ENV000000000000000000006 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+		ENV000000000000000000007 /* caz_env.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = caz_env.c; sourceTree = "<group>"; };
+		ENV000000000000000000008 /* caz_env.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = caz_env.h; sourceTree = "<group>"; };
+		ENV000000000000000000009 /* cazenv-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "cazenv-Bridging-Header.h"; sourceTree = "<group>"; };
+		ENV000000000000000000010 /* LowpolyCAT_fixed.stl */ = {isa = PBXFileReference; lastKnownFileType = file; name = LowpolyCAT_fixed.stl; path = "../stock/3d_models/LowpolyCAT_fixed.stl"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000011 /* curious-patrol.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "curious-patrol.caz"; path = "../programs/curious-patrol.caz"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000012 /* nap-watch.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "nap-watch.caz"; path = "../programs/nap-watch.caz"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000013 /* farmyard-mouser.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "farmyard-mouser.caz"; path = "../programs/farmyard-mouser.caz"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000014 /* skill-cycle.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "skill-cycle.caz"; path = "../programs/skill-cycle.caz"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000015 /* loaf-and-groom.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "loaf-and-groom.caz"; path = "../programs/loaf-and-groom.caz"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000016 /* stalk-and-pounce.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "stalk-and-pounce.caz"; path = "../programs/stalk-and-pounce.caz"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000017 /* farmyard-caution.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "farmyard-caution.caz"; path = "../programs/farmyard-caution.caz"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000018 /* greeting-play.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "greeting-play.caz"; path = "../programs/greeting-play.caz"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000019 /* pose-frame.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "pose-frame.caz"; path = "../programs/pose-frame.caz"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000020 /* return-to-charge.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "return-to-charge.caz"; path = "../programs/return-to-charge.caz"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000021 /* cazenv.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = cazenv.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ENV000000000000000000022 /* caz_cpu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_cpu.c; path = ../src/caz_cpu.c; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000023 /* caz_cpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_cpu.h; path = ../src/caz_cpu.h; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000024 /* caz_body.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_body.c; path = ../src/caz_body.c; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000025 /* caz_body.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_body.h; path = ../src/caz_body.h; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000026 /* caz_droid.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_droid.c; path = ../src/caz_droid.c; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000027 /* caz_droid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_droid.h; path = ../src/caz_droid.h; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000028 /* caz_loader.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_loader.c; path = ../src/caz_loader.c; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000029 /* caz_loader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_loader.h; path = ../src/caz_loader.h; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		ENV002000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		ENV003000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				ENV003000000000000000002 /* cazenv */,
+				ENV003000000000000000007 /* Caz C Runtime */,
+				ENV003000000000000000003 /* C Core */,
+				ENV003000000000000000004 /* Stock Assets */,
+				ENV003000000000000000005 /* Caz Programs */,
+				ENV003000000000000000006 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		ENV003000000000000000002 /* cazenv */ = {
+			isa = PBXGroup;
+			children = (
+				ENV000000000000000000001 /* CazEnvApp.swift */,
+				ENV000000000000000000002 /* ContentView.swift */,
+				ENV000000000000000000003 /* CazEnvRuntime.swift */,
+				ENV000000000000000000004 /* MetalEnvironmentView.swift */,
+				ENV000000000000000000005 /* EnvironmentRenderer.swift */,
+				ENV000000000000000000006 /* Shaders.metal */,
+				ENV000000000000000000009 /* cazenv-Bridging-Header.h */,
+			);
+			path = cazenv;
+			sourceTree = "<group>";
+		};
+		ENV003000000000000000003 /* C Core */ = {
+			isa = PBXGroup;
+			children = (
+				ENV000000000000000000007 /* caz_env.c */,
+				ENV000000000000000000008 /* caz_env.h */,
+			);
+			path = c_core;
+			sourceTree = "<group>";
+		};
+		ENV003000000000000000007 /* Caz C Runtime */ = {
+			isa = PBXGroup;
+			children = (
+				ENV000000000000000000022 /* caz_cpu.c */,
+				ENV000000000000000000023 /* caz_cpu.h */,
+				ENV000000000000000000024 /* caz_body.c */,
+				ENV000000000000000000025 /* caz_body.h */,
+				ENV000000000000000000026 /* caz_droid.c */,
+				ENV000000000000000000027 /* caz_droid.h */,
+				ENV000000000000000000028 /* caz_loader.c */,
+				ENV000000000000000000029 /* caz_loader.h */,
+			);
+			name = "Caz C Runtime";
+			sourceTree = "<group>";
+		};
+		ENV003000000000000000004 /* Stock Assets */ = {
+			isa = PBXGroup;
+			children = (
+				ENV000000000000000000010 /* LowpolyCAT_fixed.stl */,
+			);
+			name = "Stock Assets";
+			sourceTree = "<group>";
+		};
+		ENV003000000000000000005 /* Caz Programs */ = {
+			isa = PBXGroup;
+			children = (
+				ENV000000000000000000011 /* curious-patrol.caz */,
+				ENV000000000000000000012 /* nap-watch.caz */,
+				ENV000000000000000000013 /* farmyard-mouser.caz */,
+				ENV000000000000000000014 /* skill-cycle.caz */,
+				ENV000000000000000000015 /* loaf-and-groom.caz */,
+				ENV000000000000000000016 /* stalk-and-pounce.caz */,
+				ENV000000000000000000017 /* farmyard-caution.caz */,
+				ENV000000000000000000018 /* greeting-play.caz */,
+				ENV000000000000000000019 /* pose-frame.caz */,
+				ENV000000000000000000020 /* return-to-charge.caz */,
+			);
+			name = "Caz Programs";
+			sourceTree = "<group>";
+		};
+		ENV003000000000000000006 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				ENV000000000000000000021 /* cazenv.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		ENV004000000000000000001 /* cazenv */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ENV008000000000000000002 /* Build configuration list for PBXNativeTarget "cazenv" */;
+			buildPhases = (
+				ENV005000000000000000001 /* Sources */,
+				ENV002000000000000000001 /* Frameworks */,
+				ENV006000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = cazenv;
+			productName = cazenv;
+			productReference = ENV000000000000000000021 /* cazenv.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		ENV007000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1520;
+				LastUpgradeCheck = 1520;
+				TargetAttributes = {
+					ENV004000000000000000001 = {
+						CreatedOnToolsVersion = 15.2;
+					};
+				};
+			};
+			buildConfigurationList = ENV008000000000000000001 /* Build configuration list for PBXProject "cazenv" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = ENV003000000000000000001;
+			productRefGroup = ENV003000000000000000006 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				ENV004000000000000000001 /* cazenv */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		ENV006000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ENV001000000000000000008 /* LowpolyCAT_fixed.stl in Resources */,
+				ENV001000000000000000009 /* curious-patrol.caz in Resources */,
+				ENV001000000000000000010 /* nap-watch.caz in Resources */,
+				ENV001000000000000000011 /* farmyard-mouser.caz in Resources */,
+				ENV001000000000000000012 /* skill-cycle.caz in Resources */,
+				ENV001000000000000000013 /* loaf-and-groom.caz in Resources */,
+				ENV001000000000000000014 /* stalk-and-pounce.caz in Resources */,
+				ENV001000000000000000015 /* farmyard-caution.caz in Resources */,
+				ENV001000000000000000016 /* greeting-play.caz in Resources */,
+				ENV001000000000000000017 /* pose-frame.caz in Resources */,
+				ENV001000000000000000018 /* return-to-charge.caz in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		ENV005000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ENV001000000000000000001 /* CazEnvApp.swift in Sources */,
+				ENV001000000000000000002 /* ContentView.swift in Sources */,
+				ENV001000000000000000003 /* CazEnvRuntime.swift in Sources */,
+				ENV001000000000000000004 /* MetalEnvironmentView.swift in Sources */,
+				ENV001000000000000000005 /* EnvironmentRenderer.swift in Sources */,
+				ENV001000000000000000006 /* Shaders.metal in Sources */,
+				ENV001000000000000000019 /* caz_cpu.c in Sources */,
+				ENV001000000000000000020 /* caz_body.c in Sources */,
+				ENV001000000000000000021 /* caz_droid.c in Sources */,
+				ENV001000000000000000022 /* caz_loader.c in Sources */,
+				ENV001000000000000000007 /* caz_env.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		ENV009000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		ENV009000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		ENV009000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = CazEnv;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.caz.cazenv;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "cazenv/cazenv-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		ENV009000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = CazEnv;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.caz.cazenv;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "cazenv/cazenv-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		ENV008000000000000000001 /* Build configuration list for PBXProject "cazenv" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ENV009000000000000000001 /* Debug */,
+				ENV009000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		ENV008000000000000000002 /* Build configuration list for PBXNativeTarget "cazenv" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ENV009000000000000000003 /* Debug */,
+				ENV009000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = ENV007000000000000000001 /* Project object */;
+}

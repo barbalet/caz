@@ -18,7 +18,8 @@
 typedef enum CazProgramKind {
     CAZ_PROGRAM_CURIOUS_PATROL = 0,
     CAZ_PROGRAM_NAP_WATCH,
-    CAZ_PROGRAM_FARMYARD_MOUSER
+    CAZ_PROGRAM_FARMYARD_MOUSER,
+    CAZ_PROGRAM_RETURN_TO_CHARGE
 } CazProgramKind;
 
 typedef struct CazProgramImage {

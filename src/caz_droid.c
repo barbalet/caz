@@ -35,6 +35,11 @@ static uint8_t clamp_u8(int value)
     return (uint8_t)value;
 }
 
+static int abs_i(int value)
+{
+    return value < 0 ? -value : value;
+}
+
 static uint8_t centered_sensor(int offset)
 {
     return clamp_u8(128 + offset);
@@ -113,6 +118,68 @@ static void set_world(CazDroid *droid,
     droid->ear_pitch = clamp_u8(pitch);
     droid->ear_bearing = clamp_u8(bearing);
     droid->ear_pattern = clamp_u8(pattern);
+}
+
+static uint8_t bearing_to_point(const CazDroid *droid, int target_x, int target_y)
+{
+    const int dx = target_x - (int)droid->x;
+    const int dy = target_y - (int)droid->y;
+    const int forward_bias = dy >= 0 ? 0 : (dx < 0 ? -24 : 24);
+    return clamp_u8(128 + dx * 6 + forward_bias);
+}
+
+static uint8_t distance_to_point(const CazDroid *droid, int target_x, int target_y)
+{
+    const int dx = target_x - (int)droid->x;
+    const int dy = target_y - (int)droid->y;
+    return clamp_u8((abs_i(dx) + abs_i(dy)) * 8);
+}
+
+static void update_survival_sensors(CazDroid *droid)
+{
+    droid->charger_bearing = bearing_to_point(droid, 0, 0);
+    droid->charger_distance = distance_to_point(droid, 0, 0);
+    droid->charger_slots = 8u;
+    droid->junction_bearing = bearing_to_point(droid, 18, -18);
+    droid->junction_distance = distance_to_point(droid, 18, -18);
+    droid->solar_level = droid->eye_luma;
+    droid->energy_source = CAZ_ENERGY_SOURCE_BATTERY;
+
+    switch (droid->nav_intent) {
+    case CAZ_NAV_CHARGER:
+        if (droid->charger_distance <= 8u && droid->charger_slots > 0u) {
+            droid->nav_status = CAZ_NAV_STATUS_DOCKED;
+            droid->energy_source = CAZ_ENERGY_SOURCE_CHARGER;
+            droid->energy += 6;
+        } else {
+            droid->nav_status = CAZ_NAV_STATUS_RUNNING;
+        }
+        break;
+    case CAZ_NAV_SOLAR:
+        droid->nav_status = CAZ_NAV_STATUS_SOLAR;
+        droid->energy_source = CAZ_ENERGY_SOURCE_SOLAR;
+        droid->energy += droid->solar_level > 96u ? 2 : 1;
+        break;
+    case CAZ_NAV_JUNCTION:
+        if (droid->junction_distance <= 12u) {
+            droid->nav_status = CAZ_NAV_STATUS_TAPPING;
+            droid->energy_source = CAZ_ENERGY_SOURCE_JUNCTION;
+            droid->energy += 3;
+        } else {
+            droid->nav_status = CAZ_NAV_STATUS_RUNNING;
+        }
+        break;
+    case CAZ_NAV_WANDER:
+    default:
+        droid->nav_status = CAZ_NAV_STATUS_IDLE;
+        break;
+    }
+
+    if (droid->energy < 0) {
+        droid->energy = 0;
+    } else if (droid->energy > 255) {
+        droid->energy = 255;
+    }
 }
 
 static void sync_legacy_pose_fields(CazDroid *droid)
@@ -224,6 +291,8 @@ void caz_droid_init(CazDroid *droid, CazScenario scenario, uint32_t seed)
     droid->curiosity = 96;
     droid->comfort = 144;
     droid->heading = 0;
+    droid->nav_intent = CAZ_NAV_WANDER;
+    update_survival_sensors(droid);
     update_body_sensors(droid);
     sync_legacy_pose_fields(droid);
 }
@@ -321,6 +390,7 @@ void caz_droid_tick(CazDroid *droid)
 
     set_world(droid, light, motion, edge, colour, volume, pitch, bearing, pattern);
     update_pose(droid);
+    update_survival_sensors(droid);
     update_body_sensors(droid);
     caz_body_tick(&droid->body);
     sync_legacy_pose_fields(droid);
@@ -339,6 +409,15 @@ uint8_t caz_droid_read_port(void *user, uint8_t port)
     case CAZ_PORT_EAR_PITCH: return droid->ear_pitch;
     case CAZ_PORT_EAR_BEARING: return droid->ear_bearing;
     case CAZ_PORT_EAR_PATTERN: return droid->ear_pattern;
+    case CAZ_PORT_ENERGY_SOURCE: return droid->energy_source;
+    case CAZ_PORT_CHARGER_BEARING: return droid->charger_bearing;
+    case CAZ_PORT_CHARGER_DISTANCE: return droid->charger_distance;
+    case CAZ_PORT_CHARGER_SLOTS: return droid->charger_slots;
+    case CAZ_PORT_JUNCTION_BEARING: return droid->junction_bearing;
+    case CAZ_PORT_JUNCTION_DISTANCE: return droid->junction_distance;
+    case CAZ_PORT_SOLAR_LEVEL: return droid->solar_level;
+    case CAZ_PORT_NAV_INTENT: return droid->nav_intent;
+    case CAZ_PORT_NAV_STATUS: return droid->nav_status;
     default:
         return caz_body_read_port(&droid->body, port, &body_value) ? body_value : 0xffu;
     }
@@ -350,6 +429,9 @@ void caz_droid_write_port(void *user, uint8_t port, uint8_t value)
     if (caz_body_write_port(&droid->body, port, value)) {
         update_body_sensors(droid);
         sync_legacy_pose_fields(droid);
+    } else if (port == CAZ_PORT_NAV_INTENT) {
+        droid->nav_intent = (uint8_t)(value % 4u);
+        update_survival_sensors(droid);
     }
 }
 
@@ -360,6 +442,7 @@ void caz_droid_print_report(const CazDroid *droid, FILE *out)
             "ears{vol=%3u pitch=%3u bearing=%3u pattern=%-9s} "
             "pose{gait=%-8s head=%3u ears=%-8s tail=%-9s vocal=%-7s eyelid=%3u} "
             "body{imu=(%3u,%3u) lifted=%3u dropped=%3u battery=%3u terrain=%u skill=%-8s status=%-7s reflex=%-11s joint[%02u:%-14s]=%3u->%3u pose[%02u]=%3u} "
+            "survival{src=%u nav=%u/%u charger=(%3u,%3u,%u) junction=(%3u,%3u) solar=%3u} "
             "state{energy=%3d curiosity=%3d comfort=%3d xy=(%d,%d)}\n",
             (unsigned long long)droid->body_ticks,
             caz_scenario_name(droid->scenario),
@@ -392,6 +475,15 @@ void caz_droid_print_report(const CazDroid *droid, FILE *out)
             droid->body.joint_targets[droid->body.selected_joint],
             droid->body.pose_frame_index,
             droid->body.pose_frame[droid->body.pose_frame_index],
+            droid->energy_source,
+            droid->nav_intent,
+            droid->nav_status,
+            droid->charger_bearing,
+            droid->charger_distance,
+            droid->charger_slots,
+            droid->junction_bearing,
+            droid->junction_distance,
+            droid->solar_level,
             droid->energy,
             droid->curiosity,
             droid->comfort,
@@ -448,6 +540,13 @@ const char *caz_port_name(uint8_t port)
     case CAZ_PORT_DROPPED: return "DROPPED";
     case CAZ_PORT_BATTERY: return "BATTERY";
     case CAZ_PORT_TERRAIN: return "TERRAIN";
+    case CAZ_PORT_ENERGY_SOURCE: return "ENERGY_SOURCE";
+    case CAZ_PORT_CHARGER_BEARING: return "CHARGER_BEARING";
+    case CAZ_PORT_CHARGER_DISTANCE: return "CHARGER_DISTANCE";
+    case CAZ_PORT_CHARGER_SLOTS: return "CHARGER_SLOTS";
+    case CAZ_PORT_JUNCTION_BEARING: return "JUNCTION_BEARING";
+    case CAZ_PORT_JUNCTION_DISTANCE: return "JUNCTION_DISTANCE";
+    case CAZ_PORT_SOLAR_LEVEL: return "SOLAR_LEVEL";
     case CAZ_PORT_GAIT: return "GAIT";
     case CAZ_PORT_HEAD_YAW: return "HEAD_YAW";
     case CAZ_PORT_EAR_POSE: return "EAR_POSE";
@@ -458,6 +557,8 @@ const char *caz_port_name(uint8_t port)
     case CAZ_PORT_SKILL_ARG: return "SKILL_ARG";
     case CAZ_PORT_SKILL_STATUS: return "SKILL_STATUS";
     case CAZ_PORT_REFLEX_STATE: return "REFLEX_STATE";
+    case CAZ_PORT_NAV_INTENT: return "NAV_INTENT";
+    case CAZ_PORT_NAV_STATUS: return "NAV_STATUS";
     case CAZ_PORT_JOINT_INDEX: return "JOINT_INDEX";
     case CAZ_PORT_JOINT_ANGLE: return "JOINT_ANGLE";
     case CAZ_PORT_JOINT_COMMIT: return "JOINT_COMMIT";

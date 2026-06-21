@@ -47,6 +47,13 @@ static const Constant constants[] = {
     {"DROPPED", CAZ_PORT_DROPPED},
     {"BATTERY", CAZ_PORT_BATTERY},
     {"TERRAIN", CAZ_PORT_TERRAIN},
+    {"ENERGY_SOURCE", CAZ_PORT_ENERGY_SOURCE},
+    {"CHARGER_BEARING", CAZ_PORT_CHARGER_BEARING},
+    {"CHARGER_DISTANCE", CAZ_PORT_CHARGER_DISTANCE},
+    {"CHARGER_SLOTS", CAZ_PORT_CHARGER_SLOTS},
+    {"JUNCTION_BEARING", CAZ_PORT_JUNCTION_BEARING},
+    {"JUNCTION_DISTANCE", CAZ_PORT_JUNCTION_DISTANCE},
+    {"SOLAR_LEVEL", CAZ_PORT_SOLAR_LEVEL},
     {"GAIT", CAZ_PORT_GAIT},
     {"HEAD_YAW", CAZ_PORT_HEAD_YAW},
     {"EAR_POSE", CAZ_PORT_EAR_POSE},
@@ -57,6 +64,8 @@ static const Constant constants[] = {
     {"SKILL_ARG", CAZ_PORT_SKILL_ARG},
     {"SKILL_STATUS", CAZ_PORT_SKILL_STATUS},
     {"REFLEX_STATE", CAZ_PORT_REFLEX_STATE},
+    {"NAV_INTENT", CAZ_PORT_NAV_INTENT},
+    {"NAV_STATUS", CAZ_PORT_NAV_STATUS},
     {"JOINT_INDEX", CAZ_PORT_JOINT_INDEX},
     {"JOINT_ANGLE", CAZ_PORT_JOINT_ANGLE},
     {"JOINT_COMMIT", CAZ_PORT_JOINT_COMMIT},
@@ -144,7 +153,23 @@ static const Constant constants[] = {
     {"REFLEX_DROPPED", CAZ_BODY_REFLEX_DROPPED},
     {"REFLEX_LIFTED", CAZ_BODY_REFLEX_LIFTED},
     {"REFLEX_BALANCE", CAZ_BODY_REFLEX_BALANCE},
-    {"REFLEX_TERRAIN_CAUTION", CAZ_BODY_REFLEX_TERRAIN_CAUTION}
+    {"REFLEX_TERRAIN_CAUTION", CAZ_BODY_REFLEX_TERRAIN_CAUTION},
+
+    {"ENERGY_BATTERY", CAZ_ENERGY_SOURCE_BATTERY},
+    {"ENERGY_CHARGER", CAZ_ENERGY_SOURCE_CHARGER},
+    {"ENERGY_SOLAR", CAZ_ENERGY_SOURCE_SOLAR},
+    {"ENERGY_JUNCTION", CAZ_ENERGY_SOURCE_JUNCTION},
+
+    {"NAV_WANDER", CAZ_NAV_WANDER},
+    {"NAV_CHARGER", CAZ_NAV_CHARGER},
+    {"NAV_SOLAR", CAZ_NAV_SOLAR},
+    {"NAV_JUNCTION", CAZ_NAV_JUNCTION},
+    {"NAV_IDLE", CAZ_NAV_STATUS_IDLE},
+    {"NAV_RUNNING", CAZ_NAV_STATUS_RUNNING},
+    {"NAV_BLOCKED", CAZ_NAV_STATUS_BLOCKED},
+    {"NAV_DOCKED", CAZ_NAV_STATUS_DOCKED},
+    {"NAV_TAPPING", CAZ_NAV_STATUS_TAPPING},
+    {"NAV_SOLAR_STATUS", CAZ_NAV_STATUS_SOLAR}
 };
 
 static bool equals_ci(const char *a, const char *b)
@@ -878,6 +903,8 @@ bool caz_loader_parse_program_name(const char *name, CazProgramKind *kind)
         *kind = CAZ_PROGRAM_NAP_WATCH;
     } else if (equals_ci(name, "farmyard-mouser") || equals_ci(name, "mouser")) {
         *kind = CAZ_PROGRAM_FARMYARD_MOUSER;
+    } else if (equals_ci(name, "return-to-charge") || equals_ci(name, "charge")) {
+        *kind = CAZ_PROGRAM_RETURN_TO_CHARGE;
     } else {
         return false;
     }
@@ -890,6 +917,7 @@ const char *caz_loader_program_name(CazProgramKind kind)
     case CAZ_PROGRAM_CURIOUS_PATROL: return "curious-patrol";
     case CAZ_PROGRAM_NAP_WATCH: return "nap-watch";
     case CAZ_PROGRAM_FARMYARD_MOUSER: return "farmyard-mouser";
+    case CAZ_PROGRAM_RETURN_TO_CHARGE: return "return-to-charge";
     default: return "unknown";
     }
 }
@@ -903,6 +931,8 @@ const char *caz_loader_program_description(CazProgramKind kind)
         return "low-energy parlour mode that dozes until motion, human speech, or a startling sound appears";
     case CAZ_PROGRAM_FARMYARD_MOUSER:
         return "rural mouser routine tuned for prey rustle, tractor noise, human calls, weather, and glare";
+    case CAZ_PROGRAM_RETURN_TO_CHARGE:
+        return "survival routine that selects charger, solar, or junction recovery before charge reaches zero";
     default:
         return "unknown";
     }
@@ -916,4 +946,6 @@ void caz_loader_print_programs(FILE *out)
             caz_loader_program_description(CAZ_PROGRAM_NAP_WATCH));
     fprintf(out, "farmyard-mouser programs/farmyard-mouser.caz - %s\n",
             caz_loader_program_description(CAZ_PROGRAM_FARMYARD_MOUSER));
+    fprintf(out, "return-to-charge programs/return-to-charge.caz - %s\n",
+            caz_loader_program_description(CAZ_PROGRAM_RETURN_TO_CHARGE));
 }

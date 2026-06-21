@@ -96,6 +96,34 @@ All sensor values are unsigned bytes. Low-level firmware would normally smooth a
 | `0x33` | `DROPPED` | 0 or 255 | Body is in a dropped or impact reflex event. |
 | `0x34` | `BATTERY` | 0..255 | Normalized energy reserve. |
 | `0x35` | `TERRAIN` | 0..255 | Coarse terrain class from the simulator scenario. |
+| `0x36` | `ENERGY_SOURCE` | 0..3 | Current recovery source: battery, charger, solar, or junction. |
+| `0x37` | `CHARGER_BEARING` | 0..255 | Relative bearing to the charging station; `128` is straight ahead. |
+| `0x38` | `CHARGER_DISTANCE` | 0..255 | Normalized distance to the charging station; `0` is docked/adjacent. |
+| `0x39` | `CHARGER_SLOTS` | 0..8 | Available charger slots. |
+| `0x3a` | `JUNCTION_BEARING` | 0..255 | Relative bearing to the nearest usable junction box. |
+| `0x3b` | `JUNCTION_DISTANCE` | 0..255 | Normalized distance to the nearest usable junction box. |
+| `0x3c` | `SOLAR_LEVEL` | 0..255 | Present solar recovery quality. |
+
+## Survival Contract
+
+`BATTERY` is the normalized charge reserve for a Caz droid. A value of `255` means fully charged, `0` means depleted, and environment simulators should treat values near the low end as a safety condition rather than a normal behaviour choice.
+
+Survival is a bytecode responsibility first and an environment safety net second. A survival-capable program should read `BATTERY`, `CHARGER_*`, `JUNCTION_*`, `SOLAR_LEVEL`, and `CHARGER_SLOTS`, then write `NAV_INTENT` before charge reaches zero.
+
+| Threshold | Rule |
+| --- | --- |
+| `BATTERY <= 96` | The program must request charger, solar, or junction recovery. |
+| Charger selected with slot available | The droid should route to the charging station and occupy one of the eight charging slots. |
+| Charger unavailable or obstructed | The program should choose solar conservation or junction tapping if those readings are viable. |
+| Charging | Charge rises over time; a full charge from empty takes about 10 minutes. |
+| `BATTERY >= 250` | The droid can leave the charger and resume its archived program. |
+| `BATTERY == 0` away from recovery | The experiment is considered failed even if the environment can later revive the droid. |
+
+`programs/return-to-charge.caz` is the reference survival routine. It requests `NAV_CHARGER` when slots are available, `NAV_SOLAR` when conservation is the safer choice, and `NAV_JUNCTION` when a nearby junction can be tapped. The environment can still enforce last-ditch safety, but a successful long-run experiment should not require that fallback.
+
+CazEnv also gives every Caz a passive solar cell and models opportunistic access to latent electricity. Solar recovery is slow and can revive a depleted droid over long simulations, but depletion counts as a failed survival experiment. More feral-behaving droids can seek wall junction boxes and use claw/tap behavior to recover charge without occupying a formal charging slot.
+
+House and feral behavior are treated as strategy modes of the same domestic-cat body. House-oriented droids favor formal charging and predictable program routes. Feral-oriented droids favor self-sufficient recovery, hiding/resting, solar foraging, and junction tapping before they are forced into normal return-to-charge behavior.
 
 `EAR_PATTERN` values used by the simulator:
 
@@ -122,6 +150,8 @@ All sensor values are unsigned bytes. Low-level firmware would normally smooth a
 | `0x51` | `SKILL_ARG` | Optional byte argument for future skill commands. |
 | `0x52` | `SKILL_STATUS` | Current skill status: `SKILL_STATUS_IDLE`, `SKILL_STATUS_READY`, `SKILL_STATUS_RUNNING`, `SKILL_STATUS_BLOCKED`, or `SKILL_STATUS_REFLEX`. |
 | `0x53` | `REFLEX_STATE` | Current reflex state: `REFLEX_CLEAR`, `REFLEX_LOW_BATTERY`, `REFLEX_DROPPED`, `REFLEX_LIFTED`, `REFLEX_BALANCE`, or `REFLEX_TERRAIN_CAUTION`. |
+| `0x54` | `NAV_INTENT` | Requested navigation strategy: `NAV_WANDER`, `NAV_CHARGER`, `NAV_SOLAR`, or `NAV_JUNCTION`. |
+| `0x55` | `NAV_STATUS` | Current navigation result: `NAV_IDLE`, `NAV_RUNNING`, `NAV_BLOCKED`, `NAV_DOCKED`, `NAV_TAPPING`, or `NAV_SOLAR_STATUS`. |
 | `0x60` | `JOINT_INDEX` | Select one of 16 normalized joint targets. |
 | `0x61` | `JOINT_ANGLE` | Stage a normalized joint target value. |
 | `0x62` | `JOINT_COMMIT` | Commit the staged joint value to the selected joint. |
