@@ -743,6 +743,56 @@ static int registry_name_count(const char *name)
     return count;
 }
 
+static int program_source_contains(const CazProgramMetadata *metadata, const char *needle, int *contains)
+{
+    char path[CAZ_PROGRAM_PATH_MAX];
+    FILE *file;
+    char *buffer;
+    long size;
+    size_t read_count;
+    int ok = 1;
+
+    *contains = 0;
+    if (!caz_loader_program_path(metadata->kind, "programs", path, sizeof(path))) {
+        fprintf(stderr, "program-registry could not build source path for %s\n", metadata->name);
+        return 0;
+    }
+    file = fopen(path, "rb");
+    if (file == NULL) {
+        fprintf(stderr, "program-registry could not open source for %s: %s\n", metadata->name, path);
+        return 0;
+    }
+    if (fseek(file, 0, SEEK_END) != 0) {
+        fclose(file);
+        fprintf(stderr, "program-registry could not seek source for %s\n", metadata->name);
+        return 0;
+    }
+    size = ftell(file);
+    if (size < 0) {
+        fclose(file);
+        fprintf(stderr, "program-registry could not size source for %s\n", metadata->name);
+        return 0;
+    }
+    rewind(file);
+    buffer = (char *)malloc((size_t)size + 1u);
+    if (buffer == NULL) {
+        fclose(file);
+        fprintf(stderr, "program-registry out of memory reading source for %s\n", metadata->name);
+        return 0;
+    }
+    read_count = fread(buffer, 1u, (size_t)size, file);
+    if (read_count != (size_t)size) {
+        fprintf(stderr, "program-registry could not read full source for %s\n", metadata->name);
+        ok = 0;
+    } else {
+        buffer[read_count] = '\0';
+        *contains = strstr(buffer, needle) != NULL;
+    }
+    free(buffer);
+    fclose(file);
+    return ok;
+}
+
 static int run_program_registry_probe(void)
 {
     DIR *dir;
@@ -769,6 +819,19 @@ static int run_program_registry_probe(void)
         if (metadata->cazenv_assignable && !metadata->survival_participant) {
             fprintf(stderr, "program-registry assigns non-survival program %s to CazEnv\n", metadata->name);
             ok = 0;
+        }
+        if (metadata->standalone_energy) {
+            int contains_include = 0;
+            if (!metadata->survival_participant) {
+                fprintf(stderr, "program-registry marks non-survival program %s as standalone-energy\n", metadata->name);
+                ok = 0;
+            }
+            if (!program_source_contains(metadata, "survival.inc", &contains_include)) {
+                ok = 0;
+            } else if (contains_include) {
+                fprintf(stderr, "program-registry standalone-energy program %s includes survival.inc\n", metadata->name);
+                ok = 0;
+            }
         }
         survival += metadata->survival_participant ? 1 : 0;
         demo += metadata->survival_participant ? 0 : 1;
@@ -1160,6 +1223,11 @@ static int run_strategy_probe(void)
     if (!load_probe_programs(&state, load_error, sizeof(load_error))) {
         return 0;
     }
+    if (!caz_env_assign_program(&state, house_index, CAZ_PROGRAM_CURIOUS_PATROL, "programs", load_error, sizeof(load_error)) ||
+        !caz_env_assign_program(&state, feral_index, CAZ_PROGRAM_CURIOUS_PATROL, "programs", load_error, sizeof(load_error))) {
+        fprintf(stderr, "%s\n", load_error);
+        return 0;
+    }
 
     state.elapsed_seconds = 450.0f;
     fill_charger_for_probe(&state, 0.70f);
@@ -1221,6 +1289,10 @@ static int run_charger_queue_soak_probe(void)
 
     caz_env_init(&state, 0x0ca7e14bu);
     if (!load_probe_programs(&state, load_error, sizeof(load_error))) {
+        return 0;
+    }
+    if (!caz_env_assign_program(&state, waiter_index, CAZ_PROGRAM_CURIOUS_PATROL, "programs", load_error, sizeof(load_error))) {
+        fprintf(stderr, "%s\n", load_error);
         return 0;
     }
 
@@ -2013,7 +2085,7 @@ static int run_all_probes(void)
         return 0;
     }
     if (!run_nav_probe()) {
-        fprintf(stderr, "nav-probe failed: return-to-charge.caz did not request a usable recovery navigation mode\n");
+        fprintf(stderr, "nav-probe failed: bytecode survival prologue did not request a usable recovery navigation mode\n");
         return 0;
     }
     if (!run_charger_probe()) {

@@ -1058,47 +1058,43 @@ static const CazProgramMetadata program_registry[CAZ_PROGRAM_COUNT] = {
     {CAZ_PROGRAM_CURIOUS_PATROL,
      "curious-patrol",
      "general house-cat patrol loop that tracks motion, listens at night, and retreats from loud shocks",
-     1u, 1u, 2.2f, 1u},
+     1u, 1u, 0u, 2.2f, 1u},
     {CAZ_PROGRAM_NAP_WATCH,
      "nap-watch",
      "low-energy parlour mode that dozes until motion, human speech, or a startling sound appears",
-     1u, 1u, 0.35f, 0u},
+     1u, 1u, 0u, 0.35f, 0u},
     {CAZ_PROGRAM_FARMYARD_MOUSER,
      "farmyard-mouser",
      "rural mouser routine tuned for prey rustle, tractor noise, human calls, weather, and glare",
-     1u, 1u, 1.8f, 2u},
-    {CAZ_PROGRAM_SKILL_CYCLE,
-     "skill-cycle",
-     "cycles rest, sit, walk, crawl, pounce, sniff, and scratch built-in skills by symbol",
-     0u, 0u, 1.5f, 1u},
+     1u, 1u, 0u, 1.8f, 2u},
     {CAZ_PROGRAM_LOAF_AND_GROOM,
      "loaf-and-groom",
      "quiet indoor routine that rests, stretches after motion, and grooms when the room feels safe",
-     1u, 1u, 0.25f, 0u},
+     1u, 1u, 0u, 0.25f, 0u},
     {CAZ_PROGRAM_STALK_AND_POUNCE,
      "stalk-and-pounce",
      "hedgerow hunting sketch that crouches, stalks, pounces, and recovers from startled footing",
-     1u, 1u, 2.6f, 3u},
+     1u, 1u, 0u, 2.6f, 3u},
     {CAZ_PROGRAM_FARMYARD_CAUTION,
      "farmyard-caution",
      "rural safety routine for machine avoidance, terrain caution, fatigue, and recovery",
-     1u, 1u, 1.1f, 4u},
+     1u, 1u, 0u, 1.1f, 4u},
     {CAZ_PROGRAM_GREETING_PLAY,
      "greeting-play",
      "sociable kitchen sketch for human greeting, playful motion, curiosity, and settling back down",
-     1u, 1u, 1.9f, 1u},
-    {CAZ_PROGRAM_POSE_FRAME,
-     "pose-frame",
-     "buffers and commits a full 16-slot normalized body pose frame",
-     0u, 0u, 0.75f, 5u},
-    {CAZ_PROGRAM_RETURN_TO_CHARGE,
-     "return-to-charge",
-     "survival policy for selecting charger, solar, or junction recovery before charge reaches zero",
-     1u, 1u, 2.4f, 1u},
-    {CAZ_PROGRAM_SKILL_POUNCE,
-     "skill-pounce",
-     "symbolic skill and body-port fixture for pounce/reflex checks",
-     0u, 0u, 2.85f, 3u}
+     1u, 1u, 0u, 1.9f, 1u},
+    {CAZ_PROGRAM_TERRITORY_PATROL,
+     "territory-patrol",
+     "standalone house-cat route that folds charger returns into normal territorial rounds",
+     1u, 1u, 1u, 1.55f, 1u},
+    {CAZ_PROGRAM_FERAL_FORAGER,
+     "feral-forager",
+     "standalone feral-cat routine that favors sunning, wire tapping, hiding, and cautious foraging",
+     1u, 1u, 1u, 1.25f, 2u},
+    {CAZ_PROGRAM_ENERGY_AWARE_HUNTER,
+     "energy-aware-hunter",
+     "standalone hunter that only stalks and pounces when charge and recovery options are healthy",
+     1u, 1u, 1u, 2.15f, 3u},
 };
 
 size_t caz_loader_program_count(void)
@@ -1175,8 +1171,12 @@ bool caz_loader_parse_program_name(const char *name, CazProgramKind *kind)
         *kind = CAZ_PROGRAM_STALK_AND_POUNCE;
     } else if (equals_ci(name, "greeting") || equals_ci(name, "play")) {
         *kind = CAZ_PROGRAM_GREETING_PLAY;
-    } else if (equals_ci(name, "charge")) {
-        *kind = CAZ_PROGRAM_RETURN_TO_CHARGE;
+    } else if (equals_ci(name, "territory") || equals_ci(name, "territory-patrol")) {
+        *kind = CAZ_PROGRAM_TERRITORY_PATROL;
+    } else if (equals_ci(name, "feral") || equals_ci(name, "forager")) {
+        *kind = CAZ_PROGRAM_FERAL_FORAGER;
+    } else if (equals_ci(name, "hunter") || equals_ci(name, "energy-aware-hunter")) {
+        *kind = CAZ_PROGRAM_ENERGY_AWARE_HUNTER;
     } else {
         return false;
     }
@@ -1200,11 +1200,12 @@ void caz_loader_print_programs(FILE *out)
     for (size_t index = 0u; index < caz_loader_program_count(); index++) {
         const CazProgramMetadata *metadata = &program_registry[index];
         fprintf(out,
-                "%-17s programs/%s.caz - %s [%s%s]\n",
+                "%-17s programs/%s.caz - %s [%s%s%s]\n",
                 metadata->name,
                 metadata->name,
                 metadata->description,
                 metadata->survival_participant ? "survival" : "demo",
+                metadata->standalone_energy ? ", standalone-energy" : "",
                 metadata->cazenv_assignable ? ", cazenv" : ", path-only");
     }
 }

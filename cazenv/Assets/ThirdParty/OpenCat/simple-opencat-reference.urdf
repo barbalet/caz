@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <!--
-  Local OpenCat-style reference rig for CazMac pipeline development.
+  Local OpenCat-style reference rig for CazEnv pipeline development.
   This file is not an upstream OpenCat asset. It records the simple link
   hierarchy, joint axes, and Caz joint-index mapping used by the generated
-  fallback renderer until a vetted upstream URDF is imported with license notes.
+  morphology and renderer work until a vetted upstream URDF is imported with license notes.
 -->
 <robot name="caz_opencat_simple_reference" xmlns:caz="https://caz.local/rig">
   <link name="torso">

@@ -19,14 +19,13 @@ typedef enum CazProgramKind {
     CAZ_PROGRAM_CURIOUS_PATROL = 0,
     CAZ_PROGRAM_NAP_WATCH,
     CAZ_PROGRAM_FARMYARD_MOUSER,
-    CAZ_PROGRAM_SKILL_CYCLE,
     CAZ_PROGRAM_LOAF_AND_GROOM,
     CAZ_PROGRAM_STALK_AND_POUNCE,
     CAZ_PROGRAM_FARMYARD_CAUTION,
     CAZ_PROGRAM_GREETING_PLAY,
-    CAZ_PROGRAM_POSE_FRAME,
-    CAZ_PROGRAM_RETURN_TO_CHARGE,
-    CAZ_PROGRAM_SKILL_POUNCE,
+    CAZ_PROGRAM_TERRITORY_PATROL,
+    CAZ_PROGRAM_FERAL_FORAGER,
+    CAZ_PROGRAM_ENERGY_AWARE_HUNTER,
     CAZ_PROGRAM_COUNT
 } CazProgramKind;
 
@@ -36,6 +35,7 @@ typedef struct CazProgramMetadata {
     const char *description;
     uint8_t survival_participant;
     uint8_t cazenv_assignable;
+    uint8_t standalone_energy;
     float default_speed;
     uint8_t default_gait;
 } CazProgramMetadata;

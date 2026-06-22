@@ -2,7 +2,9 @@
 
 Caz is a Cat Operating System: a small Z80-inspired virtual machine driving a simulated contemporary house-cat droid. The first version in this repository is deliberately readable. It is not a cycle-perfect Z80 emulator, but it keeps the parts that make an 8-bit animal mind feel tangible: registers, flags, little-endian addresses, jump tables, input ports, output ports, and a looping bytecode program that has to notice the world through eyes and ears before deciding what sort of cat it intends to be.
 
-The simulator is written in C and builds into a single command-line program. It models a cat-sized droid with camera-like eyes, directional microphone ears, a lightweight body controller, tail/ear/head actuators, a vocaliser, and a simple rural or domestic environment. The supplied Caz programs can patrol, doze, or work as a farmyard mouser.
+The simulator is written in C and builds into a single command-line program. It models a cat-sized droid with camera-like eyes, directional microphone ears, a lightweight body controller, tail/ear/head actuators, claws, a vocaliser, and a simple rural or domestic environment. The supplied Caz programs can patrol, doze, work as a farmyard mouser, or manage survival through charging, solar recovery, and junction tapping.
+
+The repository also contains CazEnv, the macOS SwiftUI and Metal room simulator for long-run runs with twenty Caz droids sharing beds, cat trees, charger slots, solar energy, and electrical junction boxes.
 
 This project also contains in-universe documentation: a Caz language reference, maker diagrams for the droid body, and early field histories written in the calm, observant tone of a British rural documentary.
 
@@ -25,6 +27,16 @@ Try the other modes:
 ./build/caz --list
 ```
 
+Run the CazEnv survival checks:
+
+```sh
+make cazenv-probes
+make cazenv-regression
+make cazenv-stress
+make cazenv-survival
+make cazenv-survival-long
+```
+
 For instruction-level tracing:
 
 ```sh
@@ -37,27 +49,30 @@ Use this short pass before and after body-model changes:
 
 ```sh
 make
+make cazenv-probes
+make cazenv-regression
+make cazenv-stress
+make cazenv-survival
 ./build/caz --program farmyard-mouser --scenario farmyard --steps 24 --seed 1 --sample-every 8
 ./build/caz --program curious-patrol --scenario kitchen --steps 24 --seed 1 --sample-every 8
 ./build/caz --program nap-watch --scenario night-parlour --steps 24 --seed 1 --sample-every 8
-./build/caz --program programs/skill-pounce.caz --scenario farmyard --steps 70 --seed 1 --sample-every 20
-./build/caz --program programs/skill-pounce.caz --scenario hedgerow --steps 10 --seed 1 --sample-every 3
-./build/caz --program programs/skill-cycle.caz --scenario farmyard --steps 16 --seed 1 --sample-every 2
-./build/caz --program programs/pose-frame.caz --scenario kitchen --steps 10 --seed 1 --sample-every 2
 ./build/caz --program programs/loaf-and-groom.caz --scenario night-parlour --steps 20 --seed 1 --sample-every 5
 ./build/caz --program programs/stalk-and-pounce.caz --scenario farmyard --steps 20 --seed 1 --sample-every 5
 ./build/caz --program programs/farmyard-caution.caz --scenario hedgerow --steps 24 --seed 1 --sample-every 6
 ./build/caz --program programs/greeting-play.caz --scenario kitchen --steps 20 --seed 1 --sample-every 5
-./build/caz --skills-dir /private/tmp/caz-missing-skills --program programs/skill-pounce.caz --scenario farmyard --steps 4 --seed 1 --sample-every 2
-./build/caz --program programs/skill-cycle.caz --scenario farmyard --steps 8 --seed 1 --sample-every 4 --opencat-dry-run
-xcodebuild -project cazmac/cazmac.xcodeproj -scheme cazmac -configuration Debug -derivedDataPath /private/tmp/cazmac-derived-data CODE_SIGNING_ALLOWED=NO build
+./build/caz --program programs/territory-patrol.caz --scenario kitchen --steps 24 --seed 1 --sample-every 6
+./build/caz --program programs/feral-forager.caz --scenario hedgerow --steps 24 --seed 1 --sample-every 6
+./build/caz --program programs/energy-aware-hunter.caz --scenario farmyard --steps 24 --seed 1 --sample-every 6
+./build/caz --skills-dir /private/tmp/caz-missing-skills --program programs/stalk-and-pounce.caz --scenario farmyard --steps 4 --seed 1 --sample-every 2
+./build/caz --program programs/stalk-and-pounce.caz --scenario farmyard --steps 8 --seed 1 --sample-every 4 --opencat-dry-run
+xcodebuild -project cazenv/cazenv.xcodeproj -scheme cazenv -configuration Debug build
 ```
 
 The compatibility contract is that the original coarse input ports `0x10..0x23` and coarse actuator ports `0x40..0x45` keep their symbols, byte ranges, and user-facing report values. The body layer may add normalized sensors, joint targets, pose frames, skill state, reflex state, and file-backed skill overrides around that contract, but existing `.caz` programs in `programs/` must continue to assemble and run unchanged.
 
 ## What The Simulator Does
 
-The binary creates three things:
+The command-line binary creates four things:
 
 1. A Caz CPU, which is a Z80-shaped VM with 64 KiB of memory, registers `A F B C D E H L`, `PC`, `SP`, flags, `IN`, `OUT`, jumps, comparisons, arithmetic, and `HALT`.
 2. A Caz loader, which reads `.caz` assembly files from `programs/`, assembles them to Z80-style bytecode, and loads them at `0x0100`.
@@ -83,9 +98,36 @@ The reference droid is specified as a contemporary house-cat analogue, not a toy
 - Head: two camera eyes, a short-baseline depth estimate, a yaw servo, and an eyelid/aperture actuator.
 - Ears: two directional microphone shells mounted on independent swivel servos.
 - Tail: expressive counterbalance with nine coarse poses in this simulator.
+- Claws: represented through scratch and paw-test behaviours, and used by CazEnv for junction tapping when bytecode requests `NAV_JUNCTION`.
+- Solar cell: a low-power recovery surface that lets an isolated droid conserve motion and harvest ambient light.
 - Voice: small resonant speaker for purr, meow, chirrup, mrrp, and hiss-like warning tones.
 
 The simulator intentionally keeps the physics simple. The behavioural question comes first: given light, motion, object edge strength, sound volume, pitch, bearing, and recognised pattern, what should the Caz bytecode command next?
+
+## CazEnv Survival Model
+
+CazEnv is the long-run room simulator. It renders and simulates a 30 ft wide, 60 ft long, 15 ft high room containing 20 LowpolyCAT-sized droids, a shared charging station, 12 large cat beds, four cat trees or scratchers, and four wall junction boxes. The charging station is 3 ft wide, 3 ft long, 1 ft high, and exposes eight logical charge pads.
+
+The C core owns room physics, collision, energy accounting, and resource attribution. It should not be the primary survival decision maker in strict runs. Each droid runs `.caz` bytecode through the same loader and VM machinery as the command-line simulator, and recovery is expected to come from bytecode outputs such as `NAV_CHARGER`, `NAV_SOLAR`, and `NAV_JUNCTION`.
+
+Energy sources:
+
+- Battery: normal movement drains charge. Low-battery reflex information is visible to bytecode through `BATTERY`, `ENERGY_SOURCE`, `REFLEX_STATE`, and navigation status ports.
+- Charging station: the orderly house-cat recovery path. A droid must request `NAV_CHARGER` and acquire a valid slot before it receives charger gain. A full recharge is modeled at roughly ten minutes.
+- Solar: every Caz has a passive solar cell. Requested solar recovery uses `NAV_SOLAR`, low-drain resting or loafing motion, and separate accounting for passive, requested, and fallback solar gain.
+- Junction tapping: feral-leaning or emergency recovery can request `NAV_JUNCTION`. The droid approaches a junction box and uses claw-like scratch or paw-test behavior; CazEnv models a physical claw reach so tapping is possible near, but not magically through, a junction.
+
+House-cat and feral-cat behaviour are modeled as strategy tendencies within the same domestic-cat body and program family. A house-oriented Caz prefers formal charging, beds, and orderly waiting near the station. A feral-oriented Caz is more willing to conserve energy, use solar recovery, hide or loiter, and tap junction boxes when the charger is full, distant, or unsafe. The distinction is behavioural adaptation, not a different species.
+
+Archived programs can express survival in two ways. Most use the shared `programs/survival.inc` gate, which checks current energy, charge, charger availability, solar level, junction distance, blocked navigation, and strategy tendency before the program resumes playful or observational behaviour. The standalone-energy programs carry equivalent charger, solar, and junction decisions in their own behavior code and are tested to avoid including `survival.inc`. Survival assignment is tracked separately from renderer-only examples.
+
+CazEnv strict survival gates fail if supervisor fallback hides a missing bytecode decision. The current long gate is:
+
+```sh
+make cazenv-survival-long
+```
+
+That target runs regression and stress checks first, then runs the 30-day, five-seed matrix across baseline, low-sun, full-charger, distant-junction, and high-obstacle cases. The most recent release gate passed with `matrix-result=PASS failed_cases=0/5 days=30 seeds=5`, zero supervisor fallback, zero CPU faults, zero depletion, and all 20 bytecode runtimes loaded and stepping.
 
 ## Caz Memory And Ports
 
@@ -127,10 +169,20 @@ Body and skill ports:
 | `0x33` | `DROPPED` | Non-zero for a deterministic dropped/impact reflex event. |
 | `0x34` | `BATTERY` | Normalized battery/energy reserve. |
 | `0x35` | `TERRAIN` | Coarse terrain class from the active scenario. |
+| `0x36` | `ENERGY_SOURCE` | `ENERGY_BATTERY`, `ENERGY_CHARGER`, `ENERGY_SOLAR`, or `ENERGY_JUNCTION`. |
+| `0x37` | `CHARGER_BEARING` | Approximate bearing to the charging station. |
+| `0x38` | `CHARGER_DISTANCE` | Normalized distance to the charging station. |
+| `0x39` | `CHARGER_SLOTS` | Free logical charger slots. |
+| `0x3a` | `JUNCTION_BEARING` | Approximate bearing to the nearest junction box. |
+| `0x3b` | `JUNCTION_DISTANCE` | Normalized distance to the nearest junction box. |
+| `0x3c` | `SOLAR_LEVEL` | Ambient solar recovery opportunity. |
+| `0x3d` | `STRATEGY_TENDENCY` | House-to-feral tendency; `FERAL_TENDENCY` is an alias. |
 | `0x50` | `SKILL` | Active built-in skill request, such as `SKILL_POUNCE` or `SKILL_REST`. |
 | `0x51` | `SKILL_ARG` | Optional byte argument for future skill commands. |
 | `0x52` | `SKILL_STATUS` | `SKILL_STATUS_IDLE`, `READY`, `RUNNING`, `BLOCKED`, or `REFLEX`. |
 | `0x53` | `REFLEX_STATE` | `REFLEX_CLEAR`, `LOW_BATTERY`, `DROPPED`, `LIFTED`, `BALANCE`, or `TERRAIN_CAUTION`. |
+| `0x54` | `NAV_INTENT` | Bytecode output: `NAV_WANDER`, `NAV_CHARGER`, `NAV_SOLAR`, or `NAV_JUNCTION`. |
+| `0x55` | `NAV_STATUS` | Environment feedback: idle, running, blocked, docked, tapping, or solar. |
 | `0x60..0x62` | `JOINT_INDEX`, `JOINT_ANGLE`, `JOINT_COMMIT` | Stage and commit one of 16 normalized joint targets. |
 | `0x70..0x74` | `POSE_FRAME_*` | Stage and commit normalized pose-frame values. |
 
@@ -156,11 +208,15 @@ The canonical Caz programs live in `programs/` as editable `.caz` source files.
 
 `greeting-play.caz` is a sociable kitchen sketch. It greets human voices, plays with high motion, investigates uncertain objects, startles from abrupt sound, and settles when the room calms.
 
-`skill-pounce.caz` is a small fixture rather than a built-in behaviour. It calls `SKILL_POUNCE` by symbol, stages one joint and pose-frame value, and is useful for checking normal pounce, terrain caution, dropped, and low-battery reflex paths.
+`territory-patrol.caz` is a standalone-energy house-cat route. It folds soft charger returns into normal patrol, investigates corners and motion, greets humans, and rests near recovery resources before charge becomes urgent.
 
-`skill-cycle.caz` cycles rest, sit, walk, crawl, pounce, sniff, and scratch skills so the console report and CazMac renderer show distinct body primitives.
+`feral-forager.caz` is a standalone-energy feral sketch. It prefers junction tapping and solar foraging, hides from machinery or loud sound, conserves movement when charge is marginal, and only stalks prey when energy is healthy.
 
-`pose-frame.caz` buffers all 16 normalized body slots, commits them as one pose frame, and intentionally writes one unsafe head-yaw value to demonstrate body-layer clamping.
+`energy-aware-hunter.caz` is a standalone-energy hunter. It gates stalk and pounce behavior behind charge thresholds, downshifts into rest-watch states when energy is low, and still owns charger, solar, and junction recovery decisions itself.
+
+`survival.inc` is a shared include rather than a standalone behaviour. Programs call `survival_check` before their main behaviour selection so low-charge recovery stays consistent across the archive.
+
+The archive intentionally excludes standalone utility or fixture programs whose movement rates below 5/10 against actual domestic-cat behavior. The body ports, pose-frame staging, pounce skill, and survival navigation capabilities remain available for the retained cat-like programs.
 
 ## How Caz Feels
 
@@ -189,10 +245,11 @@ The language is spare on purpose. A cat droid should not require a cloud service
 - [Maker diagrams](docs/maker-diagrams.md)
 - [OpenCat hardware bridge](docs/hardware-bridge.md)
 - [Field histories](docs/field-histories.md)
+- [CazEnv room simulator](cazenv/README.md)
 
 The docs are written to be useful to two kinds of participant: a programmer extending the VM and a maker imagining the droid as a physical machine.
 
-CazMac's rig source, generated fallback body, and optional mesh provenance notes live under `cazmac/Assets/`; see [CazMac README](cazmac/README.md) for the conversion command.
+CazEnv's reusable cat morphology, generated ideal-cat STL, OpenCat-style rig reference, and optional mesh provenance notes live under `cazenv/Assets/`; see [CazEnv room simulator](cazenv/README.md) for the current app surface.
 
 ## Project Layout
 
@@ -207,14 +264,15 @@ CazMac's rig source, generated fallback body, and optional mesh provenance notes
 |   `-- maker-diagrams.md
 |-- hardware/
 |   `-- opencat-calibration.example
-|-- cazmac/
+|-- cazenv/
 |   |-- Assets/
+|   |   |-- Generated/
+|   |   |-- Reference/
+|   |   `-- ThirdParty/
+|   |-- c_core/
 |   |-- Tools/
-|   |-- cazmac/
-|   |   |-- CazRig.generated.swift
-|   |   |-- CatDroidRenderer.swift
-|   |   `-- CazRuntime.swift
-|   `-- cazmac.xcodeproj/
+|   |-- cazenv/
+|   `-- cazenv.xcodeproj/
 |-- programs/
 |   |-- curious-patrol.caz
 |   |-- farmyard-mouser.caz
@@ -222,10 +280,11 @@ CazMac's rig source, generated fallback body, and optional mesh provenance notes
 |   |-- greeting-play.caz
 |   |-- loaf-and-groom.caz
 |   |-- nap-watch.caz
-|   |-- pose-frame.caz
-|   |-- skill-cycle.caz
-|   |-- skill-pounce.caz
-|   `-- stalk-and-pounce.caz
+|   |-- territory-patrol.caz
+|   |-- feral-forager.caz
+|   |-- energy-aware-hunter.caz
+|   |-- stalk-and-pounce.caz
+|   `-- survival.inc
 |-- skills/
 |   |-- balance.cazskill
 |   |-- crawl.cazskill
@@ -235,6 +294,8 @@ CazMac's rig source, generated fallback body, and optional mesh provenance notes
 |   |-- sit.cazskill
 |   |-- sniff.cazskill
 |   `-- walk.cazskill
+|-- stock/
+|   `-- 3d_models/
 `-- src/
     |-- caz_body.c
     |-- caz_body.h
@@ -257,6 +318,8 @@ The simulator is meant to be extended in layers:
 - Add richer sensor channels without changing the CPU core.
 - Add new Caz programs as `.caz` files in `programs/`.
 - Tune body skills as `.cazskill` files in `skills/`.
+- Keep survival behavior bytecode-owned: changes that affect charge, solar, junction tapping, or charger slots should pass `make cazenv-regression`, `make cazenv-stress`, and `make cazenv-survival`.
+- Use `make cazenv-survival-long` before claiming long-run CazEnv viability after survival-policy changes.
 - Dry-run OpenCat-style hardware output with `--opencat-dry-run`; live serial output requires explicit calibration.
 - Extend `src/caz_loader.c` when the language needs another instruction or directive.
 - Add scenario generators in `src/caz_droid.c`.
@@ -267,9 +330,14 @@ The early rule is: keep the animal legible. When the droid does something odd, t
 ## Build Targets
 
 ```sh
-make        # build build/caz
-make run    # run the farmyard mouser demo
-make clean  # remove build output
+make                         # build build/caz
+make run                     # run the farmyard mouser demo
+make cazenv-probes           # targeted CazEnv ownership/resource probes
+make cazenv-regression       # archive, loader, and forced recovery checks
+make cazenv-stress           # per-program forced survival scenarios
+make cazenv-survival         # strict 14-day/3-seed survival gate
+make cazenv-survival-long    # strict 30-day/5-seed matrix gate
+make clean                   # remove build output
 ```
 
 ## License

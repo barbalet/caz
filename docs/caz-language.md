@@ -119,7 +119,7 @@ Survival is a bytecode responsibility first and an environment safety net second
 | `BATTERY >= 250` | The droid can leave the charger and resume its archived program. |
 | `BATTERY == 0` away from recovery | The experiment is considered failed even if the environment can later revive the droid. |
 
-`programs/return-to-charge.caz` is the reference survival routine. It requests `NAV_CHARGER` when slots are available, `NAV_SOLAR` when conservation is the safer choice, and `NAV_JUNCTION` when a nearby junction can be tapped. The environment can still enforce last-ditch safety, but a successful long-run experiment should not require that fallback.
+`programs/survival.inc` is the shared survival routine included by most archived behaviors. It requests `NAV_CHARGER` when slots are available, `NAV_SOLAR` when conservation is the safer choice, and `NAV_JUNCTION` when a nearby junction can be tapped. Standalone-energy programs such as `territory-patrol.caz`, `feral-forager.caz`, and `energy-aware-hunter.caz` instead derive the same recovery choices inside their own behavior flow and are tested not to include the shared file. The environment can still enforce last-ditch safety, but a successful long-run experiment should not require that fallback.
 
 CazEnv also gives every Caz a passive solar cell and models opportunistic access to latent electricity. Solar recovery is slow and can revive a depleted droid over long simulations, but depletion counts as a failed survival experiment. More feral-behaving droids can seek wall junction boxes and use claw/tap behavior to recover charge without occupying a formal charging slot.
 

@@ -1,11 +1,11 @@
 # OpenCat Hardware Bridge
 
-The OpenCat bridge is an optional command-line backend that translates the Caz body layer into OpenCat-style serial commands. It is disabled by default. The simulator and CazMac continue to use the same body state whether the bridge exists or not.
+The OpenCat bridge is an optional command-line backend that translates the Caz body layer into OpenCat-style serial commands. It is disabled by default. The command-line simulator and CazEnv continue to use the same body state whether the bridge exists or not.
 
 Start with dry-run output:
 
 ```sh
-./build/caz --program programs/skill-cycle.caz --scenario farmyard --steps 8 --seed 1 --sample-every 4 --opencat-dry-run
+./build/caz --program programs/stalk-and-pounce.caz --scenario farmyard --steps 8 --seed 1 --sample-every 4 --opencat-dry-run
 ```
 
 Dry-run mode prints the skill command and the selected servo move command that would be sent. It never opens a serial device:
@@ -19,7 +19,7 @@ Live output is intentionally gated:
 
 ```sh
 ./build/caz \
-  --program programs/skill-cycle.caz \
+  --program programs/stalk-and-pounce.caz \
   --scenario farmyard \
   --steps 8 \
   --opencat-live \
@@ -58,7 +58,7 @@ Bittle dry-run maps the leg subset only. It leaves the Caz head, tail, spine, pa
 
 ## Safety Notes
 
-Validate dry-run output before selecting a serial device. Keep the bridge disabled for ordinary simulator and CazMac work.
+Validate dry-run output before selecting a serial device. Keep the bridge disabled for ordinary simulator and CazEnv work.
 
 Use live mode only with a supported robot on a clear bench, unloaded legs, power limiting, and a calibration file measured for that specific build. Servo indices and safe ranges can differ between Nybble, Bittle, and Caz-derived hardware.
 

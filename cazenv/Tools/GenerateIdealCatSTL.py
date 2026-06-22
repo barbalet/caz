@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate an ideal domestic-cat target STL for the CazMac asset pipeline."""
+"""Generate an ideal domestic-cat target STL for the CazEnv asset pipeline."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-OUT_DIR = os.path.join(ROOT, "cazmac", "Assets", "Generated")
+OUT_DIR = os.path.join(ROOT, "cazenv", "Assets", "Generated")
 STL_PATH = os.path.join(OUT_DIR, "ideal-domestic-cat-target.stl")
 PREVIEW_PATH = os.path.join(OUT_DIR, "ideal-domestic-cat-target-preview.png")
 NOTES_PATH = os.path.join(OUT_DIR, "ideal-domestic-cat-target.md")
@@ -584,14 +584,14 @@ def write_notes(mesh: Mesh, path: str) -> None:
     bounds_min, bounds_max = mesh.bounds()
     with open(path, "w", encoding="utf-8") as out:
         out.write("# Ideal Domestic Cat Target STL\n\n")
-        out.write("Generated from `cazmac/Tools/GenerateIdealCatSTL.py` as a morphology target for a future 3D Caz droid body.\n\n")
+        out.write("Generated from `cazenv/Tools/GenerateIdealCatSTL.py` as a morphology target for a future 3D Caz droid body.\n\n")
         out.write("The shape is informed by the `stock/` domestic-cat references: long low trunk, separate shoulder and haunch volumes, compact forward-looking head, triangular ears, short muzzle, planted paws, and a full cat-length tail.\n\n")
         out.write("## Stock-Image Tuning Cues\n\n")
         out.write("- Side walking references: long body, arched back, tucked abdomen, leg columns under the shoulder and haunch rather than at the extreme ends.\n")
         out.write("- Sitting references: distinct haunch mass, compact neck-to-head transition, and upright triangular ears.\n")
-        out.write("- Lying references: smooth continuous torso volume and a narrower waist from front-to-back than the first CazMac rig implied.\n")
+        out.write("- Lying references: smooth continuous torso volume and a narrower waist from front-to-back than the earlier procedural rig implied.\n")
         out.write("- Head-on references: narrow chest, cheek/muzzle pads, short nose, almond eye placement, and paws grouped under the body line.\n\n")
-        out.write("This is not the current CazMac renderer mesh. It is an ideal target asset for replacing the existing 2D procedural body with a real 3D cat-like model.\n\n")
+        out.write("This is not the current CazEnv runtime mesh. It is an ideal target asset for future 3D cat-like body work.\n\n")
         out.write("Subjective morphology target score: roughly 9/10 for a textureless procedural STL. The remaining gap to a living-cat likeness is mostly fur, coat pattern, and pose-aware muscle deformation rather than the base body proportions.\n\n")
         out.write("## Generated Files\n\n")
         out.write("- `ideal-domestic-cat-target.stl`: review mesh, standing on all fours, head looking forward.\n")

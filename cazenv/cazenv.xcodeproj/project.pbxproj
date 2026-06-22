@@ -18,18 +18,18 @@
 		ENV001000000000000000009 /* curious-patrol.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000011 /* curious-patrol.caz */; };
 		ENV001000000000000000010 /* nap-watch.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000012 /* nap-watch.caz */; };
 		ENV001000000000000000011 /* farmyard-mouser.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000013 /* farmyard-mouser.caz */; };
-		ENV001000000000000000012 /* skill-cycle.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000014 /* skill-cycle.caz */; };
 		ENV001000000000000000013 /* loaf-and-groom.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000015 /* loaf-and-groom.caz */; };
 		ENV001000000000000000014 /* stalk-and-pounce.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000016 /* stalk-and-pounce.caz */; };
 		ENV001000000000000000015 /* farmyard-caution.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000017 /* farmyard-caution.caz */; };
 		ENV001000000000000000016 /* greeting-play.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000018 /* greeting-play.caz */; };
-		ENV001000000000000000017 /* pose-frame.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000019 /* pose-frame.caz */; };
-		ENV001000000000000000018 /* return-to-charge.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000020 /* return-to-charge.caz */; };
 		ENV001000000000000000019 /* caz_cpu.c in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000022 /* caz_cpu.c */; };
 		ENV001000000000000000020 /* caz_body.c in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000024 /* caz_body.c */; };
 		ENV001000000000000000021 /* caz_droid.c in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000026 /* caz_droid.c */; };
 		ENV001000000000000000022 /* caz_loader.c in Sources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000028 /* caz_loader.c */; };
 		ENV001000000000000000023 /* survival.inc in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000030 /* survival.inc */; };
+		ENV001000000000000000024 /* territory-patrol.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000031 /* territory-patrol.caz */; };
+		ENV001000000000000000025 /* feral-forager.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000032 /* feral-forager.caz */; };
+		ENV001000000000000000026 /* energy-aware-hunter.caz in Resources */ = {isa = PBXBuildFile; fileRef = ENV000000000000000000033 /* energy-aware-hunter.caz */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,13 +46,10 @@
 		ENV000000000000000000011 /* curious-patrol.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "curious-patrol.caz"; path = "../programs/curious-patrol.caz"; sourceTree = SOURCE_ROOT; };
 		ENV000000000000000000012 /* nap-watch.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "nap-watch.caz"; path = "../programs/nap-watch.caz"; sourceTree = SOURCE_ROOT; };
 		ENV000000000000000000013 /* farmyard-mouser.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "farmyard-mouser.caz"; path = "../programs/farmyard-mouser.caz"; sourceTree = SOURCE_ROOT; };
-		ENV000000000000000000014 /* skill-cycle.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "skill-cycle.caz"; path = "../programs/skill-cycle.caz"; sourceTree = SOURCE_ROOT; };
 		ENV000000000000000000015 /* loaf-and-groom.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "loaf-and-groom.caz"; path = "../programs/loaf-and-groom.caz"; sourceTree = SOURCE_ROOT; };
 		ENV000000000000000000016 /* stalk-and-pounce.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "stalk-and-pounce.caz"; path = "../programs/stalk-and-pounce.caz"; sourceTree = SOURCE_ROOT; };
 		ENV000000000000000000017 /* farmyard-caution.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "farmyard-caution.caz"; path = "../programs/farmyard-caution.caz"; sourceTree = SOURCE_ROOT; };
 		ENV000000000000000000018 /* greeting-play.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "greeting-play.caz"; path = "../programs/greeting-play.caz"; sourceTree = SOURCE_ROOT; };
-		ENV000000000000000000019 /* pose-frame.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "pose-frame.caz"; path = "../programs/pose-frame.caz"; sourceTree = SOURCE_ROOT; };
-		ENV000000000000000000020 /* return-to-charge.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "return-to-charge.caz"; path = "../programs/return-to-charge.caz"; sourceTree = SOURCE_ROOT; };
 		ENV000000000000000000021 /* cazenv.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = cazenv.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ENV000000000000000000022 /* caz_cpu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_cpu.c; path = ../src/caz_cpu.c; sourceTree = SOURCE_ROOT; };
 		ENV000000000000000000023 /* caz_cpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_cpu.h; path = ../src/caz_cpu.h; sourceTree = SOURCE_ROOT; };
@@ -63,6 +60,9 @@
 		ENV000000000000000000028 /* caz_loader.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_loader.c; path = ../src/caz_loader.c; sourceTree = SOURCE_ROOT; };
 		ENV000000000000000000029 /* caz_loader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_loader.h; path = ../src/caz_loader.h; sourceTree = SOURCE_ROOT; };
 		ENV000000000000000000030 /* survival.inc */ = {isa = PBXFileReference; lastKnownFileType = text; name = survival.inc; path = ../programs/survival.inc; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000031 /* territory-patrol.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "territory-patrol.caz"; path = "../programs/territory-patrol.caz"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000032 /* feral-forager.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "feral-forager.caz"; path = "../programs/feral-forager.caz"; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000033 /* energy-aware-hunter.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "energy-aware-hunter.caz"; path = "../programs/energy-aware-hunter.caz"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -140,13 +140,13 @@
 				ENV000000000000000000011 /* curious-patrol.caz */,
 				ENV000000000000000000012 /* nap-watch.caz */,
 				ENV000000000000000000013 /* farmyard-mouser.caz */,
-				ENV000000000000000000014 /* skill-cycle.caz */,
 				ENV000000000000000000015 /* loaf-and-groom.caz */,
 				ENV000000000000000000016 /* stalk-and-pounce.caz */,
 				ENV000000000000000000017 /* farmyard-caution.caz */,
 				ENV000000000000000000018 /* greeting-play.caz */,
-				ENV000000000000000000019 /* pose-frame.caz */,
-				ENV000000000000000000020 /* return-to-charge.caz */,
+				ENV000000000000000000031 /* territory-patrol.caz */,
+				ENV000000000000000000032 /* feral-forager.caz */,
+				ENV000000000000000000033 /* energy-aware-hunter.caz */,
 				ENV000000000000000000030 /* survival.inc */,
 			);
 			name = "Caz Programs";
@@ -222,14 +222,14 @@
 				ENV001000000000000000009 /* curious-patrol.caz in Resources */,
 				ENV001000000000000000010 /* nap-watch.caz in Resources */,
 				ENV001000000000000000011 /* farmyard-mouser.caz in Resources */,
-				ENV001000000000000000012 /* skill-cycle.caz in Resources */,
 				ENV001000000000000000013 /* loaf-and-groom.caz in Resources */,
 				ENV001000000000000000014 /* stalk-and-pounce.caz in Resources */,
 				ENV001000000000000000015 /* farmyard-caution.caz in Resources */,
 				ENV001000000000000000016 /* greeting-play.caz in Resources */,
-				ENV001000000000000000017 /* pose-frame.caz in Resources */,
-				ENV001000000000000000018 /* return-to-charge.caz in Resources */,
 				ENV001000000000000000023 /* survival.inc in Resources */,
+				ENV001000000000000000024 /* territory-patrol.caz in Resources */,
+				ENV001000000000000000025 /* feral-forager.caz in Resources */,
+				ENV001000000000000000026 /* energy-aware-hunter.caz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

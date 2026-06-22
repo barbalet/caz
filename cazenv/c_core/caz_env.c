@@ -15,7 +15,7 @@
 static const CazProgramMetadata *program_metadata_for(uint8_t program)
 {
     const CazProgramMetadata *metadata = caz_loader_program_metadata((CazProgramKind)program);
-    return metadata != NULL ? metadata : caz_loader_program_metadata(CAZ_PROGRAM_RETURN_TO_CHARGE);
+    return metadata != NULL ? metadata : caz_loader_program_metadata(CAZ_PROGRAM_CURIOUS_PATROL);
 }
 
 static int assignable_program_count(void)
@@ -45,7 +45,7 @@ static uint8_t assignable_program_for_droid(int droid_index)
         }
         seen++;
     }
-    return (uint8_t)CAZ_PROGRAM_RETURN_TO_CHARGE;
+    return (uint8_t)CAZ_PROGRAM_CURIOUS_PATROL;
 }
 
 static void restore_assigned_program_identity(int droid_index, CazEnvDroid *droid)
@@ -1184,7 +1184,6 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
                 const int junction = nearest_junction_index(state, droid->x, droid->z);
                 if (junction >= 0) {
                     droid->mode = CAZ_ENV_DROID_TAP_JUNCTION;
-                    droid->program = (uint8_t)CAZ_PROGRAM_RETURN_TO_CHARGE;
                     droid->target_x = state->fixtures[junction].x;
                     droid->target_z = state->fixtures[junction].z;
                     droid->nav_cause = CAZ_ENV_NAV_CAUSE_SUPERVISOR;
@@ -1192,7 +1191,6 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
                 }
             } else if (droid->charge <= 0.28f && droid->feral > 0.42f) {
                 droid->mode = CAZ_ENV_DROID_SOLAR_FORAGE;
-                droid->program = (uint8_t)CAZ_PROGRAM_RETURN_TO_CHARGE;
                 droid->speed = 0.0f;
                 droid->gait = 0u;
                 droid->target_x = droid->x;
@@ -1203,7 +1201,6 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
                 state->supervisor_metrics.gait_overrides++;
             } else if (droid->charge <= 0.22f) {
                 droid->mode = CAZ_ENV_DROID_RETURN_TO_CHARGE;
-                droid->program = (uint8_t)CAZ_PROGRAM_RETURN_TO_CHARGE;
                 droid->target_x = charger_x(state);
                 droid->target_z = charger_z(state);
                 droid->nav_cause = CAZ_ENV_NAV_CAUSE_SUPERVISOR;
