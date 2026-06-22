@@ -18,33 +18,51 @@ struct ContentView: View {
     @State private var filter: DroidFilter = .all
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
+        HStack(spacing: 0) {
             MetalEnvironmentView(snapshot: runtime.snapshot)
-                .ignoresSafeArea()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.black)
+                .layoutPriority(1)
 
-            overlay
-                .padding(18)
+            Divider()
+                .background(.white.opacity(0.12))
+
+            sidePanel
+                .frame(width: 430)
+                .frame(maxHeight: .infinity)
         }
         .background(Color.black)
+        .frame(minWidth: 980, minHeight: 620)
     }
 
-    private var overlay: some View {
+    private var sidePanel: some View {
         let visibleDroids = filteredDroids
+        let metricColumns = [
+            GridItem(.adaptive(minimum: 78), spacing: 10, alignment: .leading)
+        ]
 
         return VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 12) {
-                Text("CazEnv")
-                    .font(.system(size: 22, weight: .semibold, design: .rounded))
-                Text("30 x 60 x 15 ft")
-                    .font(.system(.body, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                Button("Reset") {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("CazEnv")
+                        .font(.system(size: 22, weight: .semibold, design: .rounded))
+                    Text("30 x 60 x 15 ft")
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Button {
                     runtime.reset()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
                 }
                 .buttonStyle(.bordered)
+                .help("Reset simulation")
             }
 
-            HStack(spacing: 18) {
+            LazyVGrid(columns: metricColumns, alignment: .leading, spacing: 8) {
                 metric("DROIDS", "\(runtime.snapshot.droids.count)")
                 metric("BEDS", "\(runtime.snapshot.fixtures.filter { $0.type == 2 }.count)")
                 metric("TREES", "\(runtime.snapshot.fixtures.filter { $0.type >= 3 && $0.type <= 6 }.count)")
@@ -66,7 +84,7 @@ struct ContentView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 720)
+            .frame(maxWidth: .infinity)
 
             Divider()
                 .background(.white.opacity(0.22))
@@ -80,21 +98,15 @@ struct ContentView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 5) {
-                    ForEach(visibleDroids.prefix(14)) { droid in
+                    ForEach(visibleDroids) { droid in
                         droidRow(droid)
                     }
                 }
             }
-            .frame(maxHeight: 360)
         }
-        .padding(14)
+        .padding(16)
         .foregroundStyle(.white)
-        .background(.black.opacity(0.58), in: RoundedRectangle(cornerRadius: 8))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(.white.opacity(0.16), lineWidth: 1)
-        )
-        .frame(width: 1040, alignment: .leading)
+        .background(Color(red: 0.045, green: 0.052, blue: 0.058))
     }
 
     private var filteredDroids: [EnvDroid] {
@@ -140,47 +152,84 @@ struct ContentView: View {
         let reflexColor: Color = droid.reflexState == 0 ? .secondary : .yellow
         let blocked = droid.blockedMovementCount > 0 || droid.blockedJunctionCount > 0
 
-        return HStack(spacing: 8) {
-            Text(String(format: "%02d", droid.id))
-                .font(.system(.caption, design: .monospaced))
-                .frame(width: 24, alignment: .leading)
-            Text(droid.programName)
-                .font(.system(.caption, design: .monospaced))
-                .frame(width: 128, alignment: .leading)
-            ProgressView(value: Double(droid.charge))
-                .progressViewStyle(.linear)
-                .frame(width: 76)
-            Text(modeName(droid.mode))
-                .font(.system(.caption, design: .monospaced))
-                .foregroundStyle(modeColor(droid.mode))
-                .frame(width: 48, alignment: .leading)
-            Text(energyName(droid.energySource))
-                .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(.secondary)
-                .frame(width: 44, alignment: .leading)
-            Text(strategy)
-                .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(strategyColor)
-                .frame(width: 42, alignment: .leading)
-            Text(nav)
-                .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(navColor(droid.navCause))
-                .frame(width: 86, alignment: .leading)
-            Text(gains)
-                .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(gainColor(droid))
-                .frame(width: 128, alignment: .leading)
-            Text(controls)
-                .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(reflexColor)
-                .frame(width: 118, alignment: .leading)
-            Text(blocked ? "blk:\(droid.blockedMovementCount)/j\(droid.blockedJunctionCount)" : "clear")
-                .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(blocked ? .red : .secondary)
-                .frame(width: 74, alignment: .leading)
-            Text(vm)
-                .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(droid.bytecodeFaulted ? .red : .secondary)
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Text(String(format: "%02d", droid.id))
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 24, alignment: .leading)
+
+                Text(droid.programName)
+                    .font(.system(.caption, design: .monospaced))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+
+                Spacer(minLength: 8)
+
+                Text(modeName(droid.mode))
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(modeColor(droid.mode))
+                    .frame(width: 54, alignment: .trailing)
+            }
+
+            HStack(spacing: 8) {
+                ProgressView(value: Double(droid.charge))
+                    .progressViewStyle(.linear)
+                    .frame(width: 112)
+
+                Text(String(format: "%3.0f%%", droid.charge * 100))
+                    .font(.system(.caption2, design: .monospaced))
+                    .frame(width: 42, alignment: .trailing)
+
+                Text(energyName(droid.energySource))
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 40, alignment: .leading)
+
+                Text(strategy)
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(strategyColor)
+
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: 10) {
+                Text(nav)
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(navColor(droid.navCause))
+                    .lineLimit(1)
+
+                Text(gains)
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(gainColor(droid))
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: 10) {
+                Text(controls)
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(reflexColor)
+                    .lineLimit(1)
+
+                Text(blocked ? "blk:\(droid.blockedMovementCount)/j\(droid.blockedJunctionCount)" : "clear")
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(blocked ? .red : .secondary)
+                    .lineLimit(1)
+
+                Text(vm)
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(droid.bytecodeFaulted ? .red : .secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+        }
+        .padding(.vertical, 7)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(.white.opacity(0.08))
+                .frame(height: 1)
         }
     }
 
