@@ -59,7 +59,7 @@ cazenv-survival-long: cazenv-survival-matrix
 
 $(CAZENV_SURVIVAL): $(CAZENV_SURVIVAL_SOURCES) cazenv/c_core/caz_env.h
 	mkdir -p $(BUILD_DIR)
-	$(CC) -Icazenv/c_core $(CFLAGS) $(CAZENV_SURVIVAL_SOURCES) -o $@
+	$(CC) -Icazenv/c_core $(CFLAGS) $(CAZENV_SURVIVAL_SOURCES) -o $@ -lm
 
 clean:
 	rm -rf $(BUILD_DIR)
