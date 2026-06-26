@@ -11,6 +11,10 @@
 #define CAZ_ENV_VM_INSTRUCTIONS_PER_TICK 24u
 #define CAZ_ENV_JUNCTION_CONTACT_FT 0.95f
 #define CAZ_ENV_JUNCTION_CLAW_REACH_FT 2.00f
+#define CAZ_ENV_MOVEMENT_MIN_STEP_FT 0.01f
+#define CAZ_ENV_MOVEMENT_COMMAND_SPEED_FTPS 0.20f
+#define CAZ_ENV_MOVEMENT_SPIN_YAW_RAD 0.18f
+#define CAZ_ENV_MOVEMENT_SPIN_CURVE_RAD_PER_FT 3.00f
 
 static const CazProgramMetadata *program_metadata_for(uint8_t program)
 {
@@ -97,6 +101,81 @@ static float wrap_pi(float angle)
         angle += 6.2831852f;
     }
     return angle;
+}
+
+static void reset_movement_metrics(CazEnvDroid *droid)
+{
+    droid->movement_total_ft = 0.0f;
+    droid->movement_longest_streak_ft = 0.0f;
+    droid->movement_current_streak_ft = 0.0f;
+    droid->movement_cycles = 0u;
+    droid->movement_active_cycles = 0u;
+    droid->movement_command_cycles = 0u;
+    droid->movement_stall_cycles = 0u;
+    droid->movement_spin_cycles = 0u;
+}
+
+static float movement_rating_for(const CazEnvDroid *droid, float elapsed_seconds)
+{
+    if (droid == NULL || elapsed_seconds <= 0.0f || droid->movement_cycles == 0u) {
+        return 0.0f;
+    }
+
+    const float average_speed = droid->movement_total_ft / elapsed_seconds;
+    const float speed_score = clampf(average_speed / 1.15f, 0.0f, 1.0f);
+    const float active_score = clampf((float)droid->movement_active_cycles /
+                                      (float)droid->movement_cycles,
+                                      0.0f,
+                                      1.0f);
+    const float streak_score = clampf(droid->movement_longest_streak_ft / 18.0f, 0.0f, 1.0f);
+    const float command_cycles = (float)droid->movement_command_cycles;
+    const float stall_ratio = command_cycles > 0.0f
+                            ? clampf((float)droid->movement_stall_cycles / command_cycles, 0.0f, 1.0f)
+                            : 0.0f;
+    const float spin_ratio = command_cycles > 0.0f
+                           ? clampf((float)droid->movement_spin_cycles / command_cycles, 0.0f, 1.0f)
+                           : 0.0f;
+    const float base = 10.0f * (0.55f * speed_score + 0.25f * active_score + 0.20f * streak_score);
+    const float penalty = clampf(1.0f - 0.70f * stall_ratio - 0.35f * spin_ratio, 0.0f, 1.0f);
+    return clampf(base * penalty, 0.0f, 10.0f);
+}
+
+static void record_movement_metrics(CazEnvDroid *droid,
+                                    float start_x,
+                                    float start_z,
+                                    float start_yaw,
+                                    float commanded_speed)
+{
+    const float dx = droid->x - start_x;
+    const float dz = droid->z - start_z;
+    const float step_distance = sqrtf(dx * dx + dz * dz);
+    const float yaw_delta = fabsf(wrap_pi(droid->yaw - start_yaw));
+    droid->movement_cycles++;
+
+    if (commanded_speed > CAZ_ENV_MOVEMENT_COMMAND_SPEED_FTPS) {
+        droid->movement_command_cycles++;
+    }
+
+    if (step_distance >= CAZ_ENV_MOVEMENT_MIN_STEP_FT) {
+        droid->movement_total_ft += step_distance;
+        droid->movement_active_cycles++;
+        droid->movement_current_streak_ft += step_distance;
+        if (commanded_speed > CAZ_ENV_MOVEMENT_COMMAND_SPEED_FTPS &&
+            yaw_delta / step_distance >= CAZ_ENV_MOVEMENT_SPIN_CURVE_RAD_PER_FT) {
+            droid->movement_spin_cycles++;
+        }
+        if (droid->movement_current_streak_ft > droid->movement_longest_streak_ft) {
+            droid->movement_longest_streak_ft = droid->movement_current_streak_ft;
+        }
+    } else {
+        if (commanded_speed > CAZ_ENV_MOVEMENT_COMMAND_SPEED_FTPS) {
+            droid->movement_stall_cycles++;
+        }
+        if (yaw_delta >= CAZ_ENV_MOVEMENT_SPIN_YAW_RAD) {
+            droid->movement_spin_cycles++;
+        }
+        droid->movement_current_streak_ft = 0.0f;
+    }
 }
 
 static uint32_t next_random(CazEnvState *state)
@@ -1023,6 +1102,7 @@ void caz_env_init(CazEnvState *state, uint32_t seed)
         droid->blocked_movement_count = 0u;
         droid->blocked_junction_count = 0u;
         droid->phase = random_range(state, 0.0f, 6.2831852f);
+        reset_movement_metrics(droid);
         droid->speed = program_metadata_for(droid->program)->default_speed;
         initialize_bytecode_runtime(state, index, droid, droid->program);
         assign_random_target(state, droid);
@@ -1054,6 +1134,7 @@ static int load_program_for_droid(CazEnvState *state,
     droid->program = (uint8_t)program;
     droid->gait = metadata->default_gait;
     droid->speed = metadata->default_speed;
+    reset_movement_metrics(droid);
     initialize_bytecode_runtime(state, index, droid, (uint8_t)program);
     runtime = &droid->bytecode;
 
@@ -1121,6 +1202,9 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
 
     for (int index = 0; index < CAZ_ENV_DROID_COUNT; index++) {
         CazEnvDroid *droid = &state->droids[index];
+        const float movement_start_x = droid->x;
+        const float movement_start_z = droid->z;
+        const float movement_start_yaw = droid->yaw;
         const float charger_dx = charger_x(state) - droid->x;
         const float charger_dz = charger_z(state) - droid->z;
         const float charger_distance = sqrtf(charger_dx * charger_dx + charger_dz * charger_dz);
@@ -1229,6 +1313,11 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
                 droid->energy_source = CAZ_ENV_ENERGY_BATTERY;
                 droid->nav_cause = CAZ_ENV_NAV_CAUSE_FAILURE;
                 record_nav_state(droid, nav_intent, CAZ_NAV_STATUS_BLOCKED, CAZ_ENV_NAV_CAUSE_FAILURE);
+                record_movement_metrics(droid,
+                                        movement_start_x,
+                                        movement_start_z,
+                                        movement_start_yaw,
+                                        0.0f);
                 continue;
             }
             const float charger_gain = dt_seconds / 600.0f;
@@ -1245,12 +1334,22 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
                 droid->nav_cause = CAZ_ENV_NAV_CAUSE_NONE;
                 set_target_from_output(droid, droid->bytecode.output.gait, droid->bytecode.output.head_yaw);
             }
+            record_movement_metrics(droid,
+                                    movement_start_x,
+                                    movement_start_z,
+                                    movement_start_yaw,
+                                    0.0f);
             continue;
         }
 
         if (droid->mode == CAZ_ENV_DROID_DEPLETED) {
             droid->energy_source = CAZ_ENV_ENERGY_SOLAR;
             record_nav_state(droid, nav_intent, CAZ_NAV_STATUS_BLOCKED, CAZ_ENV_NAV_CAUSE_FAILURE);
+            record_movement_metrics(droid,
+                                    movement_start_x,
+                                    movement_start_z,
+                                    movement_start_yaw,
+                                    0.0f);
             continue;
         }
 
@@ -1289,6 +1388,11 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
                             droid->nav_cause = CAZ_ENV_NAV_CAUSE_NONE;
                             set_target_from_output(droid, droid->bytecode.output.gait, droid->bytecode.output.head_yaw);
                         }
+                        record_movement_metrics(droid,
+                                                movement_start_x,
+                                                movement_start_z,
+                                                movement_start_yaw,
+                                                0.0f);
                         continue;
                     } else {
                         record_nav_state(droid, nav_intent, CAZ_NAV_STATUS_BLOCKED, droid->nav_cause);
@@ -1357,6 +1461,11 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
                     if (droid->charging_slot < CAZ_ENV_CHARGE_SLOT_COUNT) {
                         droid->mode = CAZ_ENV_DROID_CHARGING;
                         record_nav_state(droid, nav_intent, CAZ_NAV_STATUS_DOCKED, droid->nav_cause);
+                        record_movement_metrics(droid,
+                                                movement_start_x,
+                                                movement_start_z,
+                                                movement_start_yaw,
+                                                0.0f);
                         continue;
                     }
                 }
@@ -1390,6 +1499,7 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
             }
         }
 
+        const float commanded_speed = droid->speed;
         const float dx = droid->target_x - droid->x;
         const float dz = droid->target_z - droid->z;
         const float distance = sqrtf(dx * dx + dz * dz);
@@ -1439,6 +1549,11 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
             droid->gait = 0u;
             droid->energy_source = CAZ_ENV_ENERGY_SOLAR;
         }
+        record_movement_metrics(droid,
+                                movement_start_x,
+                                movement_start_z,
+                                movement_start_yaw,
+                                commanded_speed);
     }
 }
 
@@ -1488,6 +1603,15 @@ void caz_env_droid_snapshot(const CazEnvState *state, int index, CazEnvDroidSnap
     out_snapshot->nav_tap_gain = droid->nav_tap_gain;
     out_snapshot->fallback_tap_gain = droid->fallback_tap_gain;
     out_snapshot->speed = droid->speed;
+    out_snapshot->movement_total_ft = droid->movement_total_ft;
+    out_snapshot->movement_longest_streak_ft = droid->movement_longest_streak_ft;
+    out_snapshot->movement_current_streak_ft = droid->movement_current_streak_ft;
+    out_snapshot->movement_rating = movement_rating_for(droid, state->elapsed_seconds);
+    out_snapshot->movement_cycles = droid->movement_cycles;
+    out_snapshot->movement_active_cycles = droid->movement_active_cycles;
+    out_snapshot->movement_command_cycles = droid->movement_command_cycles;
+    out_snapshot->movement_stall_cycles = droid->movement_stall_cycles;
+    out_snapshot->movement_spin_cycles = droid->movement_spin_cycles;
     out_snapshot->program = droid->program;
     out_snapshot->gait = droid->gait;
     out_snapshot->mode = droid->mode;

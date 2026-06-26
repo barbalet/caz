@@ -34,7 +34,7 @@ static void print_usage(FILE *out, const char *argv0)
             "Usage: %s [options]\n"
             "\n"
             "Options:\n"
-            "  --program NAME|PATH         curious-patrol, nap-watch, farmyard-mouser, or a .caz file\n"
+            "  --program NAME|PATH         curious-patrol, stalk-and-pounce, farmyard-caution, or a .caz file\n"
             "  --program-dir PATH          directory for named .caz programs (default: programs)\n"
             "  --skills-dir PATH           directory for .cazskill skill overrides (default: skills)\n"
             "  --opencat-dry-run           print OpenCat-style serial commands without writing hardware\n"
@@ -79,7 +79,7 @@ static bool parse_u32(const char *text, uint32_t *value)
 static bool parse_args(int argc, char **argv, Options *options)
 {
     int i;
-    options->program = CAZ_PROGRAM_FARMYARD_MOUSER;
+    options->program = CAZ_PROGRAM_CURIOUS_PATROL;
     options->program_path[0] = '\0';
     snprintf(options->program_dir, sizeof(options->program_dir), "%s", "programs");
     snprintf(options->skills_dir, sizeof(options->skills_dir), "%s", "skills");

@@ -21,7 +21,7 @@ CAZENV_SURVIVAL_SOURCES := \
 	src/caz_droid.c \
 	src/caz_loader.c
 
-.PHONY: all run cazenv-probes cazenv-regression cazenv-stress cazenv-survival cazenv-survival-compat cazenv-survival-strict cazenv-survival-matrix cazenv-survival-long clean
+.PHONY: all run cazenv-probes cazenv-regression cazenv-stress cazenv-movement cazenv-survival cazenv-survival-compat cazenv-survival-strict cazenv-survival-matrix cazenv-survival-long clean
 
 all: $(TARGET)
 
@@ -33,7 +33,7 @@ $(BUILD_DIR)/%.o: src/%.c src/caz_cpu.h src/caz_body.h src/caz_droid.h src/caz_o
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 run: $(TARGET)
-	$(TARGET) --program farmyard-mouser --scenario farmyard --steps 48
+	$(TARGET) --program curious-patrol --scenario kitchen --steps 48
 
 cazenv-probes: $(CAZENV_SURVIVAL)
 	$(CAZENV_SURVIVAL) --mode probes
@@ -43,6 +43,9 @@ cazenv-regression: $(CAZENV_SURVIVAL)
 
 cazenv-stress: $(CAZENV_SURVIVAL)
 	$(CAZENV_SURVIVAL) --mode stress
+
+cazenv-movement: $(CAZENV_SURVIVAL)
+	$(CAZENV_SURVIVAL) --mode movement
 
 cazenv-survival: cazenv-survival-strict
 

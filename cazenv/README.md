@@ -66,11 +66,18 @@ Long-run survival is treated as an experiment that must be rerun after changes t
 make cazenv-probes
 make cazenv-regression
 make cazenv-stress
+make cazenv-movement
 make cazenv-survival
 make cazenv-survival-long
 ```
 
 The strict harness runs 20 droids for 14 simulated days across three deterministic seeds. The long target runs a 30-day, five-seed matrix across baseline, low-sun, full-charger, distant-junction, and high-obstacle cases. Runs fail if any droid reaches zero charge, enters `depleted`, ends at zero charge, faults its CPU, or receives supervisor fallback recovery. A passing strict run means the current archived `.caz` bytecode emitted the recovery decisions through survival/navigation ports.
+
+## Movement Rating
+
+CazEnv tracks movement separately from gait commands. Each droid accumulates actual x/z floor displacement in feet, active translation cycles, commanded-but-stalled cycles, spin-without-translation cycles, and the longest continuous translation streak. The app reports a 0-10 movement rating that rewards average displacement and continuous walking distance, then penalizes commands that do not move the droid across the floor.
+
+Use `make cazenv-movement` to rate the archived `.caz` programs across five deterministic CazEnv seeds. The report is intended to catch programs that look busy through gait, head, or yaw changes but do not travel meaningful distance through the room.
 
 ## House and Feral Behavior
 
@@ -86,7 +93,7 @@ In CazEnv:
 
 The app bundles the existing `.caz` archive and assigns each droid one of the survival-participant programs. Each assigned droid has its own VM runtime, loaded bytecode image, output latches, and navigation state. The C environment core owns physics and resource accounting, but recovery intent should come from bytecode `NAV_INTENT` values rather than hidden C profiles.
 
-`programs/survival.inc` is the shared prologue used by most of the archive. It chooses charger, solar, junction, or low-drain waiting paths from `BATTERY`, `ENERGY_SOURCE`, `CHARGER_SLOTS`, `SOLAR_LEVEL`, `JUNCTION_DISTANCE`, `NAV_STATUS`, and `STRATEGY_TENDENCY`. `territory-patrol.caz`, `feral-forager.caz`, and `energy-aware-hunter.caz` are standalone-energy programs that do not include that shared file; their charger, solar, and junction choices are embedded directly in their behavioral control flow and covered by the same strict survival harness.
+`programs/survival.inc` is the shared prologue used by most of the archive. It chooses charger, solar, junction, or low-drain waiting paths from `BATTERY`, `ENERGY_SOURCE`, `CHARGER_SLOTS`, `SOLAR_LEVEL`, `JUNCTION_DISTANCE`, `NAV_STATUS`, and `STRATEGY_TENDENCY`. `feral-forager.caz` does not include that shared file; its charger, solar, and junction choices are embedded directly in its behavioral control flow and covered by the same strict survival harness.
 
 ## Camera
 

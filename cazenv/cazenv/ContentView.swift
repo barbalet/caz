@@ -9,6 +9,7 @@ private enum DroidFilter: String, CaseIterable, Identifiable {
     case depleted = "Empty"
     case fallback = "Fallback"
     case blocked = "Blocked"
+    case lowMotion = "Still"
 
     var id: String { rawValue }
 }
@@ -75,6 +76,8 @@ struct ContentView: View {
                 metric("VM LOAD", "\(runtime.snapshot.droids.filter { $0.bytecodeLoaded }.count)/\(runtime.snapshot.droids.count)")
                 metric("VM RUN", "\(runtime.snapshot.droids.filter { $0.bytecodeSteppingEnabled && !$0.bytecodeHalted && !$0.bytecodeFaulted }.count)")
                 metric("NAV", "\(runtime.snapshot.droids.filter { $0.navIntent != 0 }.count)")
+                metric("MOVE", averageMovementRating)
+                metric("STILL", "\(runtime.snapshot.droids.filter { $0.movementCycles > 120 && $0.movementRating < 5.0 }.count)")
             }
 
             Picker("Filter", selection: $filter) {
@@ -128,8 +131,19 @@ struct ContentView: View {
                 return droid.navCause == 2 || droid.navCause == 3
             case .blocked:
                 return droid.navStatus == 2 || droid.obstacleState != 0 || droid.blockedJunctionCount > 0
+            case .lowMotion:
+                return droid.movementCycles > 120 && droid.movementRating < 5.0
             }
         }
+    }
+
+    private var averageMovementRating: String {
+        let droids = runtime.snapshot.droids
+        guard !droids.isEmpty else {
+            return "0.0"
+        }
+        let total = droids.reduce(0.0) { $0 + Double($1.movementRating) }
+        return String(format: "%.1f", total / Double(droids.count))
     }
 
     private func metric(_ label: String, _ value: String) -> some View {
@@ -208,6 +222,15 @@ struct ContentView: View {
             }
 
             HStack(spacing: 10) {
+                Text(movementSummary(droid))
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(movementColor(droid.movementRating))
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: 10) {
                 Text(controls)
                     .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(reflexColor)
@@ -272,6 +295,27 @@ struct ContentView: View {
             return String(format: "tap %.3f/%.3f", droid.navTapGain, droid.fallbackTapGain)
         }
         return String(format: "pass %.3f", droid.passiveSolarGain)
+    }
+
+    private func movementSummary(_ droid: EnvDroid) -> String {
+        let activePercent = droid.movementCycles > 0
+            ? Double(droid.movementActiveCycles) * 100.0 / Double(droid.movementCycles)
+            : 0.0
+        let stallPercent = droid.movementCommandCycles > 0
+            ? Double(droid.movementStallCycles) * 100.0 / Double(droid.movementCommandCycles)
+            : 0.0
+        let spinPercent = droid.movementCommandCycles > 0
+            ? Double(droid.movementSpinCycles) * 100.0 / Double(droid.movementCommandCycles)
+            : 0.0
+        return String(
+            format: "move %.1f %.0fft str %.0fft act %.0f%% stall %.0f%% spin %.0f%%",
+            Double(droid.movementRating),
+            Double(droid.movementTotalFeet),
+            Double(droid.movementLongestStreakFeet),
+            activePercent,
+            stallPercent,
+            spinPercent
+        )
     }
 
     private func vmSummary(_ droid: EnvDroid) -> String {
@@ -339,6 +383,19 @@ struct ContentView: View {
             return .cyan
         }
         return .secondary
+    }
+
+    private func movementColor(_ rating: Float) -> Color {
+        if rating >= 7.0 {
+            return .green
+        }
+        if rating >= 5.0 {
+            return .cyan
+        }
+        if rating >= 3.0 {
+            return .yellow
+        }
+        return .red
     }
 
     private func modeColor(_ mode: UInt8) -> Color {

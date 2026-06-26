@@ -2,7 +2,7 @@
 
 Caz is a Cat Operating System: a small Z80-inspired virtual machine driving a simulated contemporary house-cat droid. The first version in this repository is deliberately readable. It is not a cycle-perfect Z80 emulator, but it keeps the parts that make an 8-bit animal mind feel tangible: registers, flags, little-endian addresses, jump tables, input ports, output ports, and a looping bytecode program that has to notice the world through eyes and ears before deciding what sort of cat it intends to be.
 
-The simulator is written in C and builds into a single command-line program. It models a cat-sized droid with camera-like eyes, directional microphone ears, a lightweight body controller, tail/ear/head actuators, claws, a vocaliser, and a simple rural or domestic environment. The supplied Caz programs can patrol, doze, work as a farmyard mouser, or manage survival through charging, solar recovery, and junction tapping.
+The simulator is written in C and builds into a single command-line program. It models a cat-sized droid with camera-like eyes, directional microphone ears, a lightweight body controller, tail/ear/head actuators, claws, a vocaliser, and a simple rural or domestic environment. The supplied Caz programs can patrol, stalk, move cautiously, or manage survival through charging, solar recovery, and junction tapping.
 
 The repository also contains CazEnv, the macOS SwiftUI and Metal room simulator for long-run runs with twenty Caz droids sharing beds, cat trees, charger slots, solar energy, and electrical junction boxes.
 
@@ -19,11 +19,8 @@ Try the other modes:
 
 ```sh
 ./build/caz --program curious-patrol --scenario kitchen --steps 40
-./build/caz --program nap-watch --scenario night-parlour --steps 40
-./build/caz --program farmyard-mouser --scenario hedgerow --steps 60 --sample-every 2
-./build/caz --program programs/farmyard-mouser.caz --scenario farmyard --steps 40
-./build/caz --program programs/loaf-and-groom.caz --scenario night-parlour --steps 40
 ./build/caz --program programs/stalk-and-pounce.caz --scenario farmyard --steps 40
+./build/caz --program programs/farmyard-caution.caz --scenario hedgerow --steps 40 --sample-every 2
 ./build/caz --list
 ```
 
@@ -40,7 +37,7 @@ make cazenv-survival-long
 For instruction-level tracing:
 
 ```sh
-./build/caz --program farmyard-mouser --scenario farmyard --steps 4 --trace
+./build/caz --program stalk-and-pounce --scenario farmyard --steps 4 --trace
 ```
 
 ## Regression Checklist
@@ -53,16 +50,10 @@ make cazenv-probes
 make cazenv-regression
 make cazenv-stress
 make cazenv-survival
-./build/caz --program farmyard-mouser --scenario farmyard --steps 24 --seed 1 --sample-every 8
 ./build/caz --program curious-patrol --scenario kitchen --steps 24 --seed 1 --sample-every 8
-./build/caz --program nap-watch --scenario night-parlour --steps 24 --seed 1 --sample-every 8
-./build/caz --program programs/loaf-and-groom.caz --scenario night-parlour --steps 20 --seed 1 --sample-every 5
 ./build/caz --program programs/stalk-and-pounce.caz --scenario farmyard --steps 20 --seed 1 --sample-every 5
 ./build/caz --program programs/farmyard-caution.caz --scenario hedgerow --steps 24 --seed 1 --sample-every 6
-./build/caz --program programs/greeting-play.caz --scenario kitchen --steps 20 --seed 1 --sample-every 5
-./build/caz --program programs/territory-patrol.caz --scenario kitchen --steps 24 --seed 1 --sample-every 6
 ./build/caz --program programs/feral-forager.caz --scenario hedgerow --steps 24 --seed 1 --sample-every 6
-./build/caz --program programs/energy-aware-hunter.caz --scenario farmyard --steps 24 --seed 1 --sample-every 6
 ./build/caz --skills-dir /private/tmp/caz-missing-skills --program programs/stalk-and-pounce.caz --scenario farmyard --steps 4 --seed 1 --sample-every 2
 ./build/caz --program programs/stalk-and-pounce.caz --scenario farmyard --steps 8 --seed 1 --sample-every 4 --opencat-dry-run
 xcodebuild -project cazenv/cazenv.xcodeproj -scheme cazenv -configuration Debug build
@@ -196,23 +187,11 @@ The canonical Caz programs live in `programs/` as editable `.caz` source files.
 
 `curious-patrol.caz` is a general indoor cat loop. It retreats from very loud noises, tracks motion, crouches for prey-like rustles, listens in low light, and otherwise walks with a level tail.
 
-`nap-watch.caz` is a low-energy parlour mode. It keeps the eyelids low, purrs quietly, opens one eye for movement, greets human voices, and startles away from abrupt sound.
-
-`farmyard-mouser.caz` is tuned for rural use. It gives machinery room, treats prey-pattern sounds as a hunting cue, greets human speech, shelters during weather, and narrows its eyes in glare.
-
-`loaf-and-groom.caz` is a quiet indoor routine. It chooses rest, grooming, stretching, greeting, startle, recovery, and fatigue behaviours from body and room signals.
-
 `stalk-and-pounce.caz` is a hunting sketch. It stalks prey-like sound with `SKILL_CRAWL`, commits to `SKILL_POUNCE` on strong edge confidence, and falls back to sniffing, caution, recovery, or rest.
 
 `farmyard-caution.caz` is a rural safety routine. It demonstrates machine avoidance, terrain caution, weather sheltering, fatigue, greeting, recovery, and close-object inspection.
 
-`greeting-play.caz` is a sociable kitchen sketch. It greets human voices, plays with high motion, investigates uncertain objects, startles from abrupt sound, and settles when the room calms.
-
-`territory-patrol.caz` is a standalone-energy house-cat route. It folds soft charger returns into normal patrol, investigates corners and motion, greets humans, and rests near recovery resources before charge becomes urgent.
-
 `feral-forager.caz` is a standalone-energy feral sketch. It prefers junction tapping and solar foraging, hides from machinery or loud sound, conserves movement when charge is marginal, and only stalks prey when energy is healthy.
-
-`energy-aware-hunter.caz` is a standalone-energy hunter. It gates stalk and pounce behavior behind charge thresholds, downshifts into rest-watch states when energy is low, and still owns charger, solar, and junction recovery decisions itself.
 
 `survival.inc` is a shared include rather than a standalone behaviour. Programs call `survival_check` before their main behaviour selection so low-charge recovery stays consistent across the archive.
 
@@ -275,14 +254,8 @@ CazEnv's reusable cat morphology, generated ideal-cat STL, OpenCat-style rig ref
 |   `-- cazenv.xcodeproj/
 |-- programs/
 |   |-- curious-patrol.caz
-|   |-- farmyard-mouser.caz
 |   |-- farmyard-caution.caz
-|   |-- greeting-play.caz
-|   |-- loaf-and-groom.caz
-|   |-- nap-watch.caz
-|   |-- territory-patrol.caz
 |   |-- feral-forager.caz
-|   |-- energy-aware-hunter.caz
 |   |-- stalk-and-pounce.caz
 |   `-- survival.inc
 |-- skills/
@@ -331,7 +304,7 @@ The early rule is: keep the animal legible. When the droid does something odd, t
 
 ```sh
 make                         # build build/caz
-make run                     # run the farmyard mouser demo
+make run                     # run the curious-patrol demo
 make cazenv-probes           # targeted CazEnv ownership/resource probes
 make cazenv-regression       # archive, loader, and forced recovery checks
 make cazenv-stress           # per-program forced survival scenarios

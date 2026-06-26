@@ -29,6 +29,15 @@ struct EnvDroid: Identifiable {
     let navTapGain: Float
     let fallbackTapGain: Float
     let speed: Float
+    let movementTotalFeet: Float
+    let movementLongestStreakFeet: Float
+    let movementCurrentStreakFeet: Float
+    let movementRating: Float
+    let movementCycles: UInt64
+    let movementActiveCycles: UInt64
+    let movementCommandCycles: UInt64
+    let movementStallCycles: UInt64
+    let movementSpinCycles: UInt64
     let program: UInt8
     let gait: UInt8
     let mode: UInt8
@@ -168,6 +177,15 @@ final class CazEnvRuntime: ObservableObject {
                 navTapGain: item.nav_tap_gain,
                 fallbackTapGain: item.fallback_tap_gain,
                 speed: item.speed,
+                movementTotalFeet: item.movement_total_ft,
+                movementLongestStreakFeet: item.movement_longest_streak_ft,
+                movementCurrentStreakFeet: item.movement_current_streak_ft,
+                movementRating: item.movement_rating,
+                movementCycles: item.movement_cycles,
+                movementActiveCycles: item.movement_active_cycles,
+                movementCommandCycles: item.movement_command_cycles,
+                movementStallCycles: item.movement_stall_cycles,
+                movementSpinCycles: item.movement_spin_cycles,
                 program: item.program,
                 gait: item.gait,
                 mode: item.mode,

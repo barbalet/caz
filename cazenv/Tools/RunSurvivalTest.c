@@ -21,7 +21,8 @@ typedef enum HarnessMode {
     HARNESS_MODE_SHORT_STRICT,
     HARNESS_MODE_LONG_COMPAT,
     HARNESS_MODE_LONG_STRICT,
-    HARNESS_MODE_MATRIX
+    HARNESS_MODE_MATRIX,
+    HARNESS_MODE_MOVEMENT
 } HarnessMode;
 
 typedef enum MatrixCase {
@@ -162,6 +163,8 @@ static const char *harness_mode_name(HarnessMode mode)
         return "long-strict";
     case HARNESS_MODE_MATRIX:
         return "matrix";
+    case HARNESS_MODE_MOVEMENT:
+        return "movement";
     default:
         return "unknown";
     }
@@ -183,6 +186,8 @@ static const char *fallback_policy_name(HarnessMode mode)
     case HARNESS_MODE_LONG_STRICT:
     case HARNESS_MODE_MATRIX:
         return "fail-on-use";
+    case HARNESS_MODE_MOVEMENT:
+        return "movement-rating";
     default:
         return "unknown";
     }
@@ -264,6 +269,8 @@ static int parse_mode_name(const char *name, HarnessMode *out_mode)
         *out_mode = HARNESS_MODE_LONG_STRICT;
     } else if (strcmp(name, "matrix") == 0 || strcmp(name, "long-matrix") == 0) {
         *out_mode = HARNESS_MODE_MATRIX;
+    } else if (strcmp(name, "movement") == 0 || strcmp(name, "locomotion") == 0) {
+        *out_mode = HARNESS_MODE_MOVEMENT;
     } else {
         return 0;
     }
@@ -273,8 +280,10 @@ static int parse_mode_name(const char *name, HarnessMode *out_mode)
 static void print_usage(const char *program)
 {
     fprintf(stderr,
-            "usage: %s [--mode probes|regression|stress|short-compat|short-strict|long-compat|long-strict|matrix] [days] [seeds]\n"
+            "usage: %s [--mode probes|regression|stress|movement|short-compat|short-strict|long-compat|long-strict|matrix] [days] [seeds]\n"
+            "       %s --mode movement\n"
             "default mode is short-strict; use short-compat only for labeled compatibility diagnostics\n",
+            program,
             program);
 }
 
@@ -335,6 +344,12 @@ static int parse_options(int argc, char **argv, HarnessOptions *options)
     if (options->mode == HARNESS_MODE_MATRIX && !seeds_was_set) {
         options->seed_count = 5;
     }
+    if (options->mode == HARNESS_MODE_MOVEMENT) {
+        options->days = 0;
+        if (!seeds_was_set) {
+            options->seed_count = 5;
+        }
+    }
     if (options->mode == HARNESS_MODE_PROBES ||
         options->mode == HARNESS_MODE_REGRESSION ||
         options->mode == HARNESS_MODE_STRESS) {
@@ -344,6 +359,7 @@ static int parse_options(int argc, char **argv, HarnessOptions *options)
     if (options->mode != HARNESS_MODE_PROBES &&
         options->mode != HARNESS_MODE_REGRESSION &&
         options->mode != HARNESS_MODE_STRESS &&
+        options->mode != HARNESS_MODE_MOVEMENT &&
         (options->days <= 0 || options->seed_count <= 0)) {
         return 0;
     }
@@ -2408,6 +2424,122 @@ static int run_survival_matrix(const HarnessOptions *options)
     return failed_cases == 0 ? 0 : 1;
 }
 
+typedef struct MovementProgramAggregate {
+    int samples;
+    double rating_sum;
+    double distance_sum;
+    double streak_sum;
+    double active_ratio_sum;
+    double stall_ratio_sum;
+    double spin_ratio_sum;
+} MovementProgramAggregate;
+
+static const char *movement_band(double rating)
+{
+    if (rating >= 7.0) {
+        return "strong";
+    }
+    if (rating >= 5.0) {
+        return "acceptable";
+    }
+    if (rating >= 3.0) {
+        return "weak";
+    }
+    return "mostly-stationary";
+}
+
+static double percent_u64(uint64_t numerator, uint64_t denominator)
+{
+    if (denominator == 0u) {
+        return 0.0;
+    }
+    return (double)numerator * 100.0 / (double)denominator;
+}
+
+static int run_movement_suite(int seed_count)
+{
+    const float dt_seconds = 0.2f;
+    const float movement_seconds = 600.0f;
+    const long total_steps = (long)(movement_seconds / dt_seconds);
+    MovementProgramAggregate aggregates[CAZ_PROGRAM_COUNT];
+
+    memset(aggregates, 0, sizeof(aggregates));
+    printf("movement-window seconds=%.0f steps=%ld seeds=%d metric=actual-xz-displacement\n",
+           movement_seconds,
+           total_steps,
+           seed_count);
+
+    for (int seed_index = 0; seed_index < seed_count; seed_index++) {
+        CazEnvState state;
+        char load_error[512];
+        const uint32_t seed = 0x0ca7d100u + (uint32_t)seed_index;
+
+        caz_env_init(&state, seed);
+        if (!caz_env_load_programs(&state, "programs", load_error, sizeof(load_error))) {
+            fprintf(stderr, "%s\n", load_error);
+            return 0;
+        }
+
+        for (long step = 0; step < total_steps; step++) {
+            caz_env_step(&state, dt_seconds);
+        }
+
+        for (int index = 0; index < CAZ_ENV_DROID_COUNT; index++) {
+            CazEnvDroidSnapshot snapshot;
+            const uint8_t program = state.droids[index].bytecode.assigned_program;
+            MovementProgramAggregate *aggregate;
+            if (program >= (uint8_t)CAZ_PROGRAM_COUNT) {
+                continue;
+            }
+            caz_env_droid_snapshot(&state, index, &snapshot);
+            aggregate = &aggregates[program];
+            aggregate->samples++;
+            aggregate->rating_sum += snapshot.movement_rating;
+            aggregate->distance_sum += snapshot.movement_total_ft;
+            aggregate->streak_sum += snapshot.movement_longest_streak_ft;
+            aggregate->active_ratio_sum += percent_u64(snapshot.movement_active_cycles,
+                                                       snapshot.movement_cycles);
+            aggregate->stall_ratio_sum += percent_u64(snapshot.movement_stall_cycles,
+                                                      snapshot.movement_command_cycles);
+            aggregate->spin_ratio_sum += percent_u64(snapshot.movement_spin_cycles,
+                                                     snapshot.movement_command_cycles);
+        }
+    }
+
+    for (size_t index = 0u; index < caz_loader_program_count(); index++) {
+        const CazProgramMetadata *metadata = caz_loader_program_metadata_at(index);
+        MovementProgramAggregate *aggregate;
+        double rating;
+        if (metadata == NULL || metadata->kind >= CAZ_PROGRAM_COUNT) {
+            continue;
+        }
+        aggregate = &aggregates[metadata->kind];
+        if (aggregate->samples == 0) {
+            printf("movement-program name=%s rating=0.0/10 class=not-sampled samples=0\n",
+                   metadata->name);
+            continue;
+        }
+
+        rating = aggregate->rating_sum / (double)aggregate->samples;
+        printf("movement-program name=%s rating=%.1f/10 class=%s avg_distance=%.1fft avg_streak=%.1fft active=%.1f%% stall=%.1f%% spin=%.1f%% samples=%d\n",
+               metadata->name,
+               rating,
+               movement_band(rating),
+               aggregate->distance_sum / (double)aggregate->samples,
+               aggregate->streak_sum / (double)aggregate->samples,
+               aggregate->active_ratio_sum / (double)aggregate->samples,
+               aggregate->stall_ratio_sum / (double)aggregate->samples,
+               aggregate->spin_ratio_sum / (double)aggregate->samples,
+               aggregate->samples);
+    }
+
+    printf("movement-result=PASS programs=%zu seeds=%d seconds=%.0f\n",
+           caz_loader_program_count(),
+           seed_count,
+           movement_seconds);
+    return 1;
+}
+
 int main(int argc, char **argv)
 {
     HarnessOptions options;
@@ -2431,6 +2563,9 @@ int main(int argc, char **argv)
     }
     if (options.mode == HARNESS_MODE_STRESS) {
         return run_stress_suite() ? 0 : 1;
+    }
+    if (options.mode == HARNESS_MODE_MOVEMENT) {
+        return run_movement_suite(options.seed_count) ? 0 : 1;
     }
     if (options.mode == HARNESS_MODE_MATRIX) {
         return run_survival_matrix(&options);
