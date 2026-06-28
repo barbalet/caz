@@ -79,6 +79,8 @@ CazEnv tracks movement separately from gait commands. Each droid accumulates act
 
 Use `make cazenv-movement` to rate the archived `.caz` programs across five deterministic CazEnv seeds. The report is intended to catch programs that look busy through gait, head, or yaw changes but do not travel meaningful distance through the room.
 
+The movement-optimized standalone programs are `long-room-prowl.caz`, `sunward-forager.caz`, and `perimeter-stalker.caz`. They deliberately avoid `survival.inc`; each one carries its own charger, solar, and junction recovery paths so CazEnv can test movement quality and energy responsibility as a single behavior.
+
 ## House and Feral Behavior
 
 CazEnv models house/feral behavior as a survival tendency rather than a species distinction. Wikipedia describes domestic cats as solitary hunters with claws, strong senses, and flexible social behavior, while feral cats are unowned domestic cats living freely outdoors, generally avoiding human contact and relying on survival behavior around human settlements.
@@ -93,7 +95,7 @@ In CazEnv:
 
 The app bundles the existing `.caz` archive and assigns each droid one of the survival-participant programs. Each assigned droid has its own VM runtime, loaded bytecode image, output latches, and navigation state. The C environment core owns physics and resource accounting, but recovery intent should come from bytecode `NAV_INTENT` values rather than hidden C profiles.
 
-`programs/survival.inc` is the shared prologue used by most of the archive. It chooses charger, solar, junction, or low-drain waiting paths from `BATTERY`, `ENERGY_SOURCE`, `CHARGER_SLOTS`, `SOLAR_LEVEL`, `JUNCTION_DISTANCE`, `NAV_STATUS`, and `STRATEGY_TENDENCY`. `feral-forager.caz` does not include that shared file; its charger, solar, and junction choices are embedded directly in its behavioral control flow and covered by the same strict survival harness.
+`programs/survival.inc` is the shared prologue used by part of the archive. It chooses charger, solar, junction, or low-drain waiting paths from `BATTERY`, `ENERGY_SOURCE`, `CHARGER_SLOTS`, `SOLAR_LEVEL`, `JUNCTION_DISTANCE`, `NAV_STATUS`, and `STRATEGY_TENDENCY`. `feral-forager.caz`, `long-room-prowl.caz`, `sunward-forager.caz`, and `perimeter-stalker.caz` do not include that shared file; their charger, solar, and junction choices are embedded directly in their behavioral control flow and covered by the same strict survival harness.
 
 ## Camera
 

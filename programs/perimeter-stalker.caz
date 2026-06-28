@@ -1,0 +1,337 @@
+; name: perimeter-stalker
+; description: standalone-energy edge-aware hunter that favors continuous wall-following and bounded stalking
+
+    JP   loop
+
+loop:
+    CALL energy_gate
+
+    IN   A,(DROPPED)
+    CP   1
+    JP   NC,recover
+
+    IN   A,(LIFTED)
+    CP   1
+    JP   NC,recover
+
+    IN   A,(EAR_VOLUME)
+    CP   214
+    JP   NC,startle_arc
+
+    IN   A,(TERRAIN)
+    CP   5
+    JP   NC,wall_follow
+
+    IN   A,(EYE_EDGE)
+    CP   210
+    JP   NC,wall_follow
+
+    IN   A,(EAR_PATTERN)
+    CP   PREY
+    JP   Z,stalk_line
+
+    IN   A,(EYE_MOTION)
+    CP   150
+    JP   NC,inspect_line
+
+prowl:
+    LD   A,NAV_WANDER
+    OUT  (NAV_INTENT),A
+    LD   A,SKILL_WALK
+    OUT  (SKILL),A
+    LD   A,GAIT_WALK
+    OUT  (GAIT),A
+    LD   A,126
+    OUT  (HEAD_YAW),A
+    LD   A,EAR_SCAN
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_LEVEL
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,190
+    OUT  (EYELID),A
+    JP   loop
+
+wall_follow:
+    LD   A,NAV_WANDER
+    OUT  (NAV_INTENT),A
+    LD   A,SKILL_SNIFF
+    OUT  (SKILL),A
+    LD   A,GAIT_POUNCE
+    OUT  (GAIT),A
+    CALL safe_charger_head
+    LD   A,EAR_FORWARD
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_QUESTION
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,210
+    OUT  (EYELID),A
+    JP   loop
+
+inspect_line:
+    LD   A,NAV_WANDER
+    OUT  (NAV_INTENT),A
+    LD   A,SKILL_SNIFF
+    OUT  (SKILL),A
+    LD   A,GAIT_POUNCE
+    OUT  (GAIT),A
+    LD   A,144
+    OUT  (HEAD_YAW),A
+    LD   A,EAR_SCAN
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_TWITCH
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_MRRP
+    OUT  (VOCAL),A
+    LD   A,216
+    OUT  (EYELID),A
+    JP   loop
+
+stalk_line:
+    LD   A,NAV_WANDER
+    OUT  (NAV_INTENT),A
+    LD   A,SKILL_SNIFF
+    OUT  (SKILL),A
+    LD   A,GAIT_WALK
+    OUT  (GAIT),A
+    IN   A,(EAR_BEARING)
+    CP   92
+    JP   C,stalk_left
+    CP   164
+    JP   NC,stalk_right
+    OUT  (HEAD_YAW),A
+    JP   stalk_finish
+
+stalk_left:
+    LD   A,92
+    OUT  (HEAD_YAW),A
+    JP   stalk_finish
+
+stalk_right:
+    LD   A,164
+    OUT  (HEAD_YAW),A
+
+stalk_finish:
+    LD   A,EAR_FORWARD
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_STILL
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,236
+    OUT  (EYELID),A
+    JP   loop
+
+startle_arc:
+    LD   A,NAV_WANDER
+    OUT  (NAV_INTENT),A
+    LD   A,SKILL_STARTLE
+    OUT  (SKILL),A
+    LD   A,GAIT_RETREAT
+    OUT  (GAIT),A
+    LD   A,84
+    OUT  (HEAD_YAW),A
+    LD   A,EAR_FLAT
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_BOTTLE
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_HISS
+    OUT  (VOCAL),A
+    LD   A,246
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+recover:
+    LD   A,SKILL_RECOVER
+    OUT  (SKILL),A
+    LD   A,GAIT_LOAF
+    OUT  (GAIT),A
+    LD   A,EAR_FLAT
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_WRAP
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,224
+    OUT  (EYELID),A
+    CALL pause
+    JP   loop
+
+safe_charger_head:
+    IN   A,(CHARGER_BEARING)
+    CP   96
+    JP   C,safe_charger_left
+    CP   160
+    JP   NC,safe_charger_right
+    OUT  (HEAD_YAW),A
+    RET
+
+safe_charger_left:
+    LD   A,96
+    OUT  (HEAD_YAW),A
+    RET
+
+safe_charger_right:
+    LD   A,160
+    OUT  (HEAD_YAW),A
+    RET
+
+energy_gate:
+    IN   A,(ENERGY_SOURCE)
+    CP   ENERGY_CHARGER
+    JP   Z,keep_charger
+    CP   ENERGY_SOLAR
+    JP   Z,keep_solar
+    CP   ENERGY_JUNCTION
+    JP   Z,keep_junction
+
+    IN   A,(BATTERY)
+    CP   90
+    JP   C,route_energy
+
+clear_nav:
+    LD   A,NAV_WANDER
+    OUT  (NAV_INTENT),A
+    RET
+
+keep_charger:
+    IN   A,(BATTERY)
+    CP   250
+    JP   C,go_charger
+    JP   clear_nav
+
+keep_solar:
+    IN   A,(BATTERY)
+    CP   112
+    JP   C,go_solar
+    JP   clear_nav
+
+keep_junction:
+    IN   A,(BATTERY)
+    CP   150
+    JP   C,go_junction
+    JP   clear_nav
+
+route_energy:
+    CP   72
+    JP   C,emergency_energy
+
+    IN   A,(STRATEGY_TENDENCY)
+    CP   160
+    JP   NC,feral_route
+
+house_route:
+    IN   A,(CHARGER_SLOTS)
+    CP   1
+    JP   C,house_no_slot
+    IN   A,(CHARGER_DISTANCE)
+    CP   96
+    JP   C,go_charger
+    IN   A,(SOLAR_LEVEL)
+    CP   96
+    JP   NC,go_solar
+    IN   A,(JUNCTION_DISTANCE)
+    CP   64
+    JP   C,go_junction
+    JP   go_solar
+
+house_no_slot:
+    IN   A,(SOLAR_LEVEL)
+    CP   64
+    JP   NC,go_solar
+    IN   A,(JUNCTION_DISTANCE)
+    CP   72
+    JP   C,go_junction
+    JP   go_solar
+
+feral_route:
+    IN   A,(SOLAR_LEVEL)
+    CP   96
+    JP   NC,go_solar
+    IN   A,(JUNCTION_DISTANCE)
+    CP   72
+    JP   C,go_junction
+    IN   A,(CHARGER_SLOTS)
+    CP   1
+    JP   NC,go_charger
+    JP   go_solar
+
+emergency_energy:
+    IN   A,(JUNCTION_DISTANCE)
+    CP   56
+    JP   C,go_junction
+    IN   A,(SOLAR_LEVEL)
+    CP   32
+    JP   NC,go_solar
+    IN   A,(CHARGER_SLOTS)
+    CP   1
+    JP   NC,go_charger
+    JP   go_solar
+
+go_charger:
+    LD   A,NAV_CHARGER
+    OUT  (NAV_INTENT),A
+    IN   A,(CHARGER_BEARING)
+    OUT  (HEAD_YAW),A
+    LD   A,SKILL_WALK
+    OUT  (SKILL),A
+    LD   A,GAIT_WALK
+    OUT  (GAIT),A
+    LD   A,EAR_SCAN
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_FLAG
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,226
+    OUT  (EYELID),A
+    JP   energy_gate
+
+go_solar:
+    LD   A,NAV_SOLAR
+    OUT  (NAV_INTENT),A
+    LD   A,SKILL_REST
+    OUT  (SKILL),A
+    LD   A,GAIT_LOAF
+    OUT  (GAIT),A
+    LD   A,128
+    OUT  (HEAD_YAW),A
+    LD   A,EAR_SWIVEL
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_WRAP
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,160
+    OUT  (EYELID),A
+    JP   energy_gate
+
+go_junction:
+    LD   A,NAV_JUNCTION
+    OUT  (NAV_INTENT),A
+    IN   A,(JUNCTION_BEARING)
+    OUT  (HEAD_YAW),A
+    LD   A,SKILL_SCRATCH
+    OUT  (SKILL),A
+    LD   A,GAIT_PAW_TEST
+    OUT  (GAIT),A
+    LD   A,EAR_FORWARD
+    OUT  (EAR_POSE),A
+    LD   A,TAIL_LEVEL
+    OUT  (TAIL_POSE),A
+    LD   A,VOCAL_SILENT
+    OUT  (VOCAL),A
+    LD   A,240
+    OUT  (EYELID),A
+    JP   energy_gate
+
+pause:
+    LD   B,18
+wait:
+    DEC  B
+    JP   NZ,wait
+    RET

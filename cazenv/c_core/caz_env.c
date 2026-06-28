@@ -1490,7 +1490,16 @@ void caz_env_step(CazEnvState *state, float dt_seconds)
         } else {
             droid->mode = CAZ_ENV_DROID_PROGRAM;
             if (droid->speed > 0.01f) {
-                set_target_from_output(droid, droid->bytecode.output.gait, droid->bytecode.output.head_yaw);
+                if (nav_intent == CAZ_NAV_WANDER) {
+                    const float wander_dx = droid->target_x - droid->x;
+                    const float wander_dz = droid->target_z - droid->z;
+                    const float wander_distance = sqrtf(wander_dx * wander_dx + wander_dz * wander_dz);
+                    if (wander_distance < 0.75f || droid->obstacle_state != 0u) {
+                        assign_random_target(state, droid);
+                    }
+                } else {
+                    set_target_from_output(droid, droid->bytecode.output.gait, droid->bytecode.output.head_yaw);
+                }
                 record_nav_state(droid, nav_intent, CAZ_NAV_STATUS_RUNNING, CAZ_ENV_NAV_CAUSE_BYTECODE);
             } else {
                 droid->target_x = droid->x;

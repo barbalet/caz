@@ -193,9 +193,15 @@ The canonical Caz programs live in `programs/` as editable `.caz` source files.
 
 `feral-forager.caz` is a standalone-energy feral sketch. It prefers junction tapping and solar foraging, hides from machinery or loud sound, conserves movement when charge is marginal, and only stalks prey when energy is healthy.
 
+`long-room-prowl.caz` is a standalone-energy movement program tuned for long straight room crossings, soft edge turns, bounded sound tracking, and minimal spin-without-translation.
+
+`sunward-forager.caz` is a standalone-energy movement program that keeps foraging through bright patches and social/prey cues, only switching to solar, junction, or charger recovery when charge makes that necessary.
+
+`perimeter-stalker.caz` is a standalone-energy movement program that follows room and fixture edges with walking/sniffing outputs instead of stopping, while bounding prey turns so stalking still travels across the floor.
+
 `survival.inc` is a shared include rather than a standalone behaviour. Programs call `survival_check` before their main behaviour selection so low-charge recovery stays consistent across the archive.
 
-The archive intentionally excludes standalone utility or fixture programs whose movement rates below 5/10 against actual domestic-cat behavior. The body ports, pose-frame staging, pounce skill, and survival navigation capabilities remain available for the retained cat-like programs.
+The archive intentionally excludes standalone utility or fixture programs whose movement rates below 5/10 against actual domestic-cat behavior. New movement-optimized programs do not include `survival.inc`; they embed charger, solar, and junction recovery in their own control flow so the movement policy and survival policy can be tested together.
 
 ## How Caz Feels
 
@@ -256,7 +262,10 @@ CazEnv's reusable cat morphology, generated ideal-cat STL, OpenCat-style rig ref
 |   |-- curious-patrol.caz
 |   |-- farmyard-caution.caz
 |   |-- feral-forager.caz
+|   |-- long-room-prowl.caz
+|   |-- perimeter-stalker.caz
 |   |-- stalk-and-pounce.caz
+|   |-- sunward-forager.caz
 |   `-- survival.inc
 |-- skills/
 |   |-- balance.cazskill

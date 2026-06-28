@@ -1071,6 +1071,18 @@ static const CazProgramMetadata program_registry[CAZ_PROGRAM_COUNT] = {
      "feral-forager",
      "standalone feral-cat routine that favors sunning, wire tapping, hiding, and cautious foraging",
      1u, 1u, 1u, 1.25f, 2u},
+    {CAZ_PROGRAM_LONG_ROOM_PROWL,
+     "long-room-prowl",
+     "standalone-energy room-length prowl optimized for continuous catlike walking and broad arcs",
+     1u, 1u, 1u, 1.55f, 1u},
+    {CAZ_PROGRAM_SUNWARD_FORAGER,
+     "sunward-forager",
+     "standalone-energy sun-aware forager that keeps walking unless charge recovery is explicitly needed",
+     1u, 1u, 1u, 1.55f, 1u},
+    {CAZ_PROGRAM_PERIMETER_STALKER,
+     "perimeter-stalker",
+     "standalone-energy edge-aware hunter that favors continuous wall-following and bounded stalking",
+     1u, 1u, 1u, 1.55f, 1u},
 };
 
 size_t caz_loader_program_count(void)
@@ -1141,6 +1153,12 @@ bool caz_loader_parse_program_name(const char *name, CazProgramKind *kind)
         *kind = CAZ_PROGRAM_STALK_AND_POUNCE;
     } else if (equals_ci(name, "feral") || equals_ci(name, "forager")) {
         *kind = CAZ_PROGRAM_FERAL_FORAGER;
+    } else if (equals_ci(name, "prowl") || equals_ci(name, "long-room")) {
+        *kind = CAZ_PROGRAM_LONG_ROOM_PROWL;
+    } else if (equals_ci(name, "sunward") || equals_ci(name, "sun-forager")) {
+        *kind = CAZ_PROGRAM_SUNWARD_FORAGER;
+    } else if (equals_ci(name, "perimeter") || equals_ci(name, "stalker")) {
+        *kind = CAZ_PROGRAM_PERIMETER_STALKER;
     } else {
         return false;
     }

@@ -34,7 +34,7 @@ static void print_usage(FILE *out, const char *argv0)
             "Usage: %s [options]\n"
             "\n"
             "Options:\n"
-            "  --program NAME|PATH         curious-patrol, stalk-and-pounce, farmyard-caution, or a .caz file\n"
+            "  --program NAME|PATH         named archive program or a .caz file\n"
             "  --program-dir PATH          directory for named .caz programs (default: programs)\n"
             "  --skills-dir PATH           directory for .cazskill skill overrides (default: skills)\n"
             "  --opencat-dry-run           print OpenCat-style serial commands without writing hardware\n"
