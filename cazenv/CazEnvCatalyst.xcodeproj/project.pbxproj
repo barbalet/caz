@@ -1,0 +1,460 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		CAT001000000000000000001 /* CazEnvApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000001 /* CazEnvApp.swift */; };
+		CAT001000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000002 /* ContentView.swift */; };
+		CAT001000000000000000003 /* CazEnvRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000003 /* CazEnvRuntime.swift */; };
+		CAT001000000000000000004 /* MetalEnvironmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000004 /* MetalEnvironmentView.swift */; };
+		CAT001000000000000000005 /* EnvironmentRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000005 /* EnvironmentRenderer.swift */; };
+		CAT001000000000000000006 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000006 /* Shaders.metal */; };
+		CAT001000000000000000007 /* caz_env.c in Sources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000007 /* caz_env.c */; };
+		CAT001000000000000000008 /* LowpolyCAT_fixed.stl in Resources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000010 /* LowpolyCAT_fixed.stl */; };
+		CAT001000000000000000009 /* curious-patrol.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000011 /* curious-patrol.caz */; };
+		CAT001000000000000000014 /* stalk-and-pounce.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000016 /* stalk-and-pounce.caz */; };
+		CAT001000000000000000015 /* farmyard-caution.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000017 /* farmyard-caution.caz */; };
+		CAT001000000000000000019 /* caz_cpu.c in Sources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000022 /* caz_cpu.c */; };
+		CAT001000000000000000020 /* caz_body.c in Sources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000024 /* caz_body.c */; };
+		CAT001000000000000000021 /* caz_droid.c in Sources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000026 /* caz_droid.c */; };
+		CAT001000000000000000022 /* caz_loader.c in Sources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000028 /* caz_loader.c */; };
+		CAT001000000000000000023 /* survival.inc in Resources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000030 /* survival.inc */; };
+		CAT001000000000000000025 /* feral-forager.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000032 /* feral-forager.caz */; };
+		CAT001000000000000000026 /* long-room-prowl.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000033 /* long-room-prowl.caz */; };
+		CAT001000000000000000027 /* sunward-forager.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000034 /* sunward-forager.caz */; };
+		CAT001000000000000000028 /* perimeter-stalker.caz in Resources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000035 /* perimeter-stalker.caz */; };
+		CAT001000000000000000029 /* caz_core.c in Sources */ = {isa = PBXBuildFile; fileRef = CAT000000000000000000036 /* caz_core.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		CAT000000000000000000001 /* CazEnvApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CazEnvApp.swift; sourceTree = "<group>"; };
+		CAT000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		CAT000000000000000000003 /* CazEnvRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CazEnvRuntime.swift; sourceTree = "<group>"; };
+		CAT000000000000000000004 /* MetalEnvironmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalEnvironmentView.swift; sourceTree = "<group>"; };
+		CAT000000000000000000005 /* EnvironmentRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentRenderer.swift; sourceTree = "<group>"; };
+		CAT000000000000000000006 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+		CAT000000000000000000007 /* caz_env.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = caz_env.c; sourceTree = "<group>"; };
+		CAT000000000000000000008 /* caz_env.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = caz_env.h; sourceTree = "<group>"; };
+		CAT000000000000000000009 /* cazenv-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "cazenv-Bridging-Header.h"; sourceTree = "<group>"; };
+		CAT000000000000000000010 /* LowpolyCAT_fixed.stl */ = {isa = PBXFileReference; lastKnownFileType = file; name = LowpolyCAT_fixed.stl; path = "../stock/3d_models/LowpolyCAT_fixed.stl"; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000011 /* curious-patrol.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "curious-patrol.caz"; path = "../programs/curious-patrol.caz"; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000016 /* stalk-and-pounce.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "stalk-and-pounce.caz"; path = "../programs/stalk-and-pounce.caz"; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000017 /* farmyard-caution.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "farmyard-caution.caz"; path = "../programs/farmyard-caution.caz"; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000021 /* CazEnv.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CazEnv.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CAT000000000000000000022 /* caz_cpu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_cpu.c; path = ../src/caz_cpu.c; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000023 /* caz_cpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_cpu.h; path = ../src/caz_cpu.h; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000024 /* caz_body.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_body.c; path = ../src/caz_body.c; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000025 /* caz_body.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_body.h; path = ../src/caz_body.h; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000026 /* caz_droid.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_droid.c; path = ../src/caz_droid.c; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000027 /* caz_droid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_droid.h; path = ../src/caz_droid.h; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000028 /* caz_loader.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_loader.c; path = ../src/caz_loader.c; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000029 /* caz_loader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_loader.h; path = ../src/caz_loader.h; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000030 /* survival.inc */ = {isa = PBXFileReference; lastKnownFileType = text; name = survival.inc; path = ../programs/survival.inc; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000032 /* feral-forager.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "feral-forager.caz"; path = "../programs/feral-forager.caz"; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000033 /* long-room-prowl.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "long-room-prowl.caz"; path = "../programs/long-room-prowl.caz"; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000034 /* sunward-forager.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "sunward-forager.caz"; path = "../programs/sunward-forager.caz"; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000035 /* perimeter-stalker.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "perimeter-stalker.caz"; path = "../programs/perimeter-stalker.caz"; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000036 /* caz_core.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_core.c; path = ../src/caz_core.c; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000037 /* caz_core.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_core.h; path = ../src/caz_core.h; sourceTree = SOURCE_ROOT; };
+		CAT000000000000000000038 /* CazVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CazVersion.xcconfig; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CAT002000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CAT003000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				CAT003000000000000000002 /* cazenv */,
+				CAT003000000000000000007 /* Caz C Runtime */,
+				CAT003000000000000000003 /* C Core */,
+				CAT003000000000000000004 /* Stock Assets */,
+				CAT003000000000000000005 /* Caz Programs */,
+				CAT003000000000000000008 /* Config */,
+				CAT003000000000000000006 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CAT003000000000000000002 /* cazenv */ = {
+			isa = PBXGroup;
+			children = (
+				CAT000000000000000000001 /* CazEnvApp.swift */,
+				CAT000000000000000000002 /* ContentView.swift */,
+				CAT000000000000000000003 /* CazEnvRuntime.swift */,
+				CAT000000000000000000004 /* MetalEnvironmentView.swift */,
+				CAT000000000000000000005 /* EnvironmentRenderer.swift */,
+				CAT000000000000000000006 /* Shaders.metal */,
+				CAT000000000000000000009 /* cazenv-Bridging-Header.h */,
+			);
+			path = cazenv;
+			sourceTree = "<group>";
+		};
+		CAT003000000000000000003 /* C Core */ = {
+			isa = PBXGroup;
+			children = (
+				CAT000000000000000000007 /* caz_env.c */,
+				CAT000000000000000000008 /* caz_env.h */,
+			);
+			path = c_core;
+			sourceTree = "<group>";
+		};
+		CAT003000000000000000007 /* Caz C Runtime */ = {
+			isa = PBXGroup;
+			children = (
+				CAT000000000000000000036 /* caz_core.c */,
+				CAT000000000000000000037 /* caz_core.h */,
+				CAT000000000000000000022 /* caz_cpu.c */,
+				CAT000000000000000000023 /* caz_cpu.h */,
+				CAT000000000000000000024 /* caz_body.c */,
+				CAT000000000000000000025 /* caz_body.h */,
+				CAT000000000000000000026 /* caz_droid.c */,
+				CAT000000000000000000027 /* caz_droid.h */,
+				CAT000000000000000000028 /* caz_loader.c */,
+				CAT000000000000000000029 /* caz_loader.h */,
+			);
+			name = "Caz C Runtime";
+			sourceTree = "<group>";
+		};
+		CAT003000000000000000004 /* Stock Assets */ = {
+			isa = PBXGroup;
+			children = (
+				CAT000000000000000000010 /* LowpolyCAT_fixed.stl */,
+			);
+			name = "Stock Assets";
+			sourceTree = "<group>";
+		};
+		CAT003000000000000000005 /* Caz Programs */ = {
+			isa = PBXGroup;
+			children = (
+				CAT000000000000000000011 /* curious-patrol.caz */,
+				CAT000000000000000000016 /* stalk-and-pounce.caz */,
+				CAT000000000000000000017 /* farmyard-caution.caz */,
+				CAT000000000000000000032 /* feral-forager.caz */,
+				CAT000000000000000000033 /* long-room-prowl.caz */,
+				CAT000000000000000000034 /* sunward-forager.caz */,
+				CAT000000000000000000035 /* perimeter-stalker.caz */,
+				CAT000000000000000000030 /* survival.inc */,
+			);
+			name = "Caz Programs";
+			sourceTree = "<group>";
+		};
+		CAT003000000000000000008 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				CAT000000000000000000038 /* CazVersion.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		CAT003000000000000000006 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CAT000000000000000000021 /* CazEnv.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CAT004000000000000000001 /* CazEnvCatalyst */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CAT008000000000000000002 /* Build configuration list for PBXNativeTarget "CazEnvCatalyst" */;
+			buildPhases = (
+				CAT005000000000000000001 /* Sources */,
+				CAT002000000000000000001 /* Frameworks */,
+				CAT006000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CazEnvCatalyst;
+			productName = CazEnv;
+			productReference = CAT000000000000000000021 /* CazEnv.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CAT007000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1520;
+				LastUpgradeCheck = 1520;
+				TargetAttributes = {
+					CAT004000000000000000001 = {
+						CreatedOnToolsVersion = 15.2;
+					};
+				};
+			};
+			buildConfigurationList = CAT008000000000000000001 /* Build configuration list for PBXProject "CazEnvCatalyst" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = CAT003000000000000000001;
+			productRefGroup = CAT003000000000000000006 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CAT004000000000000000001 /* CazEnvCatalyst */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CAT006000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CAT001000000000000000008 /* LowpolyCAT_fixed.stl in Resources */,
+				CAT001000000000000000009 /* curious-patrol.caz in Resources */,
+				CAT001000000000000000014 /* stalk-and-pounce.caz in Resources */,
+				CAT001000000000000000015 /* farmyard-caution.caz in Resources */,
+				CAT001000000000000000023 /* survival.inc in Resources */,
+				CAT001000000000000000025 /* feral-forager.caz in Resources */,
+				CAT001000000000000000026 /* long-room-prowl.caz in Resources */,
+				CAT001000000000000000027 /* sunward-forager.caz in Resources */,
+				CAT001000000000000000028 /* perimeter-stalker.caz in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CAT005000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CAT001000000000000000001 /* CazEnvApp.swift in Sources */,
+				CAT001000000000000000002 /* ContentView.swift in Sources */,
+				CAT001000000000000000003 /* CazEnvRuntime.swift in Sources */,
+				CAT001000000000000000004 /* MetalEnvironmentView.swift in Sources */,
+				CAT001000000000000000005 /* EnvironmentRenderer.swift in Sources */,
+				CAT001000000000000000019 /* caz_cpu.c in Sources */,
+				CAT001000000000000000020 /* caz_body.c in Sources */,
+				CAT001000000000000000021 /* caz_droid.c in Sources */,
+				CAT001000000000000000022 /* caz_loader.c in Sources */,
+				CAT001000000000000000029 /* caz_core.c in Sources */,
+				CAT001000000000000000007 /* caz_env.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		CAT009000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CAT000000000000000000038 /* CazVersion.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CAT009000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CAT000000000000000000038 /* CazVersion.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CAT009000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CAT000000000000000000038 /* CazVersion.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(CAZ_CORE_VERSION_NUMBER)";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = CazEnv;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = "$(CAZ_CORE_VERSION)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.caz.cazenv.catalyst;
+				PRODUCT_NAME = CazEnv;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "cazenv/cazenv-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CAT009000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CAT000000000000000000038 /* CazVersion.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(CAZ_CORE_VERSION_NUMBER)";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = CazEnv;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = "$(CAZ_CORE_VERSION)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.caz.cazenv.catalyst;
+				PRODUCT_NAME = CazEnv;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "cazenv/cazenv-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CAT008000000000000000001 /* Build configuration list for PBXProject "CazEnvCatalyst" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CAT009000000000000000001 /* Debug */,
+				CAT009000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CAT008000000000000000002 /* Build configuration list for PBXNativeTarget "CazEnvCatalyst" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CAT009000000000000000003 /* Debug */,
+				CAT009000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = CAT007000000000000000001 /* Project object */;
+}

@@ -60,6 +60,7 @@
 		ENV000000000000000000035 /* perimeter-stalker.caz */ = {isa = PBXFileReference; lastKnownFileType = text; name = "perimeter-stalker.caz"; path = "../programs/perimeter-stalker.caz"; sourceTree = SOURCE_ROOT; };
 		ENV000000000000000000036 /* caz_core.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = caz_core.c; path = ../src/caz_core.c; sourceTree = SOURCE_ROOT; };
 		ENV000000000000000000037 /* caz_core.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = caz_core.h; path = ../src/caz_core.h; sourceTree = SOURCE_ROOT; };
+		ENV000000000000000000038 /* CazVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CazVersion.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +82,7 @@
 				ENV003000000000000000003 /* C Core */,
 				ENV003000000000000000004 /* Stock Assets */,
 				ENV003000000000000000005 /* Caz Programs */,
+				ENV003000000000000000008 /* Config */,
 				ENV003000000000000000006 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -146,6 +148,14 @@
 				ENV000000000000000000030 /* survival.inc */,
 			);
 			name = "Caz Programs";
+			sourceTree = "<group>";
+		};
+		ENV003000000000000000008 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				ENV000000000000000000038 /* CazVersion.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		ENV003000000000000000006 /* Products */ = {
@@ -253,6 +263,7 @@
 /* Begin XCBuildConfiguration section */
 		ENV009000000000000000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = ENV000000000000000000038 /* CazVersion.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -310,6 +321,7 @@
 		};
 		ENV009000000000000000002 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = ENV000000000000000000038 /* CazVersion.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -360,8 +372,10 @@
 		};
 		ENV009000000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = ENV000000000000000000038 /* CazVersion.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(CAZ_CORE_VERSION_NUMBER)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = CazEnv;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
@@ -370,6 +384,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(CAZ_CORE_VERSION)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.caz.cazenv;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "cazenv/cazenv-Bridging-Header.h";
@@ -379,8 +394,10 @@
 		};
 		ENV009000000000000000004 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = ENV000000000000000000038 /* CazVersion.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(CAZ_CORE_VERSION_NUMBER)";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = CazEnv;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
@@ -389,6 +406,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(CAZ_CORE_VERSION)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.caz.cazenv;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "cazenv/cazenv-Bridging-Header.h";

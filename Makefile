@@ -5,6 +5,8 @@ CPPFLAGS ?= -Isrc
 BUILD_DIR := build
 TARGET := $(BUILD_DIR)/caz
 CAZENV_SURVIVAL := $(BUILD_DIR)/cazenv-survival
+CAZENV_CATALYST_PROJECT := cazenv/CazEnvCatalyst.xcodeproj
+CAZENV_RELEASE_DERIVED := .build/cazenv-release
 SOURCES := \
 	src/main.c \
 	src/caz_core.c \
@@ -23,7 +25,7 @@ CAZENV_SURVIVAL_SOURCES := \
 	src/caz_droid.c \
 	src/caz_loader.c
 
-.PHONY: all run version release-src cazenv-probes cazenv-regression cazenv-stress cazenv-movement cazenv-survival cazenv-survival-compat cazenv-survival-strict cazenv-survival-matrix cazenv-survival-long clean
+.PHONY: all run version cazenv-version-config release-src release-packages cazenv-maccatalyst-package cazenv-ios-package cazenv-probes cazenv-regression cazenv-stress cazenv-movement cazenv-survival cazenv-survival-compat cazenv-survival-strict cazenv-survival-matrix cazenv-survival-long clean
 
 all: $(TARGET)
 
@@ -40,8 +42,12 @@ run: $(TARGET)
 version: $(TARGET)
 	@$(TARGET) --core-version
 
+cazenv-version-config:
+	@scripts/caz_version_config.sh >/dev/null
+
 release-src: $(TARGET)
 	mkdir -p dist
+	set -e; \
 	VERSION="$$( $(TARGET) --core-version )"; \
 	SRC_ROOT="caz-$$VERSION"; \
 	SRC_STAGE="$$(mktemp -d)/$$SRC_ROOT"; \
@@ -57,6 +63,48 @@ release-src: $(TARGET)
 	ditto -c -k --keepParent "$$SRC_STAGE" "dist/caz-src-$$VERSION.zip"; \
 	ls -lh "dist/caz-src-$$VERSION.zip"; \
 	shasum -a 256 "dist/caz-src-$$VERSION.zip"
+
+release-packages: release-src cazenv-maccatalyst-package cazenv-ios-package
+
+cazenv-maccatalyst-package: $(TARGET) cazenv-version-config
+	mkdir -p dist
+	set -e; \
+	VERSION="$$( $(TARGET) --core-version )"; \
+	DERIVED="$(CAZENV_RELEASE_DERIVED)-maccatalyst"; \
+	xcodebuild \
+	  -project $(CAZENV_CATALYST_PROJECT) \
+	  -scheme CazEnvCatalyst \
+	  -configuration Release \
+	  -destination "generic/platform=macOS,variant=Mac Catalyst" \
+	  -derivedDataPath "$$DERIVED" \
+	  CODE_SIGNING_ALLOWED=NO \
+	  CODE_SIGNING_REQUIRED=NO \
+	  CODE_SIGN_IDENTITY="" \
+	  build; \
+	APP_PATH="$$DERIVED/Build/Products/Release-maccatalyst/CazEnv.app"; \
+	ditto -c -k --keepParent "$$APP_PATH" "dist/cazenv-maccatalyst-$$VERSION.zip"; \
+	ls -lh "dist/cazenv-maccatalyst-$$VERSION.zip"; \
+	shasum -a 256 "dist/cazenv-maccatalyst-$$VERSION.zip"
+
+cazenv-ios-package: $(TARGET) cazenv-version-config
+	mkdir -p dist
+	set -e; \
+	VERSION="$$( $(TARGET) --core-version )"; \
+	DERIVED="$(CAZENV_RELEASE_DERIVED)-ios"; \
+	xcodebuild \
+	  -project $(CAZENV_CATALYST_PROJECT) \
+	  -scheme CazEnvCatalyst \
+	  -configuration Release \
+	  -destination "generic/platform=iOS" \
+	  -derivedDataPath "$$DERIVED" \
+	  CODE_SIGNING_ALLOWED=NO \
+	  CODE_SIGNING_REQUIRED=NO \
+	  CODE_SIGN_IDENTITY="" \
+	  build; \
+	APP_PATH="$$DERIVED/Build/Products/Release-iphoneos/CazEnv.app"; \
+	ditto -c -k --keepParent "$$APP_PATH" "dist/cazenv-ios-$$VERSION.zip"; \
+	ls -lh "dist/cazenv-ios-$$VERSION.zip"; \
+	shasum -a 256 "dist/cazenv-ios-$$VERSION.zip"
 
 cazenv-probes: $(CAZENV_SURVIVAL)
 	$(CAZENV_SURVIVAL) --mode probes

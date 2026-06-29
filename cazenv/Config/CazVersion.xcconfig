@@ -1,0 +1,5 @@
+// Generated from src/caz_core.h. Commit this file with Caz Core version changes.
+CAZ_CORE_VERSION = 0.001
+CAZ_CORE_VERSION_NUMBER = 1
+MARKETING_VERSION = $(CAZ_CORE_VERSION)
+CURRENT_PROJECT_VERSION = $(CAZ_CORE_VERSION_NUMBER)

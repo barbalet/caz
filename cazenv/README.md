@@ -2,12 +2,32 @@
 
 CazEnv is a macOS SwiftUI and Metal room simulator for multiple Caz droids. It renders a 30 ft wide, 60 ft long, 15 ft high room with randomized cat furniture, a shared charging station, electrical junction boxes, and 20 LowpolyCAT-based droids running archived `.caz` bytecode.
 
-The side panel reports the embedded Caz Core version from `caz_env_core_version()`, which mirrors `CAZ_CORE_VERSION` in `src/caz_core.h`.
+The side panel reports the CazEnv app version and the embedded Caz Core version. Both come from the committed Caz Core version in `src/caz_core.h`: CazEnv reads `caz_env_core_version()` at runtime, while Xcode reads `Config/CazVersion.xcconfig` for `MARKETING_VERSION`.
 
 ## Build
 
 ```sh
 xcodebuild -project cazenv/cazenv.xcodeproj -target cazenv -configuration Debug CODE_SIGNING_ALLOWED=NO build
+```
+
+The Catalyst/iOS project reuses the same Swift, Metal, C core, `.caz`, and STL resources:
+
+```sh
+xcodebuild -project cazenv/CazEnvCatalyst.xcodeproj -scheme CazEnvCatalyst -configuration Debug -destination "generic/platform=macOS,variant=Mac Catalyst" CODE_SIGNING_ALLOWED=NO build
+xcodebuild -project cazenv/CazEnvCatalyst.xcodeproj -scheme CazEnvCatalyst -configuration Debug -destination "generic/platform=iOS" CODE_SIGNING_ALLOWED=NO build
+```
+
+Refresh the Xcode app version after changing `CAZ_CORE_VERSION`:
+
+```sh
+scripts/caz_version_config.sh
+```
+
+Create release packages:
+
+```sh
+make cazenv-maccatalyst-package
+make cazenv-ios-package
 ```
 
 ## Environment

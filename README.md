@@ -6,7 +6,7 @@ The simulator is written in C and builds into a single command-line program. It 
 
 The repository also contains CazEnv, the macOS SwiftUI and Metal room simulator for long-run runs with twenty Caz droids sharing beds, cat trees, charger slots, solar energy, and electrical junction boxes.
 
-Caz Core releases are versioned by `CAZ_CORE_VERSION` in `src/caz_core.h`. The first source release is `0.001`; query it with `./build/caz --core-version` or, from CazEnv, `caz_env_core_version()`.
+Caz Core releases are versioned by `CAZ_CORE_VERSION` in `src/caz_core.h`. The first source release is `0.001`; query it with `./build/caz --core-version` or, from CazEnv, `caz_env_core_version()`. CazEnv's app marketing version is synced from the same header through `cazenv/Config/CazVersion.xcconfig`, so the app can show both `CazEnv 0.001` and `Core 0.001` when built from this release.
 
 This project also contains in-universe documentation: a Caz language reference, maker diagrams for the droid body, and early field histories written in the calm, observant tone of a British rural documentary.
 
@@ -245,6 +245,9 @@ CazEnv's reusable cat morphology, generated ideal-cat STL, OpenCat-style rig ref
 .
 |-- Makefile
 |-- README.md
+|-- .github/
+|   `-- workflows/
+|       `-- release.yml
 |-- docs/
 |   |-- caz-language.md
 |   |-- field-histories.md
@@ -259,7 +262,9 @@ CazEnv's reusable cat morphology, generated ideal-cat STL, OpenCat-style rig ref
 |   |   |-- Reference/
 |   |   `-- ThirdParty/
 |   |-- c_core/
+|   |-- Config/
 |   |-- Tools/
+|   |-- CazEnvCatalyst.xcodeproj/
 |   |-- cazenv/
 |   `-- cazenv.xcodeproj/
 |-- programs/
@@ -282,9 +287,13 @@ CazEnv's reusable cat morphology, generated ideal-cat STL, OpenCat-style rig ref
 |   `-- walk.cazskill
 |-- stock/
 |   `-- 3d_models/
+|-- scripts/
+|   `-- caz_version_config.sh
 `-- src/
     |-- caz_body.c
     |-- caz_body.h
+    |-- caz_core.c
+    |-- caz_core.h
     |-- caz_loader.c
     |-- caz_loader.h
     |-- caz_cpu.c
@@ -324,7 +333,11 @@ make cazenv-stress           # per-program forced survival scenarios
 make cazenv-movement         # per-program movement-distance rating
 make cazenv-survival         # strict 14-day/3-seed survival gate
 make cazenv-survival-long    # strict 30-day/5-seed matrix gate
+make cazenv-version-config   # sync CazEnv marketing version from CAZ_CORE_VERSION
 make release-src             # create dist/caz-src-<CAZ_CORE_VERSION>.zip
+make cazenv-maccatalyst-package # create dist/cazenv-maccatalyst-<CAZ_CORE_VERSION>.zip
+make cazenv-ios-package      # create dist/cazenv-ios-<CAZ_CORE_VERSION>.zip
+make release-packages        # create source, Mac Catalyst, and iOS release zips
 make clean                   # remove build output
 ```
 

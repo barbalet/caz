@@ -19,21 +19,39 @@ struct ContentView: View {
     @State private var filter: DroidFilter = .all
 
     var body: some View {
-        HStack(spacing: 0) {
-            MetalEnvironmentView(snapshot: runtime.snapshot)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black)
-                .layoutPriority(1)
+        GeometryReader { geometry in
+            if geometry.size.width < 900 {
+                VStack(spacing: 0) {
+                    MetalEnvironmentView(snapshot: runtime.snapshot)
+                        .frame(maxWidth: .infinity, minHeight: 260, maxHeight: .infinity)
+                        .background(Color.black)
+                        .layoutPriority(1)
 
-            Divider()
-                .background(.white.opacity(0.12))
+                    Divider()
+                        .background(.white.opacity(0.12))
 
-            sidePanel
-                .frame(width: 430)
-                .frame(maxHeight: .infinity)
+                    sidePanel
+                        .frame(maxWidth: .infinity)
+                        .frame(height: max(320, geometry.size.height * 0.42))
+                }
+            } else {
+                HStack(spacing: 0) {
+                    MetalEnvironmentView(snapshot: runtime.snapshot)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.black)
+                        .layoutPriority(1)
+
+                    Divider()
+                        .background(.white.opacity(0.12))
+
+                    sidePanel
+                        .frame(width: min(430, max(360, geometry.size.width * 0.35)))
+                        .frame(maxHeight: .infinity)
+                }
+            }
         }
         .background(Color.black)
-        .frame(minWidth: 980, minHeight: 620)
+        .desktopMinimumWindowSize()
     }
 
     private var sidePanel: some View {
@@ -45,7 +63,7 @@ struct ContentView: View {
         return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("CazEnv")
+                    Text("CazEnv \(cazEnvVersion)")
                         .font(.system(size: 22, weight: .semibold, design: .rounded))
                     Text("30 x 60 x 15 ft")
                         .font(.system(.caption, design: .monospaced))
@@ -113,6 +131,17 @@ struct ContentView: View {
         .padding(16)
         .foregroundStyle(.white)
         .background(Color(red: 0.045, green: 0.052, blue: 0.058))
+    }
+
+    private var cazEnvVersion: String {
+        guard
+            let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+            !version.isEmpty,
+            version != "$(MARKETING_VERSION)"
+        else {
+            return runtime.snapshot.coreVersion
+        }
+        return version
     }
 
     private var filteredDroids: [EnvDroid] {
@@ -409,5 +438,16 @@ struct ContentView: View {
         case 4: return .red
         default: return .secondary
         }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func desktopMinimumWindowSize() -> some View {
+#if os(macOS)
+        frame(minWidth: 980, minHeight: 620)
+#else
+        self
+#endif
     }
 }

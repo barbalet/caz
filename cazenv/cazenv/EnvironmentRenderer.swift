@@ -30,7 +30,7 @@ final class EnvironmentRenderer: NSObject, MTKViewDelegate {
         commandQueue = device.makeCommandQueue()
 
         let descriptor = MTLRenderPipelineDescriptor()
-        let library = device.makeDefaultLibrary()
+        let library = device.makeDefaultLibrary() ?? makeRuntimeShaderLibrary(device: device)
         descriptor.vertexFunction = library?.makeFunction(name: "vertex_main")
         descriptor.fragmentFunction = library?.makeFunction(name: "fragment_main")
         descriptor.colorAttachments[0].pixelFormat = view.colorPixelFormat
@@ -42,6 +42,38 @@ final class EnvironmentRenderer: NSObject, MTKViewDelegate {
         descriptor.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
         descriptor.colorAttachments[0].destinationAlphaBlendFactor = .oneMinusSourceAlpha
         pipelineState = try? device.makeRenderPipelineState(descriptor: descriptor)
+    }
+
+    private func makeRuntimeShaderLibrary(device: MTLDevice) -> MTLLibrary? {
+        let source = """
+        #include <metal_stdlib>
+        using namespace metal;
+
+        struct EnvVertex {
+            float3 position;
+            float4 color;
+        };
+
+        struct VertexOut {
+            float4 position [[position]];
+            float4 color;
+        };
+
+        vertex VertexOut vertex_main(uint vertexID [[vertex_id]],
+                                     const device EnvVertex *vertices [[buffer(0)]])
+        {
+            VertexOut out;
+            out.position = float4(vertices[vertexID].position, 1.0);
+            out.color = vertices[vertexID].color;
+            return out;
+        }
+
+        fragment float4 fragment_main(VertexOut in [[stage_in]])
+        {
+            return in.color;
+        }
+        """
+        return try? device.makeLibrary(source: source, options: nil)
     }
 
     func pan(deltaX: Float, deltaZ: Float) {
