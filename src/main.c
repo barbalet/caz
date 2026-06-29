@@ -1,4 +1,5 @@
 #include "caz_cpu.h"
+#include "caz_core.h"
 #include "caz_droid.h"
 #include "caz_loader.h"
 #include "caz_opencat.h"
@@ -51,6 +52,8 @@ static void print_usage(FILE *out, const char *argv0)
             "  --trace                     print CPU instruction trace to stderr\n"
             "  --quiet                     only print summary\n"
             "  --list                      list programs and scenarios\n"
+            "  --core-version              print CAZ_CORE_VERSION and exit\n"
+            "  --version                   print Caz Core version and exit\n"
             "  --help                      show this help\n",
             argv0);
 }
@@ -106,6 +109,12 @@ static bool parse_args(int argc, char **argv, Options *options)
             caz_loader_print_programs(stdout);
             printf("\nScenarios:\n");
             caz_scenario_print_all(stdout);
+            exit(0);
+        } else if (strcmp(argv[i], "--core-version") == 0) {
+            printf("%s\n", caz_core_version());
+            exit(0);
+        } else if (strcmp(argv[i], "--version") == 0) {
+            printf("Caz Core %s\n", caz_core_version());
             exit(0);
         } else if (strcmp(argv[i], "--trace") == 0) {
             options->trace = true;
@@ -271,6 +280,7 @@ int main(int argc, char **argv)
 
     if (!options.quiet) {
         printf("Caz Cat Operating System simulation\n");
+        printf("core_version=%s\n", caz_core_version());
         printf("program=%s (%s)\n", image.name, image.description);
         printf("source=%s\n", image.path);
         printf("scenario=%s steps=%llu instructions_per_tick=%llu program_bytes=%zu\n\n",

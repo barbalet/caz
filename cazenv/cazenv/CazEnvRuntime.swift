@@ -70,11 +70,12 @@ struct EnvDroid: Identifiable {
 
 struct EnvSnapshot {
     let elapsed: Float
+    let coreVersion: String
     let fixtures: [EnvFixture]
     let droids: [EnvDroid]
     let loadError: String?
 
-    static let empty = EnvSnapshot(elapsed: 0, fixtures: [], droids: [], loadError: nil)
+    static let empty = EnvSnapshot(elapsed: 0, coreVersion: "0.000", fixtures: [], droids: [], loadError: nil)
 }
 
 @MainActor
@@ -217,6 +218,12 @@ final class CazEnvRuntime: ObservableObject {
             )
         }
 
-        return EnvSnapshot(elapsed: state.elapsed_seconds, fixtures: fixtures, droids: droids, loadError: loadError)
+        return EnvSnapshot(
+            elapsed: state.elapsed_seconds,
+            coreVersion: String(cString: caz_env_core_version()),
+            fixtures: fixtures,
+            droids: droids,
+            loadError: loadError
+        )
     }
 }

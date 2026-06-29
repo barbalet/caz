@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../../src/caz_core.h"
 #include "../../src/caz_cpu.h"
 #include "../../src/caz_loader.h"
 
@@ -224,6 +225,7 @@ int caz_env_fixture_count(void);
 int caz_env_droid_count(void);
 void caz_env_fixture_snapshot(const CazEnvState *state, int index, CazEnvFixtureSnapshot *out_snapshot);
 void caz_env_droid_snapshot(const CazEnvState *state, int index, CazEnvDroidSnapshot *out_snapshot);
+const char *caz_env_core_version(void);
 const char *caz_env_program_name(uint8_t program);
 const char *caz_env_bytecode_program_name(const CazEnvState *state, int index);
 uint8_t caz_env_debug_read_port(const CazEnvState *state, int index, uint8_t port);

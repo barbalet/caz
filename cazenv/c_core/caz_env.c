@@ -1655,6 +1655,11 @@ const char *caz_env_program_name(uint8_t program)
     return program_metadata_for(program)->name;
 }
 
+const char *caz_env_core_version(void)
+{
+    return caz_core_version();
+}
+
 const char *caz_env_bytecode_program_name(const CazEnvState *state, int index)
 {
     if (state == NULL || index < 0 || index >= CAZ_ENV_DROID_COUNT) {

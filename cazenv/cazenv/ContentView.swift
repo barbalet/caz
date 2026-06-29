@@ -50,6 +50,9 @@ struct ContentView: View {
                     Text("30 x 60 x 15 ft")
                         .font(.system(.caption, design: .monospaced))
                         .foregroundStyle(.secondary)
+                    Text("Core \(runtime.snapshot.coreVersion)")
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()

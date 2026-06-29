@@ -2,6 +2,8 @@
 
 CazEnv is a macOS SwiftUI and Metal room simulator for multiple Caz droids. It renders a 30 ft wide, 60 ft long, 15 ft high room with randomized cat furniture, a shared charging station, electrical junction boxes, and 20 LowpolyCAT-based droids running archived `.caz` bytecode.
 
+The side panel reports the embedded Caz Core version from `caz_env_core_version()`, which mirrors `CAZ_CORE_VERSION` in `src/caz_core.h`.
+
 ## Build
 
 ```sh

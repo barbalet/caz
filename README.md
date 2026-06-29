@@ -6,6 +6,8 @@ The simulator is written in C and builds into a single command-line program. It 
 
 The repository also contains CazEnv, the macOS SwiftUI and Metal room simulator for long-run runs with twenty Caz droids sharing beds, cat trees, charger slots, solar energy, and electrical junction boxes.
 
+Caz Core releases are versioned by `CAZ_CORE_VERSION` in `src/caz_core.h`. The first source release is `0.001`; query it with `./build/caz --core-version` or, from CazEnv, `caz_env_core_version()`.
+
 This project also contains in-universe documentation: a Caz language reference, maker diagrams for the droid body, and early field histories written in the calm, observant tone of a British rural documentary.
 
 ## Quick Start
@@ -22,6 +24,7 @@ Try the other modes:
 ./build/caz --program programs/stalk-and-pounce.caz --scenario farmyard --steps 40
 ./build/caz --program programs/farmyard-caution.caz --scenario hedgerow --steps 40 --sample-every 2
 ./build/caz --list
+./build/caz --core-version
 ```
 
 Run the CazEnv survival checks:
@@ -249,6 +252,7 @@ CazEnv's reusable cat morphology, generated ideal-cat STL, OpenCat-style rig ref
 |   `-- maker-diagrams.md
 |-- hardware/
 |   `-- opencat-calibration.example
+|-- RELEASE.md
 |-- cazenv/
 |   |-- Assets/
 |   |   |-- Generated/
@@ -317,8 +321,10 @@ make run                     # run the curious-patrol demo
 make cazenv-probes           # targeted CazEnv ownership/resource probes
 make cazenv-regression       # archive, loader, and forced recovery checks
 make cazenv-stress           # per-program forced survival scenarios
+make cazenv-movement         # per-program movement-distance rating
 make cazenv-survival         # strict 14-day/3-seed survival gate
 make cazenv-survival-long    # strict 30-day/5-seed matrix gate
+make release-src             # create dist/caz-src-<CAZ_CORE_VERSION>.zip
 make clean                   # remove build output
 ```
 
